@@ -1,5 +1,8 @@
 // app/pages/index.vue
 <script setup lang="ts">
+import NewPostsList from '~/components/home/NewPostsList.vue'
+import TopPostsList from '~/components/home/TopPostsList.vue'
+import TestimonialQuote from '~/components/ui/spacer/TestimonialQuote.vue'
 import { useHomeData } from '~/composables/useHomeData'
 
 const route = useRoute()
@@ -36,10 +39,10 @@ useHead(() => ({
     <HotelList />
     <Features />
     <TicketList />
-    <DestinationList />
-    <TopPostsList class="max-w-960 px-4 lg:px-16 mx-auto" />
-    <NewPosts class="max-w-960 px-4 lg:px-16 mx-auto" />
-    <ProductList />
-    <TestimonialQuote /> -->
+    <DestinationList />  -->
+    <TopPostsList/>
+    <NewPostsList />
+    <!-- <ProductList /> -->
+    <TestimonialQuote />
   </div>
 </template>
