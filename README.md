@@ -35,16 +35,36 @@ What has to change:
 - Route param casting via `unplugin-vue-router` types → Nuxt's `useRoute()` / `definePageMeta`
 - API calls move from client-side `onMounted` fetches to server-side composables (need to decide what's exposed to the client vs kept server-only, e.g. API keys via `runtimeConfig`)
 
+**Architecture decision (settled):** Nitro is the unified gateway for all data fetching, mirroring Hirad's pattern. Pages never call the real backend directly — they call Nitro server routes via `useFetch('/api/...')`, and those server routes do the actual fetch to the external API. This applies uniformly to both public (no-auth) and authenticated endpoints — the client bundle never sees the base URL or any credentials either way.
+
+Example shape:
+```
+server/api/hotels/[slug].get.ts     → public, no auth, proxies to real API
+server/api/hotels/search.get.ts     → public, no auth
+server/api/contact.post.ts          → needs auth, key/token stays server-side
+```
+Whether each endpoint gets its own route file vs. a catch-all proxy route (like Hirad's `[...path].ts`) is a Phase 0 config decision once the real API's endpoint list and auth mechanism are known.
+
+**Resolved:** per-endpoint route files, with clean client-facing names that don't need to mirror the upstream path — e.g. `server/api/home.get.ts` proxies to `utilities/getMainPage`, exposed to the app as `/api/home`. Each route stays a thin proxy (no data transforms server-side); shaping/transform logic stays in the composable's `useFetch` call, same as the SPA pattern.
+
 ## 3. Migration Phases
 
 ### Phase 0 — Config foundation
 - Nitro preset: `node-server` (matches VPS deployment)
 - Tailwind + DaisyUI v5 module setup in `nuxt.config.ts`
 - Vazirmatn font loading, RTL (`dir`/`lang` via `app.head` in config, not just `useHead` per-page)
-- Lucide icons (Nuxt-friendly import path)
+- `lucide-vue-next` for icons (same package as the SPA, works as-is with Nuxt auto-imports)
 - ESLint/TS config parity with the old project
-- `runtimeConfig` for the new API's base URL + any auth keys
+- `runtimeConfig` for the new API's base URL + any auth keys (server-side only, used inside Nitro routes)
+- Decide Nitro route structure: per-endpoint files vs. a catch-all proxy route, once the real API's endpoint list is known
 - **Needs:** your current `nuxt.config.ts` + `package.json` to know what's already set up vs missing
+
+**Dependency checklist for Phase 0** (track here as each gets confirmed installed):
+```bash
+npm install -D tailwindcss @tailwindcss/vite daisyui @types/node
+npm install lucide-vue-next
+npx nuxi prepare
+```
 
 ### Phase 1 — Static/marketing pages
 - `index`, `about/`, `contact/`
@@ -55,9 +75,9 @@ What has to change:
 
 ### Phase 3 — Listing & detail pages (data-driven)
 - `hotel/*`, `pool/*`, `ticket/*`, `place/travel-guide/*`, `place/travel-to/*`
-- Convert each `useXxxMain` to `useFetch`/`useAsyncData` against the new API
+- Convert each `useXxxMain` to `useFetch`/`useAsyncData` hitting Nitro server routes (`/api/...`), which in turn proxy/fetch to the real backend — auth or no auth, the page-level code looks the same either way
 - Confirm search/pagination params re-fetch correctly on both full SSR load and client-side nav
-- **Needs:** new API base URL, auth scheme (public / API key / bearer token), and whether it's reachable from wherever the new VPS lives
+- **Needs:** new API base URL, auth scheme for the protected endpoints (API key / bearer token / other), and roughly which endpoints need auth vs. not
 
 ### Phase 4 — SEO
 - `useSeoMeta`/`useHead` per page (now actually effective)
@@ -83,7 +103,12 @@ What has to change:
 - Lighthouse/SEO crawl check, hydration mismatch check, RTL flash check
 - Decommission old Vite SPA hosting once verified
 
-## 4. Open Items Still Needed
+## 5. Coding Conventions for This Migration
+
+- Every file gets a filename comment as its first line — for `.vue` files, as the literal first line of the file, above `<script setup>`; for `.ts` files, as the literal first line. Use `~/...` for path aliases, not `@/...`.
+- No other comments in code — no explanatory comments, no inline notes. Code should read clean; any explanation belongs in chat, not the file.
+
+## 6. Open Items Still Needed
 
 1. **`nuxt.config.ts` + `package.json`** of the new project (or just describe what's already configured)
 2. **New API details** — base URL, auth method (public/API key/bearer), reachable from the new VPS?
