@@ -1,7 +1,12 @@
 // app/pages/index.vue
 <script setup lang="ts">
+import DestinationList from '~/components/home/DestinationList.vue'
 import NewPostsList from '~/components/home/NewPostsList.vue'
 import TopPostsList from '~/components/home/TopPostsList.vue'
+import PoolList from '~/components/pool/PoolList.vue'
+import TicketList from '~/components/ticket/TicketList.vue'
+import FeaturesList from '~/components/ui/spacer/FeaturesList.vue'
+import HowItWorks from '~/components/ui/spacer/HowItWorks.vue'
 import TestimonialQuote from '~/components/ui/spacer/TestimonialQuote.vue'
 import { useHomeData } from '~/composables/useHomeData'
 
@@ -33,13 +38,13 @@ useHead(() => ({
 
 <template>
   <div class="text-base-content">
-    <!-- <HeroSearch />
+    <!-- <HeroSearch />-->
     <PoolList />
     <HowItWorks />
-    <HotelList />
-    <Features />
+    <!-- <HotelList />-->
+    <FeaturesList />
     <TicketList />
-    <DestinationList />  -->
+    <DestinationList />  
     <TopPostsList/>
     <NewPostsList />
     <!-- <ProductList /> -->
