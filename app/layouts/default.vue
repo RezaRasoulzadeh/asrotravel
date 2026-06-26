@@ -7,14 +7,11 @@ import logoDark from '~/assets/images/logo-dark.svg'
 const route = useRoute()
 const router = useRouter()
 
-const theme = useCookie<'light' | 'dark'>('asro_theme', {
-  default: () => 'light',
-  maxAge: 60 * 60 * 24 * 365
-})
+const theme = useCookie<'light' | 'dark'>('asro_theme')
 
-useHead(() => ({
-  htmlAttrs: { 'data-theme': theme.value }
-}))
+function toggleTheme() {
+  theme.value = theme.value === 'light' ? 'dark' : 'light'
+}
 
 const { y } = useWindowScroll()
 const scrolled = computed(() => y.value > 40)
@@ -29,10 +26,6 @@ onClickOutside(mobileMenuRef, () => { isMobileMenuOpen.value = false })
 const isMobileUserOpen = ref(false)
 const mobileUserRef = ref<HTMLElement | null>(null)
 onClickOutside(mobileUserRef, () => { isMobileUserOpen.value = false })
-
-function toggleTheme() {
-  theme.value = theme.value === 'light' ? 'dark' : 'light'
-}
 
 function handleLogout() {
   logout()
@@ -136,7 +129,7 @@ function handleLogout() {
           </template>
           <template v-else>
             <NuxtLink 
-              :to="{ path: '/auth/login', query: { redirect: route.path } }" 
+              :to="{ path: '/login', query: { redirect: route.path } }" 
               class="btn btn-ghost btn-sm btn-circle transition-colors text-base-content"
             >
               <User2 class="size-5" />
@@ -164,7 +157,7 @@ function handleLogout() {
           </div>
         </template>
         <template v-else>
-          <NuxtLink :to="{ path: '/auth/login', query: { redirect: route.path } }"
+          <NuxtLink :to="{ path: '/login', query: { redirect: route.path } }"
             class="btn btn-sm btn-primary text-primary-content rounded-xl gap-2 mr-1 hidden lg:flex">
             <User2 class="size-4" />
             ورود / ثبت‌نام
@@ -262,7 +255,7 @@ function handleLogout() {
               <NuxtLink to="/contact" class="hover:text-primary transition-colors">تماس با ما</NuxtLink>
             </li>
             <li>
-              <NuxtLink to="/auth/login" class="hover:text-primary transition-colors">ورود / ثبت‌نام</NuxtLink>
+              <NuxtLink to="/login" class="hover:text-primary transition-colors">ورود / ثبت‌نام</NuxtLink>
             </li>
             <li>
               <NuxtLink to="/dashboard" class="hover:text-primary transition-colors">داشبورد</NuxtLink>
