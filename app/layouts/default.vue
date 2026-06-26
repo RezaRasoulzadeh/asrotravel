@@ -209,7 +209,7 @@ function handleLogout() {
       </div>
     </header>
 
-    <main class="flex-1 mt-10">
+    <main class="flex-1">
       <slot />
     </main>
 
