@@ -44,3 +44,30 @@ export interface BlogSideResponse {
   categories?: BlogSideCategory[]
   top_posts?: BlogSideTopPost[]
 }
+
+export interface BlogSeo {
+  title?: string
+  description?: string
+  keywords?: string
+  og_image?: { image_url: string }
+}
+
+export interface BlogAuthor {
+  full_name?: string
+}
+
+export interface BlogSingle {
+  id: number
+  title: string
+  content: string
+  url: string
+  slug: string
+  created_at: string
+  updated_at: string
+  view_count: number
+  comment_count: number
+  like_count: number
+  banner?: BlogBanner
+  seo?: BlogSeo
+  author?: BlogAuthor
+}

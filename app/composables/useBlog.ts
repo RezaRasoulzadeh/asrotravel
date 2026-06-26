@@ -1,6 +1,6 @@
 // composables/useBlog.ts
 
-import type { BlogFeedResponse, BlogSideResponse } from '~/types/blog'
+import type { BlogFeedResponse } from '~/types/blog'
 
 const STATIC_SEO = {
   title: 'مجله گردشگری آسرو تراول | راهنمای سفر و رزرو تفریحات',
@@ -23,9 +23,7 @@ export async function useBlog() {
     default: () => ({ data: [], totalPages: 1 }),
   })
 
-  const sideFetch = useFetch<BlogSideResponse>('/api/blog/side', {
-    default: () => ({}),
-  })
+  const sideFetch = useBlogSide()
 
   const [{ data: feed, status: feedStatus }, { data: side, status: sideStatus }] = await Promise.all([feedFetch, sideFetch])
 

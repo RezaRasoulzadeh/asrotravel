@@ -1,0 +1,149 @@
+.blog {
+  font-size: 1rem;
+  line-height: 1.95;
+  text-align: justify;
+  text-justify: inter-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  direction: rtl;
+  color: hsl(var(--bc));
+}
+
+/* HEADINGS */
+.b-heading {
+  font-weight: 900;
+  line-height: 1.4;
+  font-size: 1.5rem;
+  margin: 2rem 0 0.75rem;
+  color: hsl(var(--bc));
+}
+
+.b-heading + .b-heading {
+  margin-top: 1rem;
+}
+
+/* PARAGRAPH */
+.b-p {
+  margin: 0.75rem 0;
+  line-height: 1.95;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+/* IMAGES */
+.b-img {
+  margin: 1.5rem 0;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: hsl(var(--b2));
+}
+
+.b-img img {
+  width: 100%;
+  max-height: 40vh;
+  object-fit: cover;
+  display: block;
+}
+
+/* LISTS */
+.b-list {
+  padding-inline-start: 1.5rem;
+  margin: 1rem 0;
+  line-height: 1.9;
+}
+
+.b-list li {
+  margin: 0.35rem 0;
+}
+
+/* LINKS */
+.blog a {
+  color: hsl(var(--p));
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.blog a:hover {
+  color: var(--color-primary);
+  transition: color 0.2s ease;
+}
+
+/* INLINE EMPHASIS FIXES */
+.blog strong,
+.blog b {
+  font-weight: 800;
+}
+
+.blog em,
+.blog i {
+  font-style: italic;
+}
+
+/* BLOCK ELEMENT CONSISTENCY */
+.blog hr {
+  border: 0;
+  border-top: 1px solid hsl(var(--b3));
+  margin: 2rem 0;
+}
+
+/* BLOCKQUOTE */
+.blog blockquote {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  border-right: 4px solid hsl(var(--p));
+  background: hsl(var(--b2));
+  border-radius: 0.75rem;
+  line-height: 1.9;
+}
+
+/* TABLES */
+.blog table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  display: block;
+}
+
+.blog td,
+.blog th {
+  border: 1px solid hsl(var(--b3));
+  padding: 0.75rem;
+  text-align: right;
+}
+
+/* CODE */
+.blog pre {
+  direction: ltr;
+  background: hsl(var(--b2));
+  padding: 1rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  margin: 1.25rem 0;
+}
+
+.blog code {
+  direction: ltr;
+  font-size: 0.92rem;
+}
+
+/* MOBILE OPTIMIZATION */
+@media (max-width: 768px) {
+  .blog {
+    font-size: 0.98rem;
+    line-height: 1.85;
+  }
+
+  .b-heading {
+    margin: 1.5rem 0 0.6rem;
+    font-size: 1.25rem;
+  }
+
+  .b-p {
+    line-height: 1.85;
+  }
+
+  .b-img img {
+    max-height: 30vh;
+  }
+}

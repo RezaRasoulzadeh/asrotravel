@@ -1,7 +1,6 @@
 <!-- components/blog/BlogRenderer.vue -->
 <script setup lang="ts">
 import type { BlogBlock, InlineNode } from '~/utils/blog/types'
-
 defineProps<{ blocks: BlogBlock[] }>()
 </script>
 
