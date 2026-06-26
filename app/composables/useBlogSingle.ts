@@ -1,6 +1,6 @@
 // composables/useBlogSingle.ts
 
-import type { BlogSingle } from '~/types/blog'
+import type { BlogSingle } from '~/types/blog.types'
 
 const PANEL_URL = 'https://panel.asrotravel.com'
 

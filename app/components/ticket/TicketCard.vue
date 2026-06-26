@@ -1,7 +1,7 @@
 // components/ticket/TicketCard.vue
 <script setup lang="ts">
 import { ArrowLeft, TicketIcon } from 'lucide-vue-next'
-import type { Ticket } from '~/types/ticket'
+import type { Ticket } from '~/types/ticket.types'
 
 const props = defineProps<{
     ticket: Ticket

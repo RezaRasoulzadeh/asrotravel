@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import type { PoolItem, PoolSearchFilters, PoolSearchResponse } from '@/types/pool'
+import type { PoolItem, PoolSearchFilters, PoolSearchResponse } from '~/types/pool.types'
 
 const BASE = '/api'
 

@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { ArrowLeft, ChevronLeft, ChevronRight, LucideBuilding2, RefreshCw, SearchX, WifiOff } from 'lucide-vue-next'
 import HotelCard from '~/components/hotel/HotelCard.vue'
-import type { HotelCardItem } from '~/types/hotel'
+import type { HotelCardItem } from '~/types/hotel.types'
 
 const props = withDefaults(defineProps<{
   hotels?: HotelCardItem[] | null

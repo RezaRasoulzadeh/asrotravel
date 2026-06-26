@@ -1,7 +1,7 @@
 // components/pool/PoolCard.vue
 <script setup lang="ts">
 import { ArrowLeft } from 'lucide-vue-next'
-import type { PoolItem } from '@/types/pool'
+import type { PoolItem } from '~/types/pool.types'
 
 const props = defineProps<{ pool: PoolItem }>()
 

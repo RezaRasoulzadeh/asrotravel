@@ -4,7 +4,7 @@ import type {
   HotelCardItem,
   HotelSearchFilters,
   HotelSearchResponse,
-} from "@/types/hotel";
+} from "~/types/hotel.types";
 import { toGregorian } from "~/utils/date";
 
 const BASE = "/api";

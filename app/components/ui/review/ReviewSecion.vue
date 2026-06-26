@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { Star, LogIn, MessageSquarePlus, WifiOff, MessageSquareOff, Send, Loader2 } from 'lucide-vue-next'
 import { useReviews } from '~/composables/useReviews';
-import type { ReviewListParams } from '~/types/review'
+import type { ReviewListParams } from '~/types/review.types'
 
 const route = useRoute()
 

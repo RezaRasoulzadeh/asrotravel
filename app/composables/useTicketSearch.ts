@@ -4,7 +4,7 @@ import type {
   Ticket,
   TicketSearchFilters,
   TicketSearchResponse,
-} from "@/types/ticket";
+} from "~/types/ticket.types";
 
 const BASE = "/api";
 

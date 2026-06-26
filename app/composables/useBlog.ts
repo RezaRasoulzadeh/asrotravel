@@ -1,6 +1,6 @@
 // composables/useBlog.ts
 
-import type { BlogFeedResponse } from '~/types/blog'
+import type { BlogFeedResponse } from '~/types/blog.types'
 
 const STATIC_SEO = {
   title: 'مجله گردشگری آسرو تراول | راهنمای سفر و رزرو تفریحات',

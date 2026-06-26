@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { ArrowLeft, ChevronLeft, ChevronRight, TicketIcon, RefreshCw, SearchX, WifiOff } from 'lucide-vue-next'
 import TicketCard from './TicketCard.vue'
-import type { Ticket, GroupTicketResponse } from '@/types/ticket'
+import type { Ticket, GroupTicketResponse } from '~/types/ticket.types.js'
 
 const props = withDefaults(defineProps<{
   tickets?: Ticket[] | null

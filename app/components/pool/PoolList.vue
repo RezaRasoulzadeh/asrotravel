@@ -1,7 +1,7 @@
 // components/pool/PoolList.vue
 <script setup lang="ts">
 import { ArrowLeft, ChevronLeft, ChevronRight, LucideDroplets, RefreshCw, SearchX, WifiOff } from 'lucide-vue-next'
-import type { PoolItem, PoolGroup } from '@/types/pool'
+import type { PoolItem, PoolGroup } from '~/types/pool.types.js'
 import PoolCard from './PoolCard.vue'
 
 const props = withDefaults(defineProps<{

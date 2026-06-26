@@ -1,6 +1,6 @@
 // composables/useReviews.ts
 
-import type { ReviewListResponse, ReviewListParams } from '~/types/review'
+import type { ReviewListResponse, ReviewListParams } from '~/types/review.types'
 
 export function useReviews(params: ReviewListParams) {
   const currentPage = ref(params.page ?? 1)
