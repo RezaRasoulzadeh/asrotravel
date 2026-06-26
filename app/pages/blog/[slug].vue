@@ -127,7 +127,7 @@ useHead({
                         object_id: post?.id ?? 0,
                         object_model: 'blog',
                         object_name: post?.slug ?? post?.title ?? ''
-                    }" :is-logged-in="false" @login-click="router.push('/auth/login')" />
+                    }" :is-logged-in="false" @login-click="router.push('/login')" />
 
                 </template>
             </article>

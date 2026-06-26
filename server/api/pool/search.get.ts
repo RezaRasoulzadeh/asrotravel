@@ -1,4 +1,7 @@
 // server/api/pool/search.get.ts
-export default defineEventHandler((event) => {
-  return proxyRequest(event, 'https://api.asrotravel.com/api/pool/search')
+export default defineEventHandler(async (event): Promise<any> => {
+  const config = useRuntimeConfig()
+  const baseUrl = config.public.apiBase || 'https://api.asrotravel.com'
+  
+  return await proxyRequest(event, `${baseUrl}/api/pool/search`)
 })

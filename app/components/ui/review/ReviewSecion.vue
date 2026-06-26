@@ -203,7 +203,7 @@ async function submitReview() {
             برای ثبت نظر ابتدا وارد حساب کاربری خود شوید
           </p>
           <NuxtLink
-            :to="{ path: '/auth/login', query: { redirect: route.fullPath } }"
+            :to="{ path: '/login', query: { redirect: route.fullPath } }"
             class="btn btn-sm btn-primary rounded-xl gap-2">
             <LogIn class="size-4" />
             ورود به حساب
