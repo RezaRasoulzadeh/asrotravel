@@ -1,8 +1,10 @@
 // app/pages/index.vue
 <script setup lang="ts">
 import DestinationList from '~/components/home/DestinationList.vue'
+import HeroSearch from '~/components/home/HeroSearch.vue'
 import NewPostsList from '~/components/home/NewPostsList.vue'
 import TopPostsList from '~/components/home/TopPostsList.vue'
+import HotelList from '~/components/hotel/HotelList.vue'
 import PoolList from '~/components/pool/PoolList.vue'
 import TicketList from '~/components/ticket/TicketList.vue'
 import FeaturesList from '~/components/ui/spacer/FeaturesList.vue'
@@ -38,10 +40,10 @@ useHead(() => ({
 
 <template>
   <div class="text-base-content">
-    <!-- <HeroSearch />-->
+    <HeroSearch />
     <PoolList />
     <HowItWorks />
-    <!-- <HotelList />-->
+    <HotelList />
     <FeaturesList />
     <TicketList />
     <DestinationList />  

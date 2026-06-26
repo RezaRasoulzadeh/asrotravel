@@ -22,12 +22,19 @@ const hasDiscount = computed(() => {
 
 const priceDisplay = computed(() => props.pool?.min_price_display ?? props.pool?.min_price_view ?? '')
 const offerPriceDisplay = computed(() => props.pool?.price_with_offer_display ?? props.pool?.price_with_offer ?? '')
+function onImgError(e: Event) {
+  const target = e.target as HTMLImageElement | null
+  if (target) {
+    target.src = '/placeholder.png'
+  }
+}
 </script>
 
 <template>
   <RouterLink :to="pool?.url ?? '/'" class="card card-lift bg-base-100 overflow-hidden block group">
     <figure class="relative aspect-video overflow-hidden">
-      <img :src="pool?.banner?.image_url || '/placeholder.png'" :alt="pool?.title ?? ''" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+      <img :src="pool?.banner?.image_url || '/placeholder.png'" :alt="pool?.title ?? ''" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" 
+      @on-error="onImgError"/>
       <div class="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent" />
       <div class="absolute top-3 inset-s-3 flex gap-2">
         <span v-if="offerPercent > 0" class="badge badge-error text-white text-xs font-bold px-2 py-1">{{ offerPercent }}٪ تخفیف</span>
