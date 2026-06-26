@@ -158,7 +158,7 @@ function onSearch() {
               </fieldset>
 
               <button
-                class="btn btn-primary rounded-xl gap-2 px-5 search-btn field-animate w-full"
+                class="btn btn-primary rounded-xl mb-1 gap-2 px-5 search-btn field-animate w-full"
                 style="--fi:3"
                 @click="onSearch"
               >
@@ -200,7 +200,7 @@ function onSearch() {
               </fieldset>
 
               <button
-                class="btn btn-primary rounded-xl gap-2 px-5 search-btn field-animate w-full"
+                class="btn btn-primary rounded-xl mb-1 gap-2 px-5 search-btn field-animate w-full"
                 style="--fi:3"
                 @click="onSearch"
               >
@@ -242,7 +242,7 @@ function onSearch() {
               </fieldset>
 
               <button
-                class="btn btn-primary rounded-xl gap-2 px-5 search-btn field-animate w-full"
+                class="btn btn-primary rounded-xl mb-1 gap-2 px-5 search-btn field-animate w-full"
                 style="--fi:3"
                 @click="onSearch"
               >

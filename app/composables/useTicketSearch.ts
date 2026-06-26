@@ -6,8 +6,6 @@ import type {
   TicketSearchResponse,
 } from "~/types/ticket.types";
 
-const BASE = "/api";
-
 export function buildTicketSearchQuery(
   f: TicketSearchFilters,
 ): Record<string, string> {
@@ -93,9 +91,9 @@ if (f.min_price != null || f.max_price != null) {
 
 async function fetchSearchPage(f: TicketSearchFilters): Promise<TicketSearchResponse> {
   const params = buildParams(f);
-  const res = await fetch(`${BASE}/ticket/search?${params}`);
-  if (!res.ok) throw new Error(`خطای سرور: ${res.status}`);
-  return res.json();
+  const { data, error } = await safeApiFetch<TicketSearchResponse>(`/api/ticket/search?${params}`);
+  if (error || !data) throw new Error(error || "خطا در دریافت اطلاعات");
+  return data;
 }
 
   async function fetchTickets(f: TicketSearchFilters = filters.value) {
@@ -110,7 +108,6 @@ async function fetchSearchPage(f: TicketSearchFilters): Promise<TicketSearchResp
       perPage.value = json.perPage ?? 10;
     } catch (e) {
       error.value = e instanceof Error ? e.message : "خطا در دریافت اطلاعات";
-      tickets.value = [];
     } finally {
       loading.value = false;
     }

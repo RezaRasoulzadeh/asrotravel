@@ -2,10 +2,11 @@
 import type { HotelSingleResponse } from '~/types/hotelSingle.types'
 
 export function useHotelSingle(slug: string | Ref<string>) {
-  const { data, pending, error, refresh } = useFetch<HotelSingleResponse>(
+  const { data, pending, error, refresh } = useFetch<HotelSingleResponse | null>(
     () => `/api/hotel/${encodeURIComponent(toValue(slug))}`,
     {
       key: () => `hotel-single-${toValue(slug)}`,
+      default: () => null,
     }
   )
 

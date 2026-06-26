@@ -12,7 +12,7 @@ function defaultDates(): { start_date: string; end_date: string } {
 
 export function useHotelRooms(hotelId: MaybeRefOrGetter<number | null>) {
   const rooms = ref<HotelRoom[]>([])
-  const loading = ref(false)
+  const loading = ref(true)
   const error = ref(false)
   let activeController: AbortController | null = null
   let activeRequestId = 0
@@ -57,11 +57,13 @@ export function useHotelRooms(hotelId: MaybeRefOrGetter<number | null>) {
     error.value = false
 
     try {
-      const res = await $fetch<HotelRoom[] | { data?: HotelRoom[] }>(`/api/hotel/rooms/${id}`, {
+      const { data: res, error: fetchError } = await safeApiFetch<HotelRoom[] | { data?: HotelRoom[] }>(`/api/hotel/rooms/${id}`, {
         method: 'POST',
         body: params.value,
         signal: controller.signal,
       })
+      if (fetchError) throw new Error(fetchError)
+
       if (activeRequestId === requestId) {
         rooms.value = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : [])
       }

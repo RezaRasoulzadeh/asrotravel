@@ -1,7 +1,6 @@
 // server/api/pool/search.get.ts
 export default defineEventHandler(async (event): Promise<any> => {
-  const config = useRuntimeConfig()
-  const baseUrl = config.public.apiBase || 'https://api.asrotravel.com'
-  
-  return await proxyRequest(event, `${baseUrl}/api/pool/search`)
+  return await safeApiFetch('/pool/search', {
+    query: getQuery(event),
+  }, { data: [], total: 0, totalPages: 0, currentPage: 1, perPage: 10 })
 })

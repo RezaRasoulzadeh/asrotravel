@@ -2,9 +2,10 @@
 import type { HotelMainResponse } from '~/types/hotel.types'
 
 export function useHotelMain() {
-  const { data, pending, error, refresh } = useFetch<HotelMainResponse>('/api/hotel/main', {
+  const { data, pending, error, refresh } = useFetch<HotelMainResponse | null>('/api/hotel/main', {
     key: 'hotel-main',
     lazy: true,
+    default: () => null,
   })
 
   const promotions = computed(() => data.value?.promotions ?? [])

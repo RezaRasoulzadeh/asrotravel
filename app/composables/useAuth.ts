@@ -40,33 +40,36 @@ export function useAuth() {
   })
 
   async function sendOtp(mobile: string): Promise<{ ok: boolean; error?: string }> {
-    try {
-      const data = await $fetch<{ status?: number; message?: string }>('/api/auth/send-otp', {
-        method: 'POST',
-        body: { isoCode: 'IR', mobile }
-      })
-      if (data.status === 200) return { ok: true }
-      return { ok: false, error: data.message ?? 'خطای ناشناخته' }
-    } catch {
-      return { ok: false, error: 'خطا در اتصال به سرور' }
+    const { data, error } = await safeApiFetch<{ status?: number; message?: string }>('/api/auth/send-otp', {
+      method: 'POST',
+      body: { isoCode: 'IR', mobile }
+    }, 'خطا در اتصال به سرور')
+
+    if (error || !data) {
+      return { ok: false, error: error ?? 'خطا در اتصال به سرور' }
     }
+
+    if (data.status === 200) return { ok: true }
+    return { ok: false, error: data.message ?? 'خطای ناشناخته' }
   }
 
   async function verifyOtp(mobile: string, verificationCode: string): Promise<{ ok: boolean; error?: string }> {
-    try {
-      const data = await $fetch<{ token?: string; user?: AsroUser; message?: string }>('/api/auth/verify-otp', {
-        method: 'POST',
-        body: { mobile, verificationCode }
-      })
-      if (data.token && data.user) {
-        token.value = data.token
-        user.value = data.user
-        return { ok: true }
-      }
-      return { ok: false, error: data.message ?? 'کد تأیید نادرست است' }
-    } catch {
-      return { ok: false, error: 'خطا در اتصال به سرور' }
+    const { data, error } = await safeApiFetch<{ token?: string; user?: AsroUser; message?: string }>('/api/auth/verify-otp', {
+      method: 'POST',
+      body: { mobile, verificationCode }
+    }, 'خطا در اتصال به سرور')
+
+    if (error || !data) {
+      return { ok: false, error: error ?? 'خطا در اتصال به سرور' }
     }
+
+    if (data.token && data.user) {
+      token.value = data.token
+      user.value = data.user
+      return { ok: true }
+    }
+
+    return { ok: false, error: data.message ?? 'کد تأیید نادرست است' }
   }
 
   function logout() {

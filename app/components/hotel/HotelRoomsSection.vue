@@ -10,8 +10,8 @@ import PersianDateRangePicker from '../ui/PersianDateRangePicker.vue'
 import GuestCountPicker from '../ui/GuestCountPicker.vue'
 
 const props = defineProps<{
-  rooms: HotelRoom[]
   loading?: boolean
+  rooms: HotelRoom[]
   error?: boolean
   params: HotelRoomSearchParams
 }>()

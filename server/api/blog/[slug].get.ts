@@ -1,8 +1,8 @@
 // server/api/blog/[slug].get.ts
 
 export default defineEventHandler(async (event) => {
-  const { apiBase } = useRuntimeConfig()
   const slug = getRouterParam(event, 'slug')
+  if (!slug) return null
 
-  return await $fetch(`${apiBase}/blog/${encodeURIComponent(slug ?? '')}`)
+  return await safeApiFetch(`/blog/${encodeURIComponent(slug)}`, {}, null)
 })

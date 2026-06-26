@@ -7,8 +7,6 @@ import type {
 } from "~/types/hotel.types";
 import { toGregorian } from "~/utils/date";
 
-const BASE = "/api";
-
 // ─── pars and covert dates ──────────────────────────────────────────────────
 const parseDigits = (s: string) =>
   String(s).replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 1776));
@@ -113,7 +111,6 @@ export function useHotelSearch() {
     if (terms.length) p.set("terms", terms.join(","));
     if (f.star_rate != null) p.set("star_rate", String(f.star_rate));
 
-    // Fix: Use append instead of set to generate duplicate keys (&date=...&date=...)
     if (f.date_from) p.append("date", f.date_from);
     if (f.date_to) p.append("date", f.date_to);
 
@@ -143,9 +140,9 @@ export function useHotelSearch() {
   // ── API call ───────────────────────────────────────────────────────────
 async function fetchSearchPage(f: HotelSearchFilters): Promise<HotelSearchResponse> {
   const params = buildParams(f);
-  const res = await fetch(`${BASE}/hotel/search-page?${params}`);
-  if (!res.ok) throw new Error(`خطای سرور: ${res.status}`);
-  return res.json();
+  const { data, error } = await safeApiFetch<HotelSearchResponse>(`/api/hotel/search-page?${params}`);
+  if (error || !data) throw new Error(error || "خطا در دریافت اطلاعات");
+  return data;
 }
 
   // ── Main fetch ─────────────────────────────────────────────────────────
@@ -161,7 +158,6 @@ async function fetchSearchPage(f: HotelSearchFilters): Promise<HotelSearchRespon
       perPage.value = json.perPage ?? 10;
     } catch (e) {
       error.value = e instanceof Error ? e.message : "خطا در دریافت اطلاعات";
-      hotels.value = [];
     } finally {
       loading.value = false;
     }

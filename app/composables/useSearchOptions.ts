@@ -44,61 +44,50 @@ const fallbackTicketCategories: Option[] = [
 let cache: SearchOptions | null = null
 let fetchPromise: Promise<SearchOptions> | null = null
 
-const BASE = '/api'
-
 async function fetchAll(): Promise<SearchOptions> {
     if (cache) return cache
   if (fetchPromise) return fetchPromise
 
   fetchPromise = (async () => {
     const [locRes, poolCatRes, ticketCatRes] = await Promise.allSettled([
-      fetch(`${BASE}/pool/top-location-list`),
-      fetch(`${BASE}/pool/category-list`),
-      fetch(`${BASE}/ticket/category-list`),
+      safeApiFetch<any[]>('/api/pool/top-location-list'),
+      safeApiFetch<any[]>('/api/pool/category-list'),
+      safeApiFetch<any[]>('/api/ticket/category-list'),
     ])
 
     // ── destinations ─────────────────────────────────────
     let destinations = fallbackDestinations
-    if (locRes.status === 'fulfilled' && locRes.value.ok) {
-      try {
-        const data = await locRes.value.json()
-        const mapped: Option[] = (Array.isArray(data) ? data : [])
-          .map((l: any) => ({ slug: l.slug, name: l.name }))
-          .filter((l) => l.slug && l.name)
-        if (mapped.length) destinations = mapped
-      } catch { /* keep fallback */ }
+    if (locRes.status === 'fulfilled' && Array.isArray(locRes.value.data)) {
+      const mapped: Option[] = locRes.value.data
+        .map((l: any) => ({ slug: l?.slug, name: l?.name }))
+        .filter((l) => l.slug && l.name)
+      if (mapped.length) destinations = mapped
     }
 
     // ── pool categories ───────────────────────────────────
     let poolCategories = fallbackPoolCategories
-    if (poolCatRes.status === 'fulfilled' && poolCatRes.value.ok) {
-      try {
-        const data = await poolCatRes.value.json()
-        const mapped: Option[] = (Array.isArray(data) ? data : [])
-          .map((c: any) => ({ id: c.id, slug: c.slug, name: c.name }))
-          .filter((c) => c.slug && c.name)
-        if (mapped.length) poolCategories = mapped
-      } catch { /* keep fallback */ }
+    if (poolCatRes.status === 'fulfilled' && Array.isArray(poolCatRes.value.data)) {
+      const mapped: Option[] = poolCatRes.value.data
+        .map((c: any) => ({ id: c?.id, slug: c?.slug, name: c?.name }))
+        .filter((c) => c.slug && c.name)
+      if (mapped.length) poolCategories = mapped
     }
 
     // ── ticket categories (flatten children) ──────────────
     let ticketCategories = fallbackTicketCategories
-    if (ticketCatRes.status === 'fulfilled' && ticketCatRes.value.ok) {
-      try {
-        const data = await ticketCatRes.value.json()
-        const mapped: Option[] = []
-        for (const parent of Array.isArray(data) ? data : []) {
-          const children: any[] = parent.children ?? []
-          if (children.length) {
-            for (const child of children) {
-              if (child.slug && child.name) mapped.push({ slug: child.slug, name: child.name })
-            }
-          } else if (parent.slug && parent.name) {
-            mapped.push({ slug: parent.slug, name: parent.name })
+    if (ticketCatRes.status === 'fulfilled' && Array.isArray(ticketCatRes.value.data)) {
+      const mapped: Option[] = []
+      for (const parent of ticketCatRes.value.data) {
+        const children: any[] = parent?.children ?? []
+        if (children.length) {
+          for (const child of children) {
+            if (child?.slug && child?.name) mapped.push({ slug: child.slug, name: child.name })
           }
+        } else if (parent?.slug && parent?.name) {
+          mapped.push({ slug: parent.slug, name: parent.name })
         }
-        if (mapped.length) ticketCategories = mapped
-      } catch { }
+      }
+      if (mapped.length) ticketCategories = mapped
     }
 
     cache = { destinations, poolCategories, ticketCategories }
@@ -117,10 +106,13 @@ export function useSearchOptions() {
   })
   const loading = ref(!cache)
 
-  fetchAll().then((result) => {
-    options.value = result
-    loading.value = false
-  })
+  fetchAll()
+    .then((result) => {
+      options.value = result
+    })
+    .finally(() => {
+      loading.value = false
+    })
 
   return { options, loading }
 }

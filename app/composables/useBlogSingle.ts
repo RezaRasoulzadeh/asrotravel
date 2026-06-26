@@ -15,12 +15,13 @@ function normalizeContent(html: string): string {
 }
 
 export function useBlogSingle(slug: Ref<string>) {
-  return useFetch<BlogSingle>(
+  return useFetch<BlogSingle | null>(
     () => `/api/blog/${encodeURIComponent(slug.value)}`,
     {
       key: () => `blog-single-${slug.value}`,
       watch: [slug],
-      transform: (data) => ({ ...data, content: normalizeContent(data.content) }),
+      default: () => null,
+      transform: (data) => data ? ({ ...data, content: normalizeContent(data.content) }) : null,
     }
   )
 }
