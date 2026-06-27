@@ -30,7 +30,7 @@ export interface TicketLocation {
   id: number;
 }
 
-export interface Ticket {
+export interface TicketItem {
   id: number;
   title: string;
   slug: string;
@@ -58,7 +58,7 @@ export interface Ticket {
 }
 
 export interface GroupTicketResponse {
-  data: Ticket[];
+  data: TicketItem[];
   title: string;
 }
 
@@ -67,7 +67,7 @@ export interface TicketSearchResponse {
   totalPages: number;
   currentPage: number;
   perPage: number;
-  data: Ticket[];
+  data: TicketItem[];
 }
 
 export interface TicketCategory {

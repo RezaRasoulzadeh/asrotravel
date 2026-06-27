@@ -2,10 +2,10 @@
 <script setup lang="ts">
 import { ArrowLeft, ChevronLeft, ChevronRight, TicketIcon, RefreshCw, SearchX, WifiOff } from 'lucide-vue-next'
 import TicketCard from './TicketCard.vue'
-import type { Ticket, GroupTicketResponse } from '~/types/ticket.types.js'
+import type { TicketItem, GroupTicketResponse } from '~/types/ticket.types.js'
 
 const props = withDefaults(defineProps<{
-  tickets?: Ticket[] | null
+  tickets?: TicketItem[] | null
   title?: string | null
   tab_active?: boolean
 }>(), {
@@ -32,7 +32,7 @@ const { data, status, error, refresh } = await useFetch<GroupTicketResponse>('/a
   lazy: true
 })
 
-const tickets = computed<Ticket[]>(() => isPropMode.value ? (props.tickets ?? []) : (data.value?.data ?? []))
+const tickets = computed<TicketItem[]>(() => isPropMode.value ? (props.tickets ?? []) : (data.value?.data ?? []))
 const title = computed(() => props.title ?? data.value?.title ?? '')
 
 async function selectTab(rel: string) {

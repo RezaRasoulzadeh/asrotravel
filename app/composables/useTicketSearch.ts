@@ -1,7 +1,7 @@
 import { ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import type {
-  Ticket,
+  TicketItem,
   TicketSearchFilters,
   TicketSearchResponse,
 } from "~/types/ticket.types";
@@ -41,7 +41,7 @@ export function useTicketSearch() {
     ? route.query.is_featured === "true"
     : undefined;
 
-  const tickets = ref<Ticket[]>([]);
+  const tickets = ref<TicketItem[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
   const total = ref(0);
