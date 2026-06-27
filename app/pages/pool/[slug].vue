@@ -8,6 +8,9 @@ import BlogRenderer from '~/components/blog/BlogRenderer.vue'
 import ReviewSecion from '~/components/ui/review/ReviewSecion.vue'
 import FAQ from '~/components/ui/FAQ.vue'
 import PoolList from '~/components/pool/PoolList.vue'
+import PoolSanseCalendar from '~/components/pool/PoolSanseCalendar.vue'
+import PoolPolicySection from '~/components/pool/PoolPolicySection.vue'
+import VipSanseSecion from '~/components/pool/VipSanseSecion.vue'
 
 const route = useRoute()
 const router = useRouter()
