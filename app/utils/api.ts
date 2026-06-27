@@ -1,3 +1,4 @@
+// app/utils/api.ts
 export interface SafeApiResult<T> {
   data: T | null
   error: string | null
