@@ -1,77 +1,45 @@
-<!-- pages/hotel/index.vue -->
+// app/pages/pool/index.vue
 <script setup lang="ts">
 import { Search } from 'lucide-vue-next'
-import HotelList from '~/components/hotel/HotelList.vue';
+import PoolList from '~/components/pool/PoolList.vue';
 import FAQ from '~/components/ui/FAQ.vue';
-import GuestCountPicker from '~/components/ui/GuestCountPicker.vue';
-import PersianDateRangePicker from '~/components/ui/PersianDateRangePicker.vue';
 import HowItWorks from '~/components/ui/spacer/HowItWorks.vue';
 
 defineProps<{ imageSrc?: string }>()
 
 const router = useRouter()
 const { options } = useSearchOptions()
-const { settingData, seo, faqs, loading } = useHotelMain()
+const { settingData, seo, faqs, loading } = usePoolMain()
 
 const destination = ref('')
-const enterDate = ref('')
-const exitDate = ref('')
-const guests = ref({ adults: 1, kids: 0 })
-
-const parseDigits = (s: string) => String(s).replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 1776))
-
-watch(enterDate, (val) => {
-  if (val && exitDate.value) {
-    const a = parseInt(parseDigits(val).replace(/\//g, ''))
-    const b = parseInt(parseDigits(exitDate.value).replace(/\//g, ''))
-    if (b < a) exitDate.value = ''
-  }
-})
+const poolCategory = ref<number | null>(null)
+const poolName = ref('')
 
 useSeoMeta({
-  title: () => seo.value?.title || 'رزرو هتل آنلاین',
-  description: () => seo.value?.description || '',
-  keywords: () => seo.value?.keywords || '',
-  ogTitle: () => seo.value?.title || '',
-  ogDescription: () => seo.value?.description || '',
-  ogImage: () => seo.value?.og_image?.image_url || '',
+  title: () => seo.value?.title ?? 'رزرو استخر آنلاین',
+  description: () => seo.value?.description ?? '',
+  keywords: () => seo.value?.keywords ?? '',
+  ogTitle: () => seo.value?.title ?? '',
+  ogDescription: () => seo.value?.description ?? '',
+  ogImage: () => seo.value?.og_image?.image_url ?? '',
 })
 
 useHead({
   link: [
-    { rel: 'canonical', href: () => seo.value?.canonical || '' },
+    { rel: 'canonical', href: computed(() => seo.value?.canonical ?? '') },
   ],
 })
 
-function jalaliToGregorian(jDate: string): string {
-  const normalized = parseDigits(jDate)
-  const parts = normalized.split('/')
-  const [jyStr, jmStr, jdStr] = parts
-  if (!jyStr || !jmStr || !jdStr) return ''
-
-  const jy = parseInt(jyStr, 10)
-  const jm = parseInt(jmStr, 10)
-  const jd = parseInt(jdStr, 10)
-
-  if (isNaN(jy) || isNaN(jm) || isNaN(jd)) return ''
-
-  return toGregorian(jy, jm, jd)
-}
-
 function onSearch() {
-  const totalGuests = guests.value.adults + guests.value.kids
-  const query: Record<string, string> = {}
-
-  if (destination.value) query.location = destination.value
-
-  const gDate = enterDate.value ? jalaliToGregorian(enterDate.value) : ''
-  const eDate = exitDate.value ? jalaliToGregorian(exitDate.value) : ''
-
-  if (gDate) query.date_from = gDate
-  if (eDate) query.date_to = eDate
-  if (totalGuests > 0) query.number = String(totalGuests)
-
-  router.push({ path: '/hotel/search', query })
+  router.push({
+    path: '/pool/search',
+    query: buildPoolSearchQuery({
+      location: destination.value || undefined,
+      category_id: poolCategory.value || undefined,
+      name: poolName.value || undefined,
+      page: 1,
+    }),
+  })
 }
 </script>
 
@@ -79,19 +47,22 @@ function onSearch() {
   <section class="hero-section mt-16 px-4 lg:px-16">
     <div class="grid grid-cols-1 items-start w-full">
 
+      <!-- Hero image -->
       <div class="col-start-1 row-start-1 w-full h-[40vh] lg:h-[58vh] rounded-3xl lg:rounded-4xl overflow-hidden z-0 bg-base-200">
         <img
-          src="/hotel-hero.jpg"
-          alt="آسروتراول"
-          class="hero-img w-full h-full object-cover object-center"
+          src="/pool-hero.jpg"
+          alt="آسروتراول - استخر"
+          class="hero-img w-full h-full object-cover object-center md:object-bottom"
         />
       </div>
 
+      <!-- Search card -->
       <div class="col-start-1 row-start-1 z-10 w-full max-w-6xl mx-auto px-2 sm:px-4 mt-[30vh] lg:mt-[46vh] 2xl:mt-[51vh]">
         <div class="search-card w-full bg-base-100 rounded-3xl lg:rounded-4xl shadow-2xl shadow-base-300/80 p-4 lg:px-6 lg:py-6">
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 items-end gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 items-end gap-4">
 
+            <!-- Destination -->
             <fieldset class="fieldset field-animate" style="--fi:0">
               <legend class="fieldset-legend flex items-center gap-1">
                 <span class="text-base-content">شهر</span>
@@ -104,15 +75,30 @@ function onSearch() {
               </select>
             </fieldset>
 
-            <div class="md:col-span-2 field-animate" style="--fi:1">
-              <PersianDateRangePicker v-model:startValue="enterDate" v-model:endValue="exitDate" />
-            </div>
-
-            <fieldset class="fieldset field-animate" style="--fi:2">
-              <legend class="fieldset-legend">مهمان</legend>
-              <GuestCountPicker v-model="guests" />
+            <!-- Pool type -->
+            <fieldset class="fieldset field-animate" style="--fi:1">
+              <legend class="fieldset-legend">نوع استخر</legend>
+              <select v-model="poolCategory" class="select-custom">
+                <option :value="null">همه</option>
+                <option v-for="c in options.poolCategories" :key="c.slug" :value="c.id">
+                  {{ c.name }}
+                </option>
+              </select>
             </fieldset>
 
+            <!-- Name search -->
+            <fieldset class="fieldset field-animate" style="--fi:2">
+              <legend class="fieldset-legend">جستجو در نام</legend>
+              <input
+                v-model="poolName"
+                type="text"
+                class="input w-full"
+                placeholder="نام استخر..."
+                @keyup.enter="onSearch"
+              />
+            </fieldset>
+
+            <!-- Search button -->
             <button
               class="btn btn-primary rounded-xl mb-1 gap-2 px-5 search-btn field-animate w-full"
               style="--fi:3"
@@ -123,14 +109,13 @@ function onSearch() {
             </button>
 
           </div>
-
         </div>
       </div>
 
     </div>
   </section>
 
-  <HotelList />
+  <PoolList />
   <HowItWorks />
 
   <section v-if="settingData?.description" class="px-4 lg:px-16 my-12">
@@ -139,7 +124,7 @@ function onSearch() {
     </div>
   </section>
 
-  <FAQ title="سوالات متداول رزرو هتل" :items="faqs" :loading="loading" />
+  <FAQ title="سوالات متداول رزرو استخر" :items="faqs" :loading="loading" />
 </template>
 
 <style scoped>

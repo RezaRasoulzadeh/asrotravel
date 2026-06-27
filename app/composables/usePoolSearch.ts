@@ -1,5 +1,4 @@
-import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+// app/composables/usePoolSearch.ts
 import type { PoolItem, PoolSearchFilters, PoolSearchResponse } from '~/types/pool.types'
 
 export function buildPoolSearchQuery(f: PoolSearchFilters): Record<string, string> {
@@ -29,7 +28,6 @@ export function usePoolSearch() {
   const maxPrice = typeof urlMax === 'number' && !Number.isNaN(urlMax) ? urlMax : null
   const urlTerms = parseNumberList(route.query.terms)
 
-  // ── State ──────────────────────────────────────────────
   const pools       = ref<PoolItem[]>([])
   const loading     = ref(false)
   const error       = ref<string | null>(null)
@@ -38,7 +36,6 @@ export function usePoolSearch() {
   const currentPage = ref(1)
   const perPage     = ref(10)
 
-  // ── Filters ────────────────────────────────────────────
   const filters = ref<PoolSearchFilters>({
     category_id: route.query.category_id ? Number(route.query.category_id) : null,
     location:    (route.query.location  as string) || '',
@@ -47,10 +44,9 @@ export function usePoolSearch() {
     max_price:   maxPrice,
     ...(urlTerms.length ? { terms: urlTerms } : {}),
     page:        route.query.page       ? Number(route.query.page)       : 1,
-    sort:        (route.query.sort      as any) || 'default', 
+    sort:        (route.query.sort      as any) || 'default',
   })
 
-  // ── Build API payload ──────────────────────────────────
   function buildParams(f: PoolSearchFilters): URLSearchParams {
     const p = new URLSearchParams()
     const terms = cleanTerms(f.terms)
@@ -59,22 +55,21 @@ export function usePoolSearch() {
     if (f.name)                p.set('q',           f.name)
     if (terms.length)          p.set('terms',       terms.join(','))
     p.set('page', String(f.page ?? 1))
-    
+
     if (f.sort && f.sort !== 'default') {
       p.set('sort', f.sort)
     }
-    
-if (f.min_price != null || f.max_price != null) {
-  const apiMin = (f.min_price ?? 0) * 10;
-  const apiMax = (f.max_price ?? 0) * 10;
-  if (apiMin > 0 || apiMax > 0) {
-    p.set("amount", `${apiMin},${apiMax}`);
-  }
-}
+
+    if (f.min_price != null || f.max_price != null) {
+      const apiMin = (f.min_price ?? 0) * 10
+      const apiMax = (f.max_price ?? 0) * 10
+      if (apiMin > 0 || apiMax > 0) {
+        p.set('amount', `${apiMin},${apiMax}`)
+      }
+    }
     return p
   }
 
-  // ── Sync to URL ────────────────────────────────────────
   function syncToUrl(f: PoolSearchFilters, replace = false) {
     const query = buildPoolSearchQuery(f)
 
@@ -83,13 +78,12 @@ if (f.min_price != null || f.max_price != null) {
   }
 
   async function fetchSearchPage(f: PoolSearchFilters): Promise<PoolSearchResponse> {
-  const params = buildParams(f)
-  const { data, error } = await safeApiFetch<PoolSearchResponse>(`/api/pool/search?${params}`)
-  if (error || !data) throw new Error(error || 'خطا در دریافت اطلاعات')
-  return data
-}
+    const params = buildParams(f)
+    const { data, error } = await safeApiFetch<PoolSearchResponse>(`/api/pool/search?${params}`)
+    if (error || !data) throw new Error(error || 'خطا در دریافت اطلاعات')
+    return data
+  }
 
-  // ── Fetch ──────────────────────────────────────────────
   async function fetchPools(f: PoolSearchFilters = filters.value) {
     loading.value = true
     error.value   = null

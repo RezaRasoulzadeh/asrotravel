@@ -88,16 +88,6 @@ export interface PoolCardLocation {
   map_lng: string
 }
 
-export interface PoolGroup {
-  data: PoolItem[]
-  title: string
-  description: string
-  more_link: {
-    link: string
-    _target: string
-  }
-}
-
 export interface PoolItem {
   id:                        number
   title:                     string
@@ -124,6 +114,8 @@ export interface PoolItem {
   map_lng?:                  string
   banner:                    PoolCardBanner
   location:                  PoolCardLocation
+  terms?:          PoolTermRef[]
+  reviewsLength?:  number
 }
 
 // ─── Group & Endpoint Wrapper Envelopes ──────────────────────────────────────

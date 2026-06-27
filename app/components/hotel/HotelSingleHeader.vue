@@ -245,7 +245,6 @@ onMounted(() => {
             ویژگی‌ها و امکانات:
           </h3>
           <button 
-            v-if="amenitiesHasOverflow"
             @click="isAmenitiesExpanded = !isAmenitiesExpanded"
             class="text-[11px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-0.5"
           >
