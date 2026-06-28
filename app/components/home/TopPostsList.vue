@@ -50,7 +50,7 @@ function scrollCarousel(direction: 'prev' | 'next') {
         </div>
         <button
           class="btn btn-dash btn-sm text-primary hover:btn-primary hover:text-primary-content gap-1"
-          @click="router.push('/place/search')"
+          @click="router.push('/place/travel-guide/ardebil/search')"
         >
           مشاهده همه
           <ChevronLeft class="size-4" />
