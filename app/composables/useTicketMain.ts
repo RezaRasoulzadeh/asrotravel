@@ -69,18 +69,6 @@ export interface SeoShareItem {
   image: string | null
 }
 
-export interface Seo {
-  title: string
-  keywords?: string
-  description?: string
-  canonical: string
-  category_title: string
-  og_image: BannerImage
-  seo_share: SeoShareItem[] | {
-    facebook?: SeoShareItem
-    twitter?: SeoShareItem
-  }
-}
 
 export interface Faq {
   title: string
