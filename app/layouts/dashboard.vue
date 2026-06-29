@@ -1,4 +1,4 @@
-<!-- layouts/dashboard.vue -->
+<!-- app/layouts/dashboard.vue -->
 <script setup lang="ts">
 import {
   LayoutDashboard,
@@ -32,30 +32,22 @@ const navItems: NavItem[] = [
 ]
 
 const route = useRoute()
-const router = useRouter()
 const { user, fullName, logout } = useAuth()
 
-const theme = useLocalStorage<'light' | 'dark'>('asro_theme', 'light')
-
-useHead({
-  script: [
-    {
-      key: 'asro-theme-init',
-      innerHTML: "(function(){try{var t=localStorage.getItem('asro_theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t)}}catch(e){}})()",
-    },
-  ],
+const theme = useCookie<'light' | 'dark'>('asro_theme', {
+  default: () => 'light',
+  maxAge: 60 * 60 * 24 * 365,
 })
 
 function toggleTheme() {
   theme.value = theme.value === 'light' ? 'dark' : 'light'
-  document.documentElement.setAttribute('data-theme', theme.value)
 }
 
 const logoSrc = computed(() => theme.value === 'dark' ? logoDark : logoLight)
 
 async function handleLogout() {
-  await logout()
-  await router.push('/auth/login')
+  logout()
+  await navigateTo('/login')
 }
 
 function isActive(to: string) {
