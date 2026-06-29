@@ -70,6 +70,7 @@ useSeoMeta({
 useHead({
   link: [{ rel: 'canonical', href: computed(() => seo.value?.canonical ?? '') }],
 })
+
 </script>
 
 <template>

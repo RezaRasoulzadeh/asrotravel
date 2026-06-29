@@ -130,7 +130,15 @@ function selectSlot(slot: any, genderCode: 'men' | 'women', serviceName: string)
 
 function handleBuy(slot: any, genderCode: 'men' | 'women', serviceName: string) {
   if (!isBookable(slot)) return
-  selectSlot(slot, genderCode, serviceName)
+  
+  navigateTo({
+    path: '/cart/detail',
+    state: {
+      selectedSlot: slot,
+      genderCode,
+      serviceName
+    }
+  })
 }
 </script>
 

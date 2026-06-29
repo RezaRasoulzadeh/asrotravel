@@ -15,4 +15,5 @@ const theme = useCookie<'light' | 'dark'>('asro_theme', {
 useHead(() => ({
   htmlAttrs: { 'data-theme': theme.value },
 }))
+
 </script>

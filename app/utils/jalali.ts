@@ -38,7 +38,7 @@ export function toJalaliDash(gy: number, gm: number, gd: number): JalaliDate {
 
   const jalaliMonthDays = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29]
   let jm = 0
-  let jd = 0
+  let jd = 1
   for (let i = 0; i < 12; i++) {
     const len = jalaliMonthDays[i] ?? 0
     if (jDayNo >= len) {

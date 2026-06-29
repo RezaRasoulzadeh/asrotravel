@@ -2,6 +2,7 @@
 export interface SafeApiResult<T> {
   data: T | null
   error: string | null
+  status: number | null
 }
 
 export function apiErrorMessage(error: unknown, fallback = 'خطا در دریافت اطلاعات'): string {
@@ -30,11 +31,14 @@ export async function safeApiFetch<T>(
     return {
       data: await $fetch<T>(request, options),
       error: null,
+      status: null,
     }
   } catch (error) {
+    const maybeError = error as { status?: number; statusCode?: number }
     return {
       data: null,
       error: apiErrorMessage(error, fallbackMessage),
+      status: maybeError.status ?? maybeError.statusCode ?? null,
     }
   }
 }

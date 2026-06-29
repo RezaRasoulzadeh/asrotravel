@@ -21,13 +21,21 @@ export interface AsroUser {
   }
 }
 
+const TOKEN_COOKIE = 'asro_token'
+const USER_COOKIE = 'asro_user'
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 30 
+
 export function useAuth() {
-  const token = useLocalStorage<string | null>('asro_token', null)
-  const user = useLocalStorage<AsroUser | null>('asro_user', null, {
-    serializer: {
-      read: (v) => v ? JSON.parse(v) : null,
-      write: (v) => JSON.stringify(v),
-    },
+  const token = useCookie<string | null>(TOKEN_COOKIE, {
+    default: () => null,
+    maxAge: COOKIE_MAX_AGE,
+    sameSite: 'lax',
+  })
+
+  const user = useCookie<AsroUser | null>(USER_COOKIE, {
+    default: () => null,
+    maxAge: COOKIE_MAX_AGE,
+    sameSite: 'lax',
   })
 
   const isAuthenticated = computed(() => !!token.value)
@@ -42,7 +50,7 @@ export function useAuth() {
   async function sendOtp(mobile: string): Promise<{ ok: boolean; error?: string }> {
     const { data, error } = await safeApiFetch<{ status?: number; message?: string }>('/api/auth/send-otp', {
       method: 'POST',
-      body: { isoCode: 'IR', mobile }
+      body: { isoCode: 'IR', mobile },
     }, 'خطا در اتصال به سرور')
 
     if (error || !data) {
@@ -56,7 +64,7 @@ export function useAuth() {
   async function verifyOtp(mobile: string, verificationCode: string): Promise<{ ok: boolean; error?: string }> {
     const { data, error } = await safeApiFetch<{ token?: string; user?: AsroUser; message?: string }>('/api/auth/verify-otp', {
       method: 'POST',
-      body: { mobile, verificationCode }
+      body: { mobile, verificationCode },
     }, 'خطا در اتصال به سرور')
 
     if (error || !data) {
@@ -77,9 +85,11 @@ export function useAuth() {
     user.value = null
   }
 
-  function authHeaders(): Record<string, string> {
-    return token.value ? { Authorization: `Bearer ${token.value}` } : {}
+  async function handleSessionExpiry() {
+    logout()
+    useToast().error('نشست شما منقضی شده، لطفا دوباره وارد شوید')
+    await navigateTo('/login')
   }
 
-  return { token, user, isAuthenticated, fullName, sendOtp, verifyOtp, logout, authHeaders }
+  return { token, user, isAuthenticated, fullName, sendOtp, verifyOtp, logout, handleSessionExpiry }
 }

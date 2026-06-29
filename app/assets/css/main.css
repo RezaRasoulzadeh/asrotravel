@@ -89,6 +89,9 @@ html {
   box-shadow: 0 1px 0 oklch(0% 0 0 / 0.06);
 }
 
+.card{
+  border-radius: 1.5rem;
+}
 .card-lift {
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   box-shadow: 0 2px 12px oklch(0% 0 0 / 0.07);

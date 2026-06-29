@@ -24,6 +24,12 @@ export default defineNuxtConfig({
     },
   },
 
+  router: {
+    options: {
+      scrollBehaviorType: 'smooth',
+    },
+  },
+
   runtimeConfig: {
     apiBase: process.env.API_BASE_URL || "https://api.asrotravel.com/api",
   },
