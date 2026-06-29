@@ -64,7 +64,7 @@ function isActive(to: string) {
 </script>
 
 <template>
-  <div class="dashboard-root min-h-screen lg:h-screen bg-base-100 pe-10 flex" dir="rtl">
+  <div class="dashboard-root min-h-screen lg:h-screen bg-base-100 lg:pe-6 flex" dir="rtl">
 
     <aside class="hidden lg:flex flex-col w-56 xl:w-60 bg-base-100 shrink-0 h-screen sticky top-0 z-20">
 
@@ -92,9 +92,9 @@ function isActive(to: string) {
 
       <div class="mx-3 mb-4 rounded-2xl bg-primary/10 p-4 text-center">
         <p class="text-xs text-base-content/50 mb-1">تخفیف ویژه</p>
-        <p class="text-2xl font-bold text-primary">۳۰٪</p>
+        <p class="text-2xl font-bold text-primary">۲۰٪</p>
         <p class="text-xs text-base-content/50 mt-1 leading-relaxed">در رزروهای این هفته از تخفیف بهره‌مند شوید</p>
-        <NuxtLink to="/hotel" class="btn btn-primary btn-sm w-full mt-3 rounded-xl">مشاهده</NuxtLink>
+        <NuxtLink to="/pool" class="btn btn-primary btn-sm w-full mt-3 rounded-xl">مشاهده</NuxtLink>
       </div>
 
       <div class="px-3 pb-5 border-t border-base-200 pt-3">
@@ -109,7 +109,7 @@ function isActive(to: string) {
     </aside>
 
     <main
-      class="flex-1 overflow-y-auto bg-base-200 rounded-4xl mx-4 my-8 pb-20 lg:pb-0 min-w-0" >
+      class="flex-1 overflow-y-auto bg-base-200 rounded-[3rem] mx-4 my-8 pb-20 lg:pb-0 min-w-0" >
       <slot />
     </main>
 
@@ -120,7 +120,7 @@ function isActive(to: string) {
           <div class="avatar placeholder">
             <div class="flex justify-center items-center bg-primary text-primary-content text-center rounded-full w-10 font-bold">
               <img v-if="user?.ImageUrl" :src="user.ImageUrl" :alt="fullName" loading="lazy" class="rounded-full" />
-              <span class="pb-1.5" v-else>{{ fullName.charAt(0) }}</span>
+              <span class="pt-0.5" v-else>{{ fullName.charAt(0) }}</span>
             </div>
           </div>
           <div class="leading-tight">

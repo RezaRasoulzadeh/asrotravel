@@ -67,7 +67,7 @@ const quickActions: QuickAction[] = [
   { label: 'رزرو هتل', icon: Hotel, to: '/hotel' },
   { label: 'رزرو استخر', icon: Waves, to: '/pool' },
   { label: 'خرید بلیط', icon: Ticket, to: '/ticket' },
-  { label: 'گردشگری', icon: MapPin, to: '/place/travel-guide' },
+  { label: 'گردشگری', icon: MapPin, to: '/place/travel-guide/ardebil' },
 ]
 
 type BookingType = 'hotel' | 'pool' | 'ticket' | 'place'
@@ -96,7 +96,7 @@ const bookingIconMap: Record<BookingType, Component> = {
 
 const statusMap: Record<BookingStatus, { label: string; cls: string }> = {
   active: { label: 'فعال', cls: 'badge-success' },
-  done: { label: 'انجام شده', cls: 'badge-neutral' },
+  done: { label: 'انجام شده', cls: 'badge-secondary' },
   cancelled: { label: 'لغو شده', cls: 'badge-error' },
 }
 
@@ -111,15 +111,15 @@ const hasBookings = computed(() => bookingRows.value.length > 0)
 </script>
 
 <template>
-  <div class="px-4 lg:px-10 py-6 mx-auto space-y-8">
+  <div class="px-4 lg:px-6 py-6 mx-auto space-y-8">
 
-    <div class="card bg-primary text-primary-content shadow-sm overflow-hidden">
+    <div class="card bg-base-100 text-base-content overflow-hidden">
       <div class="card-body py-6 px-6 relative">
-        <div class="absolute -left-8 -top-8 w-40 h-40 rounded-full bg-white/10 pointer-events-none" />
-        <div class="absolute -left-2 bottom-0 w-20 h-20 rounded-full bg-white/5 pointer-events-none" />
-        <p class="text-primary-content/70 text-sm mb-1">{{ greeting }}،</p>
+        <div class="absolute -left-8 -top-8 w-40 h-40 rounded-full bg-primary/10 pointer-events-none" />
+        <div class="absolute -left-2 bottom-0 w-20 h-20 rounded-full bg-primary/5 pointer-events-none" />
+        <p class="text-base-content/80 text-sm mb-1">{{ greeting }}،</p>
         <h1 class="text-xl font-bold">{{ fullName }}</h1>
-        <p class="text-primary-content/70 text-sm mt-1">به پنل کاربری آسروتراول خوش آمدید.</p>
+        <p class="text-base-content/80 text-sm mt-1">به پنل کاربری آسروتراول خوش آمدید.</p>
       </div>
     </div>
 
