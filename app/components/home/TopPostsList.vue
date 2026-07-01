@@ -48,21 +48,16 @@ function scrollCarousel(direction: 'prev' | 'next') {
           </h2>
           <p class="text-xs text-base-content/50 mt-1">تفریح و سرگرمی</p>
         </div>
-        <button
-          class="btn btn-dash btn-sm text-primary hover:btn-primary hover:text-primary-content gap-1"
-          @click="router.push('/place/travel-guide/ardebil/search')"
-        >
+        <button class="btn btn-dash btn-sm text-primary hover:btn-primary hover:text-primary-content gap-1"
+          @click="router.push('/place/travel-guide/ardebil/search')">
           مشاهده همه
           <ChevronLeft class="size-4" />
         </button>
       </div>
 
       <div v-if="loading" class="flex gap-4 overflow-hidden -mx-4 px-4 md:mx-0 md:px-0 pt-3 pb-12">
-        <div
-          v-for="i in 4"
-          :key="i"
-          class="card bg-base-100 overflow-hidden shrink-0 w-[75vw] sm:w-[50vw] md:w-64 lg:w-72 border border-base-200 rounded-2xl"
-        >
+        <div v-for="i in 4" :key="i"
+          class="card bg-base-100 overflow-hidden shrink-0 w-[75vw] sm:w-[50vw] md:w-64 lg:w-72 border border-base-200 rounded-2xl">
           <div class="aspect-video bg-base-200 animate-pulse" />
           <div class="p-4 flex flex-col gap-3">
             <div class="h-4 bg-base-200 animate-pulse rounded-md w-3/4" />
@@ -72,60 +67,40 @@ function scrollCarousel(direction: 'prev' | 'next') {
         </div>
       </div>
 
-      <div
-        v-else-if="!posts.length"
-        class="flex flex-col items-center justify-center py-12 gap-4 text-base-content/50"
-      >
+      <div v-else-if="!posts.length" class="flex flex-col items-center justify-center py-12 gap-4 text-base-content/50">
         <BadgeAlert class="size-10" />
         <p class="text-sm">داده‌ای یافت نشد</p>
       </div>
 
       <div v-else class="relative group/carousel">
-        <button
-          class="hidden md:flex absolute inset-s-0 top-[45%] -translate-y-1/2 translate-x-1/2 z-10
+        <button class="hidden md:flex absolute inset-s-0 top-[45%] -translate-y-1/2 translate-x-1/2 z-10
                  btn btn-circle btn-sm bg-base-100 shadow-md border border-base-200
-                 opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-200"
-          aria-label="قبلی"
-          @click="scrollCarousel('prev')"
-        >
+                 opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-200" aria-label="قبلی"
+          @click="scrollCarousel('prev')">
           <ChevronRight class="size-5" />
         </button>
 
-        <button
-          class="hidden md:flex absolute inset-e-0 top-[45%] -translate-y-1/2 -translate-x-1/2 z-10
+        <button class="hidden md:flex absolute inset-e-0 top-[45%] -translate-y-1/2 -translate-x-1/2 z-10
                  btn btn-circle btn-sm bg-base-100 shadow-md border border-base-200
-                 opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-200"
-          aria-label="بعدی"
-          @click="scrollCarousel('next')"
-        >
+                 opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-200" aria-label="بعدی"
+          @click="scrollCarousel('next')">
           <ChevronLeft class="size-5" />
         </button>
 
-        <div
-          ref="carouselRef"
+        <div ref="carouselRef"
           class="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 pt-3 pb-12"
-          style="scrollbar-width: none; -ms-overflow-style: none;"
-        >
-          <NuxtLink
-            v-for="post in posts"
-            :key="post.id"
-            :to="post.url"
+          style="scrollbar-width: none; -ms-overflow-style: none;">
+          <NuxtLink v-for="post in posts" :key="post.id" :to="post.url"
             class="card card-lift bg-base-100 overflow-hidden block group shrink-0 snap-start
-                   w-[75vw] sm:w-[50vw] md:w-64 lg:w-72 shadow-sm hover:shadow-md border border-base-200 rounded-2xl transition-all"
-          >
+                   w-[75vw] sm:w-[50vw] md:w-64 lg:w-72 shadow-sm hover:shadow-md border border-base-200 rounded-2xl transition-all">
             <figure class="relative aspect-video overflow-hidden">
-              <img
-                :src="post.imageUrl || post.image_url"
-                :alt="post.title"
+              <img :src="post.imageUrl || post.image_url" :alt="post.title"
                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                loading="lazy"
-              />
+                loading="lazy" />
               <div class="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent" />
 
-              <div
-                v-if="formatScore(post.reviewScore ?? post.review_score)"
-                class="absolute top-3 inset-e-3 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-lg px-2 py-1"
-              >
+              <div v-if="formatScore(post.reviewScore ?? post.review_score)"
+                class="absolute top-3 inset-e-3 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-lg px-2 py-1">
                 <Star class="size-3.5 text-yellow-400 fill-yellow-400" />
                 <span class="text-white text-xs font-semibold">
                   {{ formatScore(post.reviewScore ?? post.review_score) }}
@@ -138,10 +113,8 @@ function scrollCarousel(direction: 'prev' | 'next') {
                 {{ post.title || post.translate?.title }}
               </h3>
 
-              <p
-                v-if="post.locationName || post.location?.title || post.location?.name"
-                class="text-base-content/50 text-xs flex items-center gap-1"
-              >
+              <p v-if="post.locationName || post.location?.title || post.location?.name"
+                class="text-base-content/50 text-xs flex items-center gap-1">
                 <MapPin class="size-3.5 shrink-0" />
                 <span>{{ post.locationName || post.location?.title || post.location?.name }}</span>
               </p>
@@ -160,13 +133,10 @@ function scrollCarousel(direction: 'prev' | 'next') {
           </NuxtLink>
 
           <div class="shrink-0 snap-start w-[45vw] sm:w-[30vw] md:w-44 self-stretch">
-            <button
-              class="h-full w-full rounded-2xl border-2 border-dashed border-primary/30
+            <button class="h-full w-full rounded-2xl border-2 border-dashed border-primary/30
                      flex flex-col items-center justify-center gap-3
                      text-primary/60 hover:text-primary hover:border-primary/60 cursor-pointer
-                     hover:bg-primary/5 transition-all duration-200 p-4"
-              @click="router.push('/place/search')"
-            >
+                     hover:bg-primary/5 transition-all duration-200 p-4" @click="router.push('/place/search')">
               <List class="size-8" />
               <span class="text-xs font-medium text-center leading-snug">مشاهده بیشتر</span>
             </button>
@@ -178,5 +148,7 @@ function scrollCarousel(direction: 'prev' | 'next') {
 </template>
 
 <style scoped>
-div::-webkit-scrollbar { display: none; }
+div::-webkit-scrollbar {
+  display: none;
+}
 </style>
