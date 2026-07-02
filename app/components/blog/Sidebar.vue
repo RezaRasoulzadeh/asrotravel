@@ -1,7 +1,7 @@
 <!-- components/blog/BlogSidebar.vue -->
 <script setup lang="ts">
 import { Layers, MapPin, Flame } from 'lucide-vue-next'
-import type { BlogSideCategory, BlogSideLocation, BlogSideTopPost } from '~/types/blog'
+import type { BlogSideCategory, BlogSideLocation, BlogSideTopPost } from '~/types/blog.types'
 
 const props = withDefaults(
   defineProps<{

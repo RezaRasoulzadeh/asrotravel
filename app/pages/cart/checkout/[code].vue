@@ -2,7 +2,9 @@
 <script setup lang="ts">
 import { WifiOff } from 'lucide-vue-next'
 import CartSteps from '~/components/cart/CartSteps.vue'
+import CheckoutBookingSummary from '~/components/cart/CheckoutBookingSummary.vue'
 import CheckoutSummary from '~/components/cart/CheckoutSummary.vue'
+import LoadingState from '~/components/ui/LoadingState.vue'
 
 const { isAuthenticated } = useAuth()
 const route = useRoute()
@@ -18,17 +20,17 @@ const { checkout, loading, error } = isAuthenticated.value
   ? useCheckout(code)
   : { checkout: ref(null), loading: ref(false), error: ref(null) }
 
-const onPay = (gatewayKey: string) => {
-  // TODO: pay endpoint — still unconfirmed
+function onPay(payload: { gateway: string; credit: number; howToPay: 'full' | 'deposit' }) {
+  // TODO: pay endpoint — still unconfirmed (old code's $api.cart.doCheckout)
 }
 </script>
 
 <template>
-  <div class="container mx-auto p-4 md:p-8 mt-24">
-    <CartSteps :current-step="2" />
+  <div class="container mx-auto p-4 md:p-8 mt-24" dir="rtl">
+    <CartSteps :current-step="3" />
 
     <div v-if="loading" class="flex justify-center p-12">
-      <span class="loading loading-spinner loading-lg text-primary" />
+      <LoadingState v-if="loading" label="در حال دریافت اطلاعات پرداخت..." />
     </div>
 
     <div
@@ -41,6 +43,9 @@ const onPay = (gatewayKey: string) => {
       <p class="text-base-content/50">خطا در دریافت اطلاعات پرداخت</p>
     </div>
 
-    <CheckoutSummary v-else :checkout="checkout" @pay="onPay" />
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <CheckoutBookingSummary :checkout="checkout" />
+      <CheckoutSummary :checkout="checkout" @pay="onPay" />
+    </div>
   </div>
 </template>
