@@ -25,7 +25,7 @@ const colorMap: Record<ToastType, string> = {
       <div
         v-for="toast in toasts"
         :key="toast.id"
-        class="pointer-events-auto flex items-center gap-3 bg-base-100 shadow-lg rounded-2xl px-4 py-3 max-w-sm w-full"
+        class="pointer-events-auto flex items-center gap-3 bg-base-300 rounded-2xl px-4 py-3 max-w-sm w-full"
       >
         <div :class="[colorMap[toast.type], 'w-8 h-8 rounded-xl flex items-center justify-center shrink-0']">
           <component :is="iconMap[toast.type]" :size="16" />

@@ -4,6 +4,14 @@ import CartDetail from '~/components/cart/CartDetail.vue'
 import CartSteps from '~/components/cart/CartSteps.vue'
 import type { OpenHour } from '~/types/poolSingle.types'
 
+interface CheckoutSlotState {
+  selectedSlot: OpenHour
+  genderCode: 'men' | 'women'
+  serviceName: string
+}
+
+const checkoutSlotState = useState<CheckoutSlotState | null>('checkout-slot', () => null)
+
 const selectedSlot = ref<OpenHour | null>(null)
 const genderCode = ref<'men' | 'women'>('men')
 const serviceName = ref('')
@@ -16,13 +24,25 @@ const back = () => {
 
 if (import.meta.client) {
   const { state } = window.history
-  
+
   if (state?.selectedSlot) {
     selectedSlot.value = state.selectedSlot
     genderCode.value = state.genderCode || 'men'
     serviceName.value = state.serviceName || ''
+
+    // persist so a redirect (e.g. login) doesn't lose it
+    checkoutSlotState.value = {
+      selectedSlot: state.selectedSlot,
+      genderCode: state.genderCode || 'men',
+      serviceName: state.serviceName || '',
+    }
+  } else if (checkoutSlotState.value) {
+    // fallback: returning here after a redirect, history.state is gone but we saved it
+    selectedSlot.value = checkoutSlotState.value.selectedSlot
+    genderCode.value = checkoutSlotState.value.genderCode
+    serviceName.value = checkoutSlotState.value.serviceName
   } else {
-    navigateTo('/') 
+    navigateTo('/')
   }
 }
 </script>

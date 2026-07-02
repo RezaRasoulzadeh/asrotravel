@@ -20,6 +20,7 @@ interface Props {
   } | null
   modelValue?: string | null
   serviceActive?: boolean
+  poolSlug: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -134,7 +135,7 @@ function handleBuy(slot: any, genderCode: 'men' | 'women', serviceName: string) 
   navigateTo({
     path: '/cart/detail',
     state: {
-      selectedSlot: slot,
+      selectedSlot: { ...slot, slug: props.poolSlug },
       genderCode,
       serviceName
     }

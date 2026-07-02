@@ -85,11 +85,12 @@ export function useAuth() {
     user.value = null
   }
 
-  async function handleSessionExpiry() {
+async function handleSessionExpiry() {
     logout()
     useToast().error('نشست شما منقضی شده، لطفا دوباره وارد شوید')
-    await navigateTo('/login')
-  }
+    const route = useRoute()
+    await navigateTo(`/login?redirect=${encodeURIComponent(route.fullPath)}`)
+}
 
   return { token, user, isAuthenticated, fullName, sendOtp, verifyOtp, logout, handleSessionExpiry }
 }

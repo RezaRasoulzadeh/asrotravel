@@ -181,13 +181,14 @@ useHead({
     <PoolSingleHeader class="lg:pe-14" :pool="aggregatedData" :gallery="gallery" :is_vip="is_vip" />
 <!-- Calendar / Sanse Section -->
 <div id="sans-section" class="scroll-mt-20">
-  <PoolSanseCalendar
+<PoolSanseCalendar
     v-if="!is_vip && aggregatedData.services"
     :services="aggregatedData.services"
     :service-active="pool?.service_active == 1"
+    :pool-slug="aggregatedData.slug ?? slug"
     v-model="selectedSlotUuid"
     @add-to-cart="handleAddToCart"
-  />
+/>
   <VipSanseSecion
     v-else-if="is_vip && aggregatedData.services?.vip"
     :vip-services="aggregatedData.services.vip"
