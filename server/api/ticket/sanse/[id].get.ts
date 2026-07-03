@@ -4,13 +4,11 @@ import type { TicketSanse } from '~/types/ticketSingle.types'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
-
-  if (!id) return null
-
-  const encodedId = encodeURIComponent(id)
+  if (!id)
+    return null
 
   return await safeApiFetch<TicketSanse | null>(
-    `/ticket/get-sanse/${encodedId}`,
+    `/ticket/get-sanse/${encodeURIComponent(id)}`,
     {},
     null,
   )

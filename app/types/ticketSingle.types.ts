@@ -156,9 +156,9 @@ export interface TicketServiceItem {
   updated_at: string
 }
 
-export type TicketServicesByGender = Record<string, TicketServiceItem[]>
-export type TicketServiceCategory = TicketServicesByGender[]
-export type TicketServices = Record<string, TicketServiceCategory>
+export type TicketServicesByGender = Readonly<Record<string, readonly TicketServiceItem[]>>
+export type TicketServiceCategory = readonly TicketServicesByGender[]
+export type TicketServices = Readonly<Record<string, TicketServiceCategory>>
 
 export interface TicketSanse {
   id: number

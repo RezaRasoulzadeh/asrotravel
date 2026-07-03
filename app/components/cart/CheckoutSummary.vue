@@ -1,18 +1,22 @@
 <!-- app/components/cart/CheckoutSummary.vue -->
 <script setup lang="ts">
-import { Landmark } from 'lucide-vue-next'
+import { Landmark, Loader2 } from 'lucide-vue-next'
 import type { CheckoutResponse } from '~/types/checkout.types'
 
 interface Props {
   checkout: CheckoutResponse
+  loading?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  loading: false
+})
+
 const emit = defineEmits<{ pay: [payload: { gateway: string; credit: number; howToPay: 'full' | 'deposit' }] }>()
 
 const { user } = useAuth()
 
-const { statusHtml, primaryStatusMessage, accessToPaid, countdownDisplay, countdownExpired } =
+const { primaryStatusMessage, accessToPaid, countdownDisplay, countdownExpired, statusLoading } =
   useBookingStatus(props.checkout.booking.booking_code)
 
 const selectedGateway = ref<string | null>(
@@ -48,7 +52,7 @@ const remainingAfterWallet = computed(() => payableTotal.value - walletCredit.va
 const needsGateway = computed(() => remainingAfterWallet.value > 0)
 
 const payDisabled = computed(() =>
-  !accessToPaid.value || (needsGateway.value && !selectedGateway.value)
+  statusLoading.value || !accessToPaid.value || (needsGateway.value && !selectedGateway.value) || props.loading
 )
 
 function onPayClick() {
@@ -79,7 +83,6 @@ function onPayClick() {
         <span class="text-sm text-base-content/70">کد تخفیف دارید؟</span>
         <input v-model="hasDiscountCode" type="checkbox" class="toggle toggle-primary toggle-sm" disabled>
       </label>
-      <!-- TODO: offer-code input + submit — needs the real endpoint before this can be functional -->
     </div>
 
     <div class="bg-base-100 rounded-3xl border border-base-300 p-6 shadow-sm">
@@ -122,7 +125,7 @@ function onPayClick() {
           <label
             v-for="(gateway, key) in checkout.gateways"
             :key="key"
-            class="flex flex-col items-center justify-center gap-1 border rounded-xl w-24 h-24 cursor-pointer transition-colors"
+            class="flex flex-col items-center justify-center gap-1 border rounded-xl w-24 h-24 cursor-pointer transition-colors p-1"
             :class="selectedGateway === key ? 'border-primary border-2 text-primary shadow-sm shadow-primary/30' : 'border-base-300'"
           >
             <input v-model="selectedGateway" type="radio" :value="key" class="hidden">
@@ -130,7 +133,7 @@ function onPayClick() {
               v-if="gateway.logo"
               :src="gateway.logo"
               :alt="gateway.name"
-              class="rounded-xl h-full object-contain p-2"
+              class="rounded-lg h-full bg-white object-contain"
             >
             <template v-else>
               <Landmark class="size-6 text-base-content/50" />
@@ -145,17 +148,23 @@ function onPayClick() {
         :disabled="payDisabled"
         @click="onPayClick"
       >
-        پرداخت و دریافت رسید
+        <Loader2 v-if="loading || statusLoading" class="animate-spin ml-2 h-5 w-5" />
+        {{ statusLoading ? 'در حال بررسی وضعیت رزرو...' : (loading ? 'در حال پردازش...' : 'پرداخت و دریافت رسید') }}
       </button>
 
-      <div v-if="primaryStatusMessage" class="mt-4 text-sm text-primary bg-primary/10 rounded-xl px-3 py-2 text-center">
-    {{ primaryStatusMessage }}
-</div>
+      <div v-if="loading" class="mt-3 flex items-center justify-center gap-2 text-sm text-base-content/70">
+        <Loader2 class="w-4 h-4 animate-spin text-primary" />
+        <span>در حال انتقال به درگاه پرداخت، لطفاً منتظر بمانید...</span>
+      </div>
 
-      <div v-if="countdownDisplay" class="flex justify-center mt-3">
+      <div v-if="primaryStatusMessage" class="mt-4 text-sm text-primary bg-primary/10 rounded-xl px-3 py-2 text-center">
+        {{ primaryStatusMessage }}
+      </div>
+
+      <div v-if="countdownDisplay && !statusLoading" class="flex justify-center mt-3">
         <span class="font-mono text-lg font-bold text-warning">{{ countdownDisplay }}</span>
       </div>
-      <div v-else-if="countdownExpired" class="flex justify-center mt-3">
+      <div v-else-if="countdownExpired && !statusLoading" class="flex justify-center mt-3">
         <span class="text-sm text-error font-medium">مهلت پرداخت به اتمام رسید</span>
       </div>
     </div>

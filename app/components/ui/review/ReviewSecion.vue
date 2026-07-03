@@ -3,6 +3,7 @@
 import { Star, LogIn, MessageSquarePlus, WifiOff, MessageSquareOff, Send, Loader2 } from 'lucide-vue-next'
 import { useReviews } from '~/composables/useReviews';
 import type { ReviewListParams } from '~/types/review.types'
+import { safeApiFetch } from '~/utils/api'
 
 const route = useRoute()
 
@@ -11,7 +12,7 @@ const props = defineProps<{
 }>()
 
 const { data, loading, error, currentPage, goToPage } = useReviews(props.params)
-const { isAuthenticated, user, authHeaders } = useAuth()
+const { isAuthenticated, user, token } = useAuth()
 
 function toPersian(val: number | string | undefined | null): string {
   if (val === undefined || val === null) return ''
@@ -95,38 +96,56 @@ function resetForm() {
 
 async function submitReview() {
   if (!isFormValid() || submitLoading.value) return
-  submitError.value   = ''
+
+  submitError.value = ''
   submitLoading.value = true
 
   const reviewStats: Record<string, number> = {}
-  criteriaKeys.forEach(k => { reviewStats[k] = starRatings.value[k] })
+  criteriaKeys.forEach(k => {
+    reviewStats[k] = starRatings.value[k]
+  })
 
   if (serviceType.value === 'Pool') {
-    reviewStats['کیفیت خدمات']    = starRatings.value.Service
-    reviewStats['نظافت مجموعه']   = starRatings.value.Organization
+    reviewStats['کیفیت خدمات'] = starRatings.value.Service
+    reviewStats['نظافت مجموعه'] = starRatings.value.Organization
     reviewStats['برخورد کارکنان'] = starRatings.value.Friendliness
   }
 
-  try {
-    await $fetch('/api/review/add', {
-      method: 'POST',
-      headers: authHeaders(),
-      body: {
-        review_service_type: props.params.object_model,
-        review_service_id:   props.params.object_id,
-        review_stats:        reviewStats,
-        review_title:        reviewTitle.value.trim(),
-        review_content:      reviewContent.value.trim(),
-        photo: [''],
-      },
-    })
-    submitSuccess.value = true
-    resetForm()
-  } catch (e: any) {
-    submitError.value = e?.data?.message ?? 'خطا در ارسال نظر'
-  } finally {
+  const { data, error, status } = await safeApiFetch<{
+    status: number
+    message: string
+  }>('/api/review/add', {
+    method: 'POST',
+    headers: token.value
+  ? {
+      authorization: `Bearer ${token.value}`,
+    }
+  : {},
+    body: {
+      review_service_type: props.params.object_model,
+      review_service_id: props.params.object_id,
+      review_stats: reviewStats,
+      review_title: reviewTitle.value.trim(),
+      review_content: reviewContent.value.trim(),
+      photo: [''],
+    },
+  })
+
+  console.log('review/add', {
+    status,
+    error,
+    data,
+  })
+
+  if (error) {
+    submitError.value = error
     submitLoading.value = false
+    return
   }
+
+  submitSuccess.value = true
+  resetForm()
+  submitLoading.value = false
 }
 </script>
 

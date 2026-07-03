@@ -20,8 +20,19 @@ const { checkout, loading, error } = isAuthenticated.value
   ? useCheckout(code)
   : { checkout: ref(null), loading: ref(false), error: ref(null) }
 
-function onPay(payload: { gateway: string; credit: number; howToPay: 'full' | 'deposit' }) {
-  // TODO: pay endpoint — still unconfirmed (old code's $api.cart.doCheckout)
+const isPaying = ref(false)
+
+async function onPay(payload: { gateway: string; credit: number; howToPay: 'full' | 'deposit' }) {
+  if (isPaying.value) return
+  isPaying.value = true
+
+  try {
+    await new Promise(resolve => setTimeout(resolve, 2000))
+  } catch (err) {
+    useToast().error('خطا در ارتباط با سرور')
+  } finally {
+    isPaying.value = false
+  }
 }
 </script>
 
@@ -45,7 +56,7 @@ function onPay(payload: { gateway: string; credit: number; howToPay: 'full' | 'd
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <CheckoutBookingSummary :checkout="checkout" />
-      <CheckoutSummary :checkout="checkout" @pay="onPay" />
+      <CheckoutSummary :checkout="checkout" :loading="isPaying" @pay="onPay" />
     </div>
   </div>
 </template>

@@ -31,7 +31,7 @@ const totalPriceRial = computed(() => pricePerUnitRial.value * quantity.value)
 const totalOriginPriceRial = computed(() => originPricePerUnitRial.value * quantity.value)
 const totalSavingsRial = computed(() => totalOriginPriceRial.value - totalPriceRial.value)
 
-const maxCapacity = computed(() => props.selectedSlot.number || 10)
+const maxCapacity = computed(() => props.selectedSlot.number || 1000)
 
 const increase = () => {
     if (quantity.value < maxCapacity.value) {
@@ -137,9 +137,9 @@ const checkout = async () => {
                 <div class="flex justify-between items-center px-2">
                     <span class="text-base-content/70">سود شما از این رزرو:</span>
                     <div class="flex items-center gap-2">
-                        <span v-if="offerPercent > 0" class="badge badge-error badge-sm text-white font-mono">{{
+                        <span v-if="offerPercent > 0" class="badge badge-success badge-sm text-white font-mono">{{
                             offerPercent }}%</span>
-                        <span class="text-error font-bold">{{ formatPrice(totalSavingsRial) }}</span>
+                        <span class="text-success font-bold">{{ formatPrice(totalSavingsRial) }}</span>
                     </div>
                 </div>
 

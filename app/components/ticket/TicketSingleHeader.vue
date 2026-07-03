@@ -4,45 +4,70 @@ import {
   MapPin, RefreshCw, Calendar,
   Heart, Bell, Share2, Compass,
   Star, Maximize2, Info, ChevronRight, ChevronLeft,
-  LayoutGrid, AlertTriangle, ChevronDown, Minus, Plus,
-  ShoppingCart, Ticket,
+  LayoutGrid, AlertTriangle, ChevronDown,
+  TicketIcon, Users
 } from 'lucide-vue-next'
 import { formatPrice } from '~/utils/price'
-import type { GalleryImage, TicketSanse, TicketCartItem } from '~/types/ticketSingle.types'
 import FullscreenImageViewer from '~/components/ui/FullscreenImageViewer.vue'
-
-interface FlatService {
-  categoryName: string
-  genderGroup: string
-  item: any
-}
+import type { GalleryImage, Ticket, TicketSanse } from '~/types/ticketSingle.types'
 
 const props = defineProps<{
-  ticket: any
+  ticket: Ticket
+  sanse?: TicketSanse | null
   gallery: GalleryImage[]
-  sanse: TicketSanse | null
   sanseLoading?: boolean
 }>()
 
-const emit = defineEmits<{
-  (e: 'add-to-cart', item: TicketCartItem): void
-}>()
+const serviceCategories = computed(() => {
+  const cats: string[] = []
+  const services = props.sanse?.services?.ticket
+  if (!services) return cats
+
+  for (const category of Object.values(services)) {
+    if (!Array.isArray(category)) continue
+
+    for (const genderGroup of category) {
+      for (const gender of Object.keys(genderGroup)) {
+        if (!cats.includes(gender))
+          cats.push(gender)
+      }
+    }
+  }
+
+  return cats
+})
 
 const allImages = computed(() => {
   const list: string[] = []
-  props.gallery?.forEach(img => {
-    if (img?.image_url && !list.includes(img.image_url)) list.push(img.image_url)
+
+  props.gallery.forEach((img) => {
+    if (img.image_url && !list.includes(img.image_url))
+      list.push(img.image_url)
   })
-  if (!list.length) list.push('/placeholder.png')
+
+  if (!list.length)
+    list.push('/placeholder.png')
+
   return list
 })
 
 const activeImageIdx = ref(0)
 const isViewerOpen = ref(false)
-const activeImageUrl = computed(() => allImages.value[activeImageIdx.value] ?? '/images/ticket-placeholder.jpg')
 
-const nextImage = () => { activeImageIdx.value = (activeImageIdx.value + 1) % allImages.value.length }
-const prevImage = () => { activeImageIdx.value = (activeImageIdx.value - 1 + allImages.value.length) % allImages.value.length }
+const activeImageUrl = computed(
+  () => allImages.value[activeImageIdx.value] ?? '/images/ticket-placeholder.jpg',
+)
+
+const nextImage = () => {
+  if (!allImages.value.length) return
+  activeImageIdx.value = (activeImageIdx.value + 1) % allImages.value.length
+}
+
+const prevImage = () => {
+  if (!allImages.value.length) return
+  activeImageIdx.value =
+    (activeImageIdx.value - 1 + allImages.value.length) % allImages.value.length
+}
 
 const thumbsContainer = ref<HTMLElement | null>(null)
 const canScrollStart = ref(false)
@@ -50,20 +75,25 @@ const canScrollEnd = ref(false)
 
 const onThumbsScroll = () => {
   const el = thumbsContainer.value
-  if (el == null) return
+  if (!el) return
+
   const sl = el.scrollLeft
   canScrollStart.value = sl < -4
   canScrollEnd.value = sl > -(el.scrollWidth - el.clientWidth - 4)
 }
 
 const scrollThumbs = (dir: 'start' | 'end') => {
-  thumbsContainer.value?.scrollBy({ left: dir === 'start' ? 200 : -200, behavior: 'smooth' })
+  thumbsContainer.value?.scrollBy({
+    left: dir === 'start' ? 200 : -200,
+    behavior: 'smooth',
+  })
 }
 
 onMounted(() => {
   nextTick(() => {
     const el = thumbsContainer.value
-    if (el == null) return
+    if (!el) return
+
     onThumbsScroll()
     canScrollEnd.value = el.scrollWidth > el.clientWidth
   })
@@ -76,118 +106,64 @@ const termsContainer = ref<HTMLElement | null>(null)
 const termsHasOverflow = ref(false)
 
 onMounted(() => {
-  if (termsContainer.value == null) return
+  if (!termsContainer.value) return
+
   const observer = new ResizeObserver(() => {
     const el = termsContainer.value
-    if (el) termsHasOverflow.value = el.scrollHeight > el.clientHeight
+    if (el)
+      termsHasOverflow.value = el.scrollHeight > el.clientHeight
   })
+
   observer.observe(termsContainer.value)
 })
 
 const openGoogleMap = () => {
-  if (props.ticket?.map_lat == null || props.ticket?.map_lng == null) return
-  window.open(`https://www.google.com/maps/search/?api=1&query=$${props.ticket.map_lat},${props.ticket.map_lng}`, '_blank')
+  if (!props.ticket.map_lat || !props.ticket.map_lng) return
+
+  window.open(
+    `https://www.google.com/maps/search/?api=1&query=${props.ticket.map_lat},${props.ticket.map_lng}`,
+    '_blank',
+  )
+}
+
+const scrollToTickets = () => {
+  const element = document.getElementById('tickets-section')
+  if (!element) return
+
+  const headerOffset = 100
+  const offsetPosition =
+    element.getBoundingClientRect().top + window.scrollY - headerOffset
+
+  window.scrollTo({
+    top: offsetPosition,
+    behavior: 'smooth',
+  })
 }
 
 const ceiledOfferPercent = computed(() =>
-  props.ticket?.max_offer_percent ? Math.ceil(props.ticket.max_offer_percent) : 0
+  props.ticket.max_offer_percent
+    ? Math.ceil(props.ticket.max_offer_percent)
+    : 0,
 )
 
 const ratingStars = computed(() => {
-  const score = props.ticket?.review_score ? Math.round(Number(props.ticket.review_score)) : 5
+  const score = props.ticket.review_score
+    ? Math.round(Number(props.ticket.review_score))
+    : 5
+
   return Math.min(Math.max(score, 1), 5)
 })
 
-const flatServices = computed<FlatService[]>(() => {
-  const result: FlatService[] = []
-  const services = props.sanse?.services?.ticket
-  if (services == null) return result
-  for (const [catName, catGroups] of Object.entries(services)) {
-    if (!Array.isArray(catGroups)) continue
-    for (const genderMap of catGroups) {
-      for (const [genderName, items] of Object.entries(genderMap as Record<string, any[]>)) {
-        for (const item of items) {
-          result.push({ categoryName: catName, genderGroup: genderName, item })
-        }
-      }
-    }
-  }
-  return result
-})
-
-const quantities = ref<Record<number, number>>({})
-
-const getQty = (id: number) => quantities.value[id] ?? 1
-const maxQty = (item: any) => Math.min(Number(item.service_features?.max ?? 10), 99)
-
-const increment = (id: number, item: any) => {
-  const max = maxQty(item)
-  quantities.value[id] = Math.min((quantities.value[id] ?? 1) + 1, max)
-}
-
-const decrement = (id: number) => {
-  quantities.value[id] = Math.max((quantities.value[id] ?? 1) - 1, 1)
-}
-
-watch(flatServices, (services) => {
-  for (const fs of services) {
-    const id = fs.item.service_features?.id ?? fs.item.id
-    if (!(id in quantities.value)) {
-      quantities.value[id] = 1
-    }
-  }
-}, { immediate: true })
-
-const totalItems = computed(() =>
-  Object.values(quantities.value).reduce((s, v) => s + v, 0)
-)
-
-const totalPrice = computed(() => {
-  let sum = 0
-  for (const fs of flatServices.value) {
-    const id = fs.item.service_features?.id ?? fs.item.id
-    const qty = getQty(id)
-    const unitPrice = fs.item.sale_price ?? fs.item.price ?? 0
-    sum += unitPrice * qty
-  }
-  return sum
-})
-
-const totalPriceDisplay = computed(() =>
-  totalPrice.value > 0 ? (totalPrice.value / 10).toLocaleString('fa-IR') + ' تومان' : null
-)
-
-function handleAddToCart() {
-  for (const fs of flatServices.value) {
-    const featureId = fs.item.service_features?.id ?? fs.item.id
-    const qty = getQty(featureId)
-    const unitPrice = fs.item.sale_price ?? fs.item.price ?? 0
-    const total = unitPrice * qty
-    emit('add-to-cart', {
-      serviceId: fs.item.id,
-      serviceFeatureId: featureId,
-      ticketId: props.ticket.id,
-      categoryName: fs.categoryName,
-      genderGroup: fs.genderGroup,
-      serviceName: fs.item.service_features?.name ?? fs.categoryName,
-      quantity: qty,
-      unitPrice,
-      totalPrice: total,
-      priceDisplay: (unitPrice / 10).toLocaleString('fa-IR') + ' تومان',
-      totalPriceDisplay: (total / 10).toLocaleString('fa-IR') + ' تومان',
-    })
-  }
-}
-
 const displayPrice = computed(() =>
-  props.sanse?.price_with_offer_display ||
-  props.sanse?.min_price_display ||
-  props.ticket?.min_price_display ||
-  (props.ticket?.min_price ? formatPrice(props.ticket.min_price) : null)
+  props.sanse?.price_with_offer_display
+  ?? props.sanse?.min_price_display
+  ?? (props.ticket.min_price ? formatPrice(props.ticket.min_price) : null),
 )
 
 const originalPrice = computed(() =>
-  ceiledOfferPercent.value > 0 ? (props.sanse?.min_price_display || props.ticket?.min_price_display || null) : null
+  ceiledOfferPercent.value > 0
+    ? (props.sanse?.min_price_display ?? null)
+    : null,
 )
 </script>
 
@@ -199,7 +175,7 @@ const originalPrice = computed(() =>
       <div @click="isViewerOpen = true"
         class="w-full aspect-video rounded-3xl overflow-hidden bg-base-200 shadow-xs relative group cursor-zoom-in">
         <img :src="activeImageUrl" :alt="ticket.title"
-          class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103" />
+          class="w-full h-full object-cover hero-img transition-transform duration-500 group-hover:scale-103" />
 
         <div
           class="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -315,6 +291,17 @@ const originalPrice = computed(() =>
           class="inline-flex items-center gap-1 text-[11px] font-medium bg-blue-500/10 text-blue-600 px-2.5 py-1 rounded-full">❄️ زمستان</span>
       </div>
 
+      <div v-if="serviceCategories.length" class="space-y-2">
+        <h3 class="text-xs font-bold text-base-content/50">نوع سرویس:</h3>
+        <div class="flex flex-wrap gap-2">
+          <div v-for="cat in serviceCategories" :key="cat"
+            class="inline-flex items-center gap-1 bg-primary/10 text-primary px-3 py-1.5 rounded-xl text-[11px] font-medium">
+            <Users class="size-3" />
+            {{ cat }}
+          </div>
+        </div>
+      </div>
+
       <div v-if="ticket?.terms?.length" class="space-y-2">
         <div class="flex items-center justify-between">
           <h3 class="text-xs font-bold text-base-content/50 flex items-center gap-1">
@@ -350,72 +337,14 @@ const originalPrice = computed(() =>
       </div>
 
       <div class="mt-auto pt-4 border-t border-base-200 space-y-4">
-
+        
         <template v-if="sanseLoading">
           <div class="space-y-2 animate-pulse">
             <div class="h-4 bg-base-300 rounded w-1/3"></div>
             <div class="h-12 bg-base-300 rounded-2xl w-full"></div>
           </div>
         </template>
-
-        <template v-else-if="flatServices.length">
-          <div class="space-y-2">
-            <h3 class="text-xs font-bold text-base-content/50 flex items-center gap-1">
-              <Ticket class="size-3" />
-              انتخاب بلیت:
-            </h3>
-
-            <div v-for="fs in flatServices" :key="fs.item.service_features?.id ?? fs.item.id"
-              class="flex items-center justify-between gap-3 bg-base-200/60 hover:bg-base-200 transition-colors rounded-2xl px-4 py-3">
-              <div class="flex-1 min-w-0">
-                <p class="text-xs font-semibold text-base-content truncate">{{ fs.item.service_features?.name || fs.categoryName }}</p>
-                <div class="flex items-center gap-1.5 mt-0.5">
-                  <span v-if="fs.item.offer_percent > 0"
-                    class="text-[10px] text-base-content/40 line-through">{{ (fs.item.price / 10).toLocaleString('fa-IR') }} تومان</span>
-                  <span class="text-[11px] font-bold text-primary">{{ (fs.item.sale_price / 10).toLocaleString('fa-IR') }} تومان</span>
-                  <span v-if="fs.genderGroup !== 'هر دو'"
-                    class="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{{ fs.genderGroup }}</span>
-                </div>
-              </div>
-              <div class="flex items-center gap-1 shrink-0">
-                <button
-                  @click="decrement(fs.item.service_features?.id ?? fs.item.id)"
-                  :disabled="getQty(fs.item.service_features?.id ?? fs.item.id) <= 1"
-                  class="w-8 h-8 rounded-xl bg-base-300 hover:bg-base-content/20 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors cursor-pointer">
-                  <Minus class="size-3.5" />
-                </button>
-                <span class="w-8 text-center text-sm font-bold tabular-nums">
-                  {{ getQty(fs.item.service_features?.id ?? fs.item.id).toLocaleString('fa-IR') }}
-                </span>
-                <button
-                  @click="increment(fs.item.service_features?.id ?? fs.item.id, fs.item)"
-                  :disabled="getQty(fs.item.service_features?.id ?? fs.item.id) >= maxQty(fs.item)"
-                  class="w-8 h-8 rounded-xl bg-primary/15 hover:bg-primary/25 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors cursor-pointer text-primary">
-                  <Plus class="size-3.5" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="space-y-1 text-center lg:text-right">
-            <div v-if="originalPrice" class="text-xs text-base-content/50 font-medium">
-              ارزش واقعی: <span class="line-through mr-1">{{ originalPrice }}</span>
-            </div>
-            <div class="text-sm font-bold">
-              مجموع پرداختی:
-              <span class="text-xl lg:text-2xl font-black text-primary mx-1">{{ totalPriceDisplay }}</span>
-              <span class="text-xs text-base-content/40 font-normal">({{ totalItems.toLocaleString('fa-IR') }} بلیت)</span>
-            </div>
-          </div>
-
-          <button @click="handleAddToCart"
-            :disabled="ticket?.service_active === 0"
-            class="btn btn-primary w-full rounded-xl h-11 font-bold shadow-xs cursor-pointer disabled:bg-base-300 disabled:text-base-content/40 disabled:border-transparent disabled:cursor-not-allowed gap-2">
-            <ShoppingCart class="size-4" />
-            {{ ticket?.service_active === 0 ? 'غیر قابل رزرو/خرید' : 'افزودن به سبد خرید' }}
-          </button>
-        </template>
-
+        
         <template v-else>
           <div class="space-y-1 text-center lg:text-right">
             <div v-if="originalPrice" class="text-xs text-base-content/50 font-medium">
@@ -428,9 +357,10 @@ const originalPrice = computed(() =>
               </span>
             </div>
           </div>
-          <button disabled
-            class="btn btn-primary w-full rounded-xl h-11 font-bold shadow-xs disabled:bg-base-300 disabled:text-base-content/40 disabled:border-transparent disabled:cursor-not-allowed">
-            غیر قابل رزرو/خرید
+
+          <button @click="scrollToTickets" :disabled="ticket?.service_active === 0"
+            class="btn btn-primary w-full rounded-xl h-11 font-bold shadow-xs cursor-pointer disabled:bg-base-300 disabled:text-base-content/40 disabled:border-transparent disabled:cursor-not-allowed gap-2">
+            {{ ticket?.service_active === 0 ? 'غیر قابل رزرو/خرید' : 'انتخاب و خرید بلیت' }}
           </button>
         </template>
 
@@ -444,7 +374,7 @@ const originalPrice = computed(() =>
             <span class="text-[11px] font-medium leading-tight">اعتبار تا پایان سال</span>
           </div>
           <div class="flex flex-col items-center gap-1.5 text-base-content/60">
-            <Ticket class="w-5 h-5 text-primary" />
+            <TicketIcon class="w-5 h-5 text-primary" />
             <span class="text-[11px] font-medium leading-tight">صدور و استفاده آنی</span>
           </div>
           <div class="flex flex-col items-center gap-1.5 text-base-content/60">
@@ -467,4 +397,5 @@ const originalPrice = computed(() =>
 <style scoped>
 .scrollbar-none::-webkit-scrollbar { display: none; }
 .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+.dir-ltr { direction: ltr; text-align: right; }
 </style>

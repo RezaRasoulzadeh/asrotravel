@@ -1,6 +1,7 @@
 // server/api/dashboard/bookings.get.ts
-import type { BookingObjectModel, BookingStatus, BookingTab, DashboardBookingsResponse } from '~/types/dashboardBookings.types'
+import type { BookingObjectModel, BookingStatus, BookingTab, DashboardBookingsDtoResponse, DashboardBookingsResponse } from '~/types/dashboardBookings.types'
 
+// TODO: filter param name + casing unconfirmed — verify via Network tab.
 const TAB_TO_MODEL: Record<BookingTab, BookingObjectModel> = {
   pool: 'Pool',
   hotel: 'Hotel', 
@@ -21,7 +22,7 @@ export default defineEventHandler(async (event) => {
     perPage: 10,
   }
 
-  return safeAuthApiFetch<DashboardBookingsResponse>(
+  const raw = await safeAuthApiFetch<DashboardBookingsResponse>(
     event,
     '/booking/list',
     {
@@ -33,4 +34,14 @@ export default defineEventHandler(async (event) => {
     },
     fallback,
   )
+
+  const dto: DashboardBookingsDtoResponse = {
+    total: raw.total,
+    totalPages: raw.totalPages,
+    currentPage: raw.currentPage,
+    perPage: raw.perPage,
+    data: raw.data.map(mapBookingToDto),
+  }
+
+  return dto
 })

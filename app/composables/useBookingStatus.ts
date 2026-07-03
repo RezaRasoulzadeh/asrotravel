@@ -17,16 +17,17 @@ export function useBookingStatus(code: MaybeRefOrGetter<string>) {
   const countdownExpired = ref(false)
   const connected = ref(false)
   const primaryStatusMessage = ref('')
+  const statusLoading = ref(true)
 
   let socket: Socket | null = null
   let timer: ReturnType<typeof setInterval> | null = null
   let remainingSeconds = 0
 
-function formatCountdown(seconds: number): string {
+  function formatCountdown(seconds: number): string {
     const m = Math.floor(seconds / 60)
     const s = seconds - m * 60
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
-}
+  }
 
   function stopCountdown() {
     if (timer) {
@@ -50,15 +51,18 @@ function formatCountdown(seconds: number): string {
     }, 1000)
   }
 
-function handleBookingStatus(data: BookingStatusData) {
+  function handleBookingStatus(data: BookingStatusData) {
+    statusLoading.value = false
     statusHtml.value = data.html
     primaryStatusMessage.value = extractPrimaryMessage(data.html)
     accessToPaid.value = !!data.access_to_paid
+
     function extractPrimaryMessage(html: string): string {
-    if (!import.meta.client) return ''
-    const parsed = new DOMParser().parseFromString(html, 'text/html')
-    return parsed.querySelector('div > div')?.textContent?.trim() ?? ''
-}
+      if (!import.meta.client) return ''
+      const parsed = new DOMParser().parseFromString(html, 'text/html')
+      return parsed.querySelector('div > div')?.textContent?.trim() ?? ''
+    }
+
     stopCountdown()
 
     if (!data.need_offline_accept) {
@@ -102,7 +106,7 @@ function handleBookingStatus(data: BookingStatusData) {
     socket?.disconnect()
   })
 
-return {
+  return {
     statusHtml,
     primaryStatusMessage,
     accessToPaid,
@@ -110,5 +114,6 @@ return {
     countdownDisplay,
     countdownExpired,
     connected,
-}
+    statusLoading,
+  }
 }

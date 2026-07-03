@@ -1,6 +1,7 @@
 <!-- app/components/cart/CheckoutBookingSummary.vue -->
 <script setup lang="ts">
-import { MapPin, Clock } from 'lucide-vue-next'
+import { computed } from 'vue'
+import { Clock, CalendarDays } from 'lucide-vue-next'
 import type { CheckoutResponse } from '~/types/checkout.types'
 import { formatPrice } from '~/utils/price'
 
@@ -8,7 +9,14 @@ interface Props {
   checkout: CheckoutResponse
 }
 
-defineProps<Props>()
+const { checkout } = defineProps<Props>()
+
+function toFaDigitsInString(str: string): string {
+  const digits = Array.from({ length: 10 }, (_, i) => i.toLocaleString('fa-IR'))
+  return str.replace(/\d/g, d => digits[Number(d)] ?? d)
+}
+
+const formattedTime = computed(() => checkout.service.time_display ? toFaDigitsInString(checkout.service.time_display) : null)
 </script>
 
 <template>
@@ -22,10 +30,10 @@ defineProps<Props>()
       <div class="flex items-center justify-between pb-4 border-b border-base-300 mb-4">
         <span class="text-sm text-base-content/60 flex items-center gap-1.5">
           <Clock class="size-4" />
-          ساعت: {{ checkout.service.time_display }}
+          ساعت: {{ formattedTime}}
         </span>
         <span class="text-sm text-base-content/60 flex items-center gap-1.5">
-          <MapPin class="size-4" />
+          <CalendarDays class="size-4" />
           {{ checkout.service.date_display }}
         </span>
       </div>
@@ -48,7 +56,7 @@ defineProps<Props>()
 
         <div class="flex justify-between items-center">
           <span class="text-base-content/60">تخفیف/هدیه:</span>
-          <span class="font-medium text-error">{{ checkout.booking.offer_display }}</span>
+          <span class="font-medium text-success">{{ checkout.booking.offer_display }}</span>
         </div>
 
         <div class="flex justify-between items-center pt-3 border-t border-base-300">
