@@ -1,10 +1,9 @@
 // server/api/dashboard/bookings.get.ts
-import type { BookingObjectModel, BookingTab, DashboardBookingsResponse } from '~/types/dashboardBookings.types'
+import type { BookingObjectModel, BookingStatus, BookingTab, DashboardBookingsResponse } from '~/types/dashboardBookings.types'
 
-// TODO: filter param name + casing unconfirmed — verify via Network tab.
 const TAB_TO_MODEL: Record<BookingTab, BookingObjectModel> = {
   pool: 'Pool',
-  hotel: 'Hotel', // unused — Hotel tab is disabled in the UI for now
+  hotel: 'Hotel', 
   ticket: 'Ticket',
 }
 
@@ -12,6 +11,7 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const tab = (typeof query.tab === 'string' && query.tab in TAB_TO_MODEL ? query.tab : 'pool') as BookingTab
   const page = Number(query.page) > 0 ? Number(query.page) : 1
+  const status = typeof query.status === 'string' && query.status ? (query.status as BookingStatus) : undefined
 
   const fallback: DashboardBookingsResponse = {
     total: 0,
@@ -24,7 +24,13 @@ export default defineEventHandler(async (event) => {
   return safeAuthApiFetch<DashboardBookingsResponse>(
     event,
     '/booking/list',
-    { query: { service: TAB_TO_MODEL[tab], page } },
+    {
+      query: {
+        service: TAB_TO_MODEL[tab],
+        page,
+        ...(status ? { status } : {}), // TODO: unconfirmed the API even honors this
+      },
+    },
     fallback,
   )
 })
