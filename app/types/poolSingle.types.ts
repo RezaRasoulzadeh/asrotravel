@@ -376,6 +376,36 @@ export type SanseService = TicketSanseService | VipSanseService
 
 export type SanseCategoryMap = Record<string, Array<Record<string, SanseService[]>>>
 export type VipCategoryMap   = Record<string, Array<Record<string, VipSanseService[]>>>
+
+export interface VipChangeDateSlot {
+  uuid: string
+  name: string
+  sans_period: number
+  active: number
+  event: string
+  title: string
+  price_html: string
+  number: number
+  en_date: string
+  start: string
+  end: string
+  time_display: string
+  day: { day_name: string; day_date: string }
+  date_display: string
+  service_id: number
+  service_type: string
+  id: number
+  classNames: string[]
+  eventClassNames?: string[]
+  price: string
+  offer: string
+  offer_unit: string
+  price_per_hour: string
+  price_per_day: string
+  price_per_sans: string
+  backgroundColor: string
+  eventBorderColor: string
+}
 export type TicketCategoryMap = Record<string, Array<Record<string, TicketSanseService[]>>>
 export interface PoolSingleWithSanse extends PoolSingle {
   services?: PoolSanseResponse['services'] | null

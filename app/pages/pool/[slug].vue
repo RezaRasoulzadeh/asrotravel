@@ -55,7 +55,15 @@ const is_vip = computed(() => {
 const selectedSlotUuid = ref<string | null>(null)
 
 function handleAddToCart(slot: OpenHour & { gender: 'men' | 'women'; serviceName: string }) {
-  console.log('add to cart', slot)
+  const { gender, serviceName, ...selectedSlot } = slot
+  navigateTo({
+    path: '/cart/detail',
+    state: {
+      selectedSlot,
+      genderCode: gender,
+      serviceName,
+    },
+  })
 }
 
 useSeoMeta({

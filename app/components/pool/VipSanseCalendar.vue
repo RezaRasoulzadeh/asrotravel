@@ -1,37 +1,9 @@
 // components/pool/VipSanseCalendar.vue
 <script setup lang="ts">
 import { CalendarDays, Clock, WifiOff, SearchX, RefreshCw, Tag, CheckCircle2, Ban, Loader, ChevronRight, ChevronLeft } from 'lucide-vue-next'
-import type { VipSanseService } from '~/types/poolSingle.types'
+import type { VipSanseService, VipChangeDateSlot } from '~/types/poolSingle.types'
 
-interface SansSlot {
-  uuid: string
-  name: string
-  sans_period: number
-  active: number
-  event: string
-  title: string
-  price_html: string
-  number: number
-  en_date: string
-  start: string
-  end: string
-  time_display: string
-  day: { day_name: string; day_date: string }
-  date_display: string
-  service_id: number
-  service_type: string
-  id: number
-  classNames: string[]
-  eventClassNames?: string[]
-  price: string
-  offer: string
-  offer_unit: string
-  price_per_hour: string
-  price_per_day: string
-  price_per_sans: string
-  backgroundColor: string
-  eventBorderColor: string
-}
+type SansSlot = VipChangeDateSlot
 
 interface DayTab {
   isoDate: string
@@ -104,13 +76,21 @@ async function fetchSlots() {
     const windowStart = new Date(iranTodayStart().getTime() + weekOffset.value * weekMs)
     const windowEnd = new Date(windowStart.getTime() + weekMs)
 
-    const url = `https://api.asrotravel.com/api/pool/vip-chnage-date/${props.service.id}?start=${encodeURIComponent(toIranISO(windowStart))}&end=${encodeURIComponent(toIranISO(windowEnd))}`
+    const result = await safeApiFetch<SansSlot[]>(
+      `/api/pool/${props.service.id}/vip-change-date`,
+      {
+        query: {
+          start: toIranISO(windowStart),
+          end: toIranISO(windowEnd),
+        },
+        signal,
+      },
+    )
 
-    const res = await fetch(url, { signal })
-    if (!res.ok) throw new Error(`خطای سرور: ${res.status}`)
+    if (signal.aborted) return
+    if (result.error) throw new Error(result.error)
 
-    const data: SansSlot[] = await res.json()
-    allSlots.value = Array.isArray(data) ? data : []
+    allSlots.value = Array.isArray(result.data) ? result.data : []
 
     const firstDay = groupDays(allSlots.value)[0]?.isoDate ?? ''
     if (firstDay) selectedDay.value = firstDay

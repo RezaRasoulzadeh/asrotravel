@@ -1,115 +1,340 @@
-# Asro — Nuxt 4 SSR Migration: Conventions Reference
+# Asro Travel — Project Context & Scheme
 
-You are assisting with migrating **Asro** (asrotravel.com) from a Vue 3 SPA to a Nuxt 4 SSR project. Persian RTL UI, DaisyUI v5, Tailwind, Lucide Vue Next, Vazirmatn font. Reza supplies one source file at a time and expects a complete converted output following the rules below — not partial diffs, not explanations baked into the code.
+> Source: reverse-engineered directly from `github.com/RezaRasoulzadeh/asrotravel` (public repo, current `main`).
+> Existing `README.md` / `DASHBOARD.md` / `checkout.md` in the repo are flagged as **stale** — this doc supersedes them.
+> Last synced: 2026-07-04.
 
-## Hard rules — no exceptions, ever
+---
 
-1. **Every backend request goes through Nitro. Always. Regardless of what the old SPA did.**
-   The SPA fetched directly from the client for plenty of endpoints, including ones with no auth requirement. That pattern does not carry over — not even temporarily, not even for "simple" or "public" data. In the Nuxt app:
-   - No page, component, or composable ever calls the upstream API (`api.asrotravel.com` or any other host) directly.
-   - Every call goes: client composable → `/api/...` (relative, on the Nuxt server) → `server/api/**` Nitro route → upstream API.
-   - When converting an old SPA composable that fetched directly, the conversion is not done until a matching Nitro route exists and the composable calls that instead. There is no valid intermediate state where a converted file still hits the upstream URL.
+## 1. What this project is
 
-2. **Always null-guard. Always.**
-   - Every value coming from an API response, a composable, or a route param must be guarded — `?.`, `??`, or an explicit `!= null` check before use.
-   - Non-null assertion (`!`) is only ever allowed immediately after an explicit guard for that same value, never on its own.
-   - This matters more than it did in the SPA: the server-side `safeApiFetch` now returns a `fallback` (usually `null` or `[]`) on **any** upstream failure, not just "no data." Every consumer must treat null/empty as a normal expected state, not an edge case to patch in later.
+Asro (asrotravel.com) is a Persian-language (RTL) travel booking platform covering four product types — **hotel**, **pool** (سالن استخر / sports hall bookings), **ticket** (سانس/دربیس-style timed sessions), and **place** (destination/travel-guide content) — plus a blog and a customer dashboard for managing bookings.
 
-## Stack
+**This was migrated from a Vue 3 + Vite SPA to Nuxt 4 SSR.** That migration is the single most important architectural fact for this project: every page now goes through a server-rendered, two-hop fetch pattern (browser → Nuxt server route → real backend), not a direct SPA → API call.
 
-- Nuxt 4, TypeScript, `script setup lang="ts"`, Composition API only, auto-imports (never manually import `ref`/`computed`/`watch`/etc.)
-- DaisyUI v5 + Tailwind, Lucide Vue Next, Vazirmatn font, RTL Persian
-- Nitro preset: `node-server` (VPS deploy: Node + nginx + systemd)
-- `~/` alias only — never `@/`
-- Numerals: always `toLocaleString('fa-IR')` (or fa-IR locale options) — scores, counts, dates, percentages, pagination, everything
+---
 
-## File conventions
+## 2. Stack
 
-- Filename comment as the literal first line of every file — above `<script setup>` for `.vue`, line 1 for `.ts`.
-- No other comments anywhere — no inline notes, no explanatory comments. Explanation belongs in chat, not in the file.
-- `encodeURIComponent` on every slug/param at **both** the composable layer and the Nitro layer.
-- Template/markup is never touched during conversion — script/logic changes only, unless explicitly asked.
+| Layer | Technology |
+|---|---|
+| Framework | **Nuxt 4.4** (SSR, `node-server` nitro preset) |
+| UI | Vue 3.5, `vue-router` 5 |
+| Styling | **Tailwind CSS 4** (via `@tailwindcss/vite`, CSS-first `@theme`/`@plugin` config — not `tailwind.config.js`) |
+| Component kit | **DaisyUI 5** (`@plugin "daisyui"` in CSS, themes: `light` default / `dark` prefersdark) |
+| Icons | `lucide-vue-next` |
+| Font | Vazirmatn (self-hosted woff2, 400/500/600/700) |
+| Realtime | `socket.io-client` (booking payment status) |
+| Composition utilities | `@vueuse/nuxt` module |
+| Language | TypeScript, `strict: true` |
+| Locale | `lang="fa"`, `dir="rtl"` set globally in `nuxt.config.ts` |
 
-## The unified request pattern
+No Pinia, no state library — global reactive state uses Nuxt's `useState`, and persistent client state uses `useCookie` (not localStorage — this matters, see §7).
 
-Two `utils/api.ts` files, same filename, different layer, different contract — this is intentional, not a duplication bug.
+---
 
-**`app/utils/api.ts` (client)** — for composables that fetch imperatively (search/listing, anything with manual refetch or pagination). Never throws, always resolves `{ data, error }`:
+## 3. Directory map
+
+```
+asrotravel/
+├── app/                        # Nuxt 4 app/ dir (client + universal code)
+│   ├── app.vue                 # root shell: NuxtLayout > NuxtPage + ToastContainer
+│   ├── error.vue               # global error page (RTL, DaisyUI styled)
+│   ├── router.options.ts       # scroll behavior override
+│   ├── assets/
+│   │   ├── css/main.css        # Tailwind 4 + DaisyUI theme tokens, keyframes, utility classes
+│   │   ├── css/blog.css        # blog typography
+│   │   └── images/             # logo-light.svg, logo-dark.svg
+│   ├── layouts/                # default.vue, blank.vue, dashboard.vue
+│   ├── pages/                  # file-based routes (Nuxt native, NOT unplugin-vue-router anymore)
+│   ├── components/             # see §5 component tree
+│   ├── composables/            # see §6
+│   ├── types/                  # per-domain *.types.ts
+│   └── utils/                  # price.ts, date.ts, jalali.ts, api.ts, blog/
+├── server/                     # Nitro server (BFF layer)
+│   ├── api/                    # one file per backend-proxying endpoint (see §4)
+│   └── utils/                  # api.ts, auth.ts, dashboardBookings.ts — Nitro auto-imported
+├── public/                     # static assets, hero images, fonts, favicon
+├── nuxt.config.ts
+├── package.json
+└── tsconfig.json
+```
+
+---
+
+## 4. The fetch architecture (BFF pattern) — read this first
+
+This is the part most likely to trip up new work, so it gets its own section.
+
+### 4.1 Two separate `safeApiFetch` functions — do not confuse them
+
+There are **two different, same-named helpers**. They are not interchangeable and live in different runtimes.
+
+**Client-side** — `app/utils/api.ts`:
 ```ts
 export interface SafeApiResult<T> {
   data: T | null
   error: string | null
+  status: number | null
 }
 
 export async function safeApiFetch<T>(
   request: string,
   options?: Parameters<typeof $fetch>[1],
   fallbackMessage = 'خطا در دریافت اطلاعات',
-): Promise<SafeApiResult<T>> {
-  try {
-    return { data: await $fetch<T>(request, options), error: null }
-  } catch (error) {
-    return { data: null, error: apiErrorMessage(error, fallbackMessage) }
-  }
-}
+): Promise<SafeApiResult<T>>
 ```
+- Always resolves (never throws).
+- Returns a `{data, error, status}` envelope.
+- `error` is a **user-facing Persian string**, already resolved via `apiErrorMessage()`.
+- Used from composables calling **internal Nuxt routes** (`/api/...`), not the external backend directly.
 
-**`server/utils/api.ts` (server)** — used inside every Nitro route. Fail-soft: swallows upstream errors, returns a caller-supplied `fallback`, never `createError`:
+**Server-side** — `server/utils/api.ts`:
 ```ts
 export async function safeApiFetch<T>(
   path: string,
   options: FetchOptions = {},
   fallback: T,
-): Promise<T> {
-  try {
-    return await $fetch<T>(apiUrl(path), { ...options, headers })
-  } catch (error) {
-    console.warn(`[api] ${path} failed`, error)
-    return fallback
-  }
-}
+): Promise<T>
 ```
-Known open question: this collapses a real 404 and a 500/network error into the same flat `fallback`, so "not found" currently renders as an empty page rather than a true 404. Flag this if it comes up — not yet decided whether to special-case `createError({ statusCode: 404 })` for genuine not-found while keeping fail-soft for everything else.
+- Returns the **raw fallback value itself** on failure (not an envelope) — e.g. `null`, `[]`, or a default object.
+- Swallows errors and just logs `console.warn`.
+- Used inside `server/api/*` route handlers to call the **real external API** (`apiUrl(path)` → `https://api.asrotravel.com/api/...`).
 
-### Two composable shapes — pick one, never invent a third
+There's also `safeAuthApiFetch` (server-only, `server/utils/auth.ts`) — same shape but reads the `asro_token` cookie server-side, attaches `Authorization: Bearer`, and **throws a 401 `createError`** if the token is missing or the backend returns 401 (it does not silently fall back on auth failure, only on other errors).
 
-**1. Single-item / detail composables** — reactive `useFetch` straight to the Nitro route, keyed via `toValue`, `default: () => null`, response reshaped into `computed` getters:
+### 4.2 The request path for a typical page
+
+```
+Page/component
+   → composable (useHotelSingle, usePoolMain, ...)
+      → useFetch('/api/hotel/[slug]')      ← Nuxt internal route, SSR-friendly
+         → server/api/hotel/[slug].get.ts
+            → safeApiFetch(path, {}, fallback)   ← server/utils/api.ts
+               → real backend: https://api.asrotravel.com/api/hotel/{slug}/single
+```
+
+Public/read composables use **`useFetch`** directly against the internal `/api/...` route (SSR data fetching, dedup by `key`). Example (`useHotelSingle.ts`):
 ```ts
-export function useHotelSingle(slug: string | Ref<string>) {
-  const { data, pending, error, refresh } = useFetch<HotelSingleResponse | null>(
-    () => `/api/hotel/${encodeURIComponent(toValue(slug))}`,
-    { key: () => `hotel-single-${toValue(slug)}`, default: () => null }
-  )
-  return {
-    hotel: computed(() => data.value?.hotel ?? null),
-    gallery: computed(() => data.value?.gallery ?? []),
-    similar: computed(() => data.value?.related ?? []),
-    seo: computed(() => data.value?.hotel?.seo ?? null),
-    faqs: computed(() => data.value?.hotel?.faqs ?? []),
-    loading: pending, error, refresh,
-  }
-}
+const { data, pending, error, refresh } = useFetch<HotelSingleResponse | null>(
+  () => `/api/hotel/${encodeURIComponent(toValue(slug))}`,
+  { key: () => `hotel-single-${toValue(slug)}`, default: () => null }
+)
 ```
 
-**2. Search/listing composables** — own `ref` state for filters/results, an imperative `fetchX()` that calls the **client** `safeApiFetch`, filters synced to the URL via `router.replace`/`push`, self-triggers once on creation. Not `useFetch`-based — the manual pagination/filter/URL-sync needs an imperative trigger.
+Mutating / authenticated / client-only flows (dashboard bookings, cancel, cart add, booking creation) instead call the client `safeApiFetch` / `usePrivateApiFetch` directly with `$fetch`-style semantics rather than `useFetch`, since they're user-triggered, not route-driven.
 
-### Nitro route shape
+### 4.3 `usePrivateApiFetch` — the private/authenticated wrapper
 
 ```ts
-// server/api/hotel/[slug].get.ts
-export default defineEventHandler(async (event) => {
-  const slug = getRouterParam(event, 'slug')
-  if (!slug) return null
-  return await safeApiFetch<HotelSingleResponse | null>(
-    `/hotel/${encodeURIComponent(slug)}/single`, {}, null
-  )
-})
+// app/composables/usePrivateApiFetch.ts
+export async function usePrivateApiFetch<T>(request, options?, fallbackMessage?) {
+  const result = await safeApiFetch<T>(request, options, fallbackMessage)
+  if (result.error) {
+    if (result.status === 401) {
+      await useAuth().handleSessionExpiry()
+      return result
+    }
+    useToast().error(result.error)
+  }
+  return result
+}
 ```
-Thin proxy only — no data shaping server-side, that stays in the composable. Explicit fallback value every time.
+Use this (not raw `safeApiFetch`) for any action that should **auto-toast on error and auto-redirect-to-login on 401**. Read-only `useFetch`-based composables handle 401 manually inline instead (see `useCheckout.ts`, `useDashboardBookings.ts`).
 
-## Known bugs / gotchas already solved — don't reintroduce
+### 4.4 Server route conventions
 
-- Sequential `await useFetch(...)` calls lose Nuxt's unctx context — create all `useFetch` calls synchronously, resolve together via `Promise.all` if multiple are needed in one composable.
-- `noUncheckedIndexedAccess` (TS strict) breaks bracket indexing on strings/arrays — use `.charAt()` etc., non-null assertion only after an explicit guard.
-- Component double-prefixing: a file at `components/blog/BlogSidebar.vue` auto-registers oddly — rename to `components/blog/Sidebar.vue` style (folder already provides the prefix).
-- `definePageMeta` replaces `defineOptions` for layout assignment.
+- One file per endpoint, named by HTTP verb suffix: `[slug].get.ts`, `add.post.ts`, `[id]/cancel.post.ts`.
+- Nearly all are thin proxies: extract params → `safeApiFetch(path, options, fallback)` → return.
+- `apiUrl(path)` (server/utils/api.ts) prefixes `runtimeConfig.apiBase` (`https://api.asrotravel.com/api` by default, overridable via `API_BASE_URL` env var).
+- Server utils are **Nitro auto-imported** — never `import` them explicitly from `~/server/...` inside a handler.
+- `readBody` is used directly for fixed-shape POST bodies; `safeReadBody(event)` exists as a defensive variant that always resolves to an object even on parse failure — used only where body shape is uncertain.
+
+### 4.5 Realtime — booking payment status
+
+`useBookingStatus.ts` connects a raw `socket.io-client` (not proxied through Nitro) directly to `https://api.asrotravel.com/booking_check`, client-only (`onMounted` + `import.meta.client` guard). It manages:
+- `booking_status` event → parses returned HTML fragment (`extractPrimaryMessage`, client-only DOMParser) for the human-readable status, drives a countdown timer, and exposes `accessToPaid` to gate the payment button.
+- `panel_booking_status` → routed straight to `useToast().error(...)`.
+- Emits `end_booking_time_for_pay` when the countdown hits zero.
+
+---
+
+## 5. Component tree
+
+```
+app/components/
+├── blog/
+│   ├── BlogRenderer.vue        # renders parsed blog HTML (uses utils/blog/parser.ts)
+│   └── Sidebar.vue
+├── cart/
+│   ├── CartDetail.vue
+│   ├── CartSteps.vue
+│   ├── CheckoutBookingSummary.vue
+│   └── CheckoutSummary.vue
+├── dashboard/
+│   ├── BookingCard.vue
+│   ├── BookingsList.vue
+│   ├── BookingsTabs.vue
+│   └── MiniCalendar.vue
+├── home/
+│   ├── DestinationList.vue
+│   ├── HeroSearch.vue
+│   ├── NewPostsList.vue
+│   └── TopPostsList.vue
+├── hotel/
+│   ├── HotelCard.vue / HotelList.vue
+│   ├── HotelPolicySection.vue
+│   ├── HotelRoomsSection.vue
+│   ├── HotelSingleHeader.vue
+│   └── SearchCard.vue
+├── place/
+│   ├── CategoryGrid.vue
+│   ├── PlaceSearchCard.vue
+│   └── ProvinceHero.vue
+├── pool/
+│   ├── PoolCard.vue / PoolList.vue
+│   ├── PoolPolicySection.vue
+│   ├── PoolSanseCalendar.vue / VipSanseCalendar.vue / VipSanseSecion.vue
+│   ├── PoolSearchCard.vue
+│   └── PoolSingleHeader.vue
+├── ticket/
+│   ├── SearchCard.vue
+│   ├── TicketCard.vue / TicketList.vue
+│   ├── TicketSanseCalendar.vue
+│   └── TicketSingleHeader.vue
+└── ui/
+    ├── FAQ.vue
+    ├── FullscreenImageViewer.vue
+    ├── GuestCountPicker.vue
+    ├── LoadingState.vue
+    ├── PersianDateRangePicker.vue
+    ├── ToastContainer.vue
+    ├── review/ReviewSecion.vue      
+    └── spacer/
+        ├── FeaturesList.vue
+        ├── HowItWorks.vue
+        └── TestimonialQuote.vue
+```
+
+**Naming/import note:** components auto-register with Nuxt's folder-prefixed convention, e.g. `app/components/dashboard/MiniCalendar.vue` → `<DashboardMiniCalendar />` (confirmed in use in `layouts/dashboard.vue`).
+
+### Page tree (routes)
+
+```
+/                                   pages/index.vue
+/about                              pages/about/index.vue
+/contact                            pages/contact/index.vue
+/blog, /blog/[slug]
+/hotel, /hotel/search, /hotel/[slug]
+/pool, /pool/search, /pool/[slug]
+/ticket, /ticket/search, /ticket/[slug]
+/place/travel-guide/[slug], /place/travel-guide/[slug]/search
+/place/travel-to/[slug]/[id]        slug = ename (place lookup), id = numeric review object_id
+/cart/detail
+/cart/checkout/[code]               booking code, drives useCheckout + useBookingStatus
+/login
+/dashboard, /dashboard/bookings     dashboard layout
+```
+
+Layouts: `default` (public site), `dashboard` (customer panel — sidebar nav, mobile bottom nav, theme toggle), `blank`.
+
+---
+
+## 6. Composables reference
+
+| Composable | Purpose | Fetch style |
+|---|---|---|
+| `useAuth` | cookie-based session (`asro_token`, `asro_user`), OTP login, `handleSessionExpiry()` | client `safeApiFetch` |
+| `useToast` | global toast queue via `useState('toasts')` | — |
+| `useHomeData`, `useHotelMain`, `usePoolMain`, `useTicketMain` | landing/list data for each vertical | `useFetch` |
+| `useHotelSearch`, `usePoolSearch`, `useTicketSearch`, `usePlaceSearch` | search-page state + results | `useFetch` |
+| `useHotelSearchAttributes`, `usePoolSearchAttributes`, `useTicketSearchAttributes`, `usePlaceSearchAttributes` | filter option metadata for search pages | `useFetch` |
+| `useHotelSingle`, `usePoolSingle`, `useTicketSingle`, `useProvinceGuide` | single-item detail pages | `useFetch` |
+| `useHotelRooms` | room list/pricing for a hotel | `useFetch` |
+| `usePoolSanse`, `useTicketSanse` | timeslot/session ("sanse") data for pool/ticket single pages | `useFetch` |
+| `useBlog`, `useBlogSide`, `useBlogSingle` | blog list, sidebar, single post | `useFetch` |
+| `useReviews` | review list + submission | mixed |
+| `useSearchOptions` | shared search widget option state (guests, dates, etc.) | — |
+| `useJalaliDates` | Jalali calendar helpers for date pickers | — |
+| `useDashboardBookings` | dashboard bookings list: tabs, status filter, sort, search, incremental "load more" pagination, `cancelBooking()` | client `safeApiFetch` + `usePrivateApiFetch` |
+| `useCreateBooking` | add-to-cart / create booking | raw `$fetch` + manual 401 handling |
+| `useCheckout` | checkout page data by booking `code` | `useFetch`, manual 401 handling |
+| `useBookingStatus` | live payment status via socket.io + countdown | raw socket.io-client |
+| `usePrivateApiFetch` | authenticated wrapper: auto-toast + auto-redirect on 401 | wraps client `safeApiFetch` |
+
+### `useDashboardBookings` behavior detail (most recently built feature)
+
+- Two loading modes: **paged** (default — `newest` sort, no search) uses `loadMore()` / incremental pagination; switches to **fully-loaded** mode (`ensureFullyLoaded()`, loops all pages) automatically the moment a search term or non-default sort is applied (`needsFullData` computed), because search/sort must operate over the complete set.
+- Uses a `generation` counter to invalidate in-flight requests when the tab/filter changes mid-fetch (prevents stale responses from overwriting newer state).
+- `cancelBooking(code)` — **⚠️ open item**: comment in source flags that the endpoint is keyed by `code` (UUID) rather than internal numeric `id`, and that the exact path/param contract with the real backend is *unconfirmed*. Treat as unverified until checked against the actual API.
+
+---
+
+## 7. Conventions & redlines
+
+These are the rules the codebase actually follows — deviate deliberately, not by accident.
+
+1. **`script setup lang="ts"` + Composition API only.** No Options API anywhere observed.
+2. **Auto-imports** — never manually import `ref`, `computed`, `watch`, `useFetch`, `useState`, etc. Nuxt auto-imports composables from `app/composables/` and utils from `app/utils/` too.
+3. **Null-guard everything from the network.** Optional chaining (`?.`), nullish coalescing (`?? ''`/`?? null`), explicit `!= null` checks. Non-null assertion (`!`) only ever after an explicit guard, never as a shortcut.
+4. **Persian numerals everywhere a number is displayed** — `toLocaleString('fa-IR')` (see `formatPrice`, which also does the rial→toman `/10` conversion and formats with `٫` as the thousands separator, matching Persian convention) or fa-IR locale options.
+5. **`formatPrice()` (utils/price.ts) already divides by 10** (backend returns rial, UI shows toman) — never re-divide, and never call it on an already-converted number.
+6. **RTL is global**, not per-component: `htmlAttrs: { dir: 'rtl' }` in `nuxt.config.ts`, plus `html { direction: rtl }` in CSS as a belt-and-suspenders rule.
+7. **Theme is a cookie, not localStorage** — `asro_theme` (`'light' | 'dark'`), read via `useCookie` in `app.vue`/`error.vue`/`layouts/dashboard.vue`, applied as `data-theme` on `<html>` via `useHead`. This is SSR-safe (cookie is readable server-side, avoiding theme flash) — do not swap this for `localStorage` or `window.matchMedia` without also handling SSR hydration.
+8. **Toasts are global app state**, not per-component — `useToast()` backs onto `useState('toasts', ...)`, so any composable/component can push a toast and `<UiToastContainer />` (mounted once in `app.vue`) renders it.
+9. **Error/empty state pattern** is consistent across list components (`HotelList`, `PoolList`, `TicketList`, `ReviewSecion`, etc.):
+   - Loading → skeleton cards (`animate-pulse`, matching card shape).
+   - Error → `WifiOff` icon in `bg-error/10` circle, title + `text-base-content/50` subtitle, `btn-sm btn-error btn-soft` retry button calling `execute()`/`refresh()`.
+   - Empty → `SearchX` icon in `bg-base-200` circle, same text pattern, **no button**.
+   - Both wrapped in `flex-col items-center justify-center py-16 gap-3 text-center px-4`.
+10. **Component naming typo preserved:** `ui/review/ReviewSecion.vue` (missing "t") — this is load-bearing (imported/auto-registered under this name), don't "fix" it without a repo-wide rename + import check.
+11. **`is_vip` derivation for pool** (`pages/pool/[slug].vue`): `ticket === 0 && vip > 0`, computed from the counts of keys in `services.ticket` / `services.vip` objects returned by the sanse endpoint.
+12. **Two safe-fetch helpers, one name, different files/behavior** — see §4.1. Always check which file you're in before assuming the return shape.
+13. **Route params always cast explicitly** where dynamic — pattern seen in `place/travel-to/[slug]/[id].vue`: slug is the entity lookup key (`ename`), `id` is the numeric key used for review `object_id`.
+14. **No inline explanatory comments in generated code** (project-wide rule from your own conventions) — only a file-path header comment as the first line, and TODO comments. Explanations belong in chat, not the file.
+
+### Known unresolved / in-progress items
+
+- `useDashboardBookings.cancelBooking()` — endpoint contract unconfirmed (see §6 detail above).
+- `pages/pool/[slug].vue` → `handleAddToCart()` currently just does `console.log('add to cart', slot)` — **not wired** to `useCreateBooking()` yet. The real cart-add composable exists and works (`useCreateBooking` → `POST /api/booking/cart/add`), it's just not called from this page yet.
+- `README.md`, `DASHBOARD.md`, `checkout.md` in the repo are explicitly flagged by you as stale — don't trust their content; this doc was built by reading source directly instead.
+
+---
+
+## 8. Design tokens (Tailwind 4 / DaisyUI 5, CSS-first config)
+
+Config lives entirely in `app/assets/css/main.css` — there is **no `tailwind.config.js`** (Tailwind 4 style: `@import "tailwindcss"`, `@plugin "daisyui" { themes: light --default, dark --prefersdark; }`, `@theme { ... }`).
+
+| Token | Light | Dark |
+|---|---|---|
+| `--color-primary` | `oklch(62.54% 0.108 209.39)` (teal-blue) | `oklch(71.15% 0.121 200.32)` |
+| `--color-secondary` | `oklch(60.6% 0.25 292.717)` | `oklch(70.2% 0.183 293.541)` |
+| `--color-base-100` | `oklch(100% 0 0)` | `oklch(22% 0.01 240)` |
+| `--color-base-200` | `oklch(96% 0 0)` | `oklch(19% 0.01 240)` |
+| `--color-base-300` | `oklch(91% 0 0)` | `oklch(16% 0.01 240)` |
+| `--color-error` | `oklch(64% 0.246 16.439)` | same |
+| `--radius-box` | `2rem` | `2rem` |
+| `--radius-btn` | `1rem` | `1rem` |
+
+Custom keyframes/animations: `field-in` (staggered form-field entrance via `--fi` CSS var), `hero-reveal` (scale+fade for hero images), `card-rise` (translateY+fade for card grids). Utility classes: `.card-lift` (hover translateY + shadow, dark-mode shadow variant), `.select-custom`, `.hero-overlay`, `.no-scrollbar`, `.input`/`.btn` radius overrides.
+
+Font: Vazirmatn, self-hosted `/fonts/*.woff2`, weights 400/500/600/700, `font-display: swap`.
+
+---
+
+## 9. Types reference
+
+`app/types/`: `blog.types`, `blogSingle.types`, `cart.types`, `checkout.types`, `dashboardBookings.types`, `hotel.types`, `hotelSingle.types`, `place.types`, `placeSingle.types`, `pool.types`, `poolSingle.types`, `province.types`, `review.types`, `ticket.types`, `ticketSingle.types`.
+
+`dashboardBookings.types.ts` exports `BookingSortOption`, `BookingStatus`, `BookingTab`, `DashboardBookingDto`, `DashboardBookingsDtoResponse`, and a `BOOKING_STATUS_LABELS` map (Persian status labels, used to optimistically patch UI after cancel).
+
+`app/utils/`: `api.ts` (client `SafeApiResult`/`safeApiFetch`/`apiErrorMessage`), `price.ts` (`formatPrice`), `date.ts` + `jalali.ts` (Jalali↔Gregorian conversion, hand-rolled algorithm — no external date library), `blog/parser.ts` + `blog/types.ts` (blog HTML parsing via `htmlparser2`).
+
+---
+
+## 10. Things a new task should check before assuming
+
+- **Which `safeApiFetch` am I in?** — client (`~/utils/api.ts`) vs server (`~~/server/utils/api.ts`). Import path context tells you; behavior differs completely.
+- **Is this composable `useFetch`-based (SSR, cached by key) or raw `$fetch`-based (client-triggered action)?** Determines whether 401 handling is automatic or must be added manually.
+- **Does the target page already have a real backend endpoint**, or is it one of the still-stubbed dashboard nav items (`/dashboard/profile`, `/dashboard/my-wallet`, `/dashboard/my-favorites`, `/dashboard/support` are linked in the sidebar but no corresponding `pages/dashboard/*` files exist yet beyond `index.vue` and `bookings.vue`).
+- **Persian RTL + Jalali dates + toman formatting** apply to *any* new page touching dates or prices — don't reach for a new date/currency library, use the existing `utils/date.ts`/`utils/jalali.ts`/`utils/price.ts`.
