@@ -1,24 +1,48 @@
 // app/composables/usePoolSanse.ts
+
 import type { PoolSanseResponse } from '~/types/poolSingle.types'
+import { safeApiFetch } from '~/utils/api'
 
 export function usePoolSanse(poolId: Ref<number | null>) {
-  const { data, pending, error, execute } = useFetch<PoolSanseResponse | null>(
-    () => `/api/pool/${poolId.value}/sanse`,
-    {
-      key: () => `pool-sanse-${poolId.value ?? 'none'}`,
-      default: () => null,
-      immediate: false,
+  const sanse = ref<PoolSanseResponse | null>(null)
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  async function refresh() {
+    if (!poolId.value) {
+      sanse.value = null
+      return
     }
+
+    loading.value = true
+    error.value = null
+
+    const result = await safeApiFetch<PoolSanseResponse>(
+      `/api/pool/${poolId.value}/sanse`,
+      {
+        method: 'GET',
+      },
+      'خطا در دریافت سانس‌ها',
+    )
+
+    sanse.value = result.data
+    error.value = result.error
+
+    loading.value = false
+  }
+
+  watch(
+    poolId,
+    () => {
+      refresh()
+    },
+    { immediate: true },
   )
 
-  watch(poolId, (id) => {
-    if (id) execute()
-  }, { immediate: true })
-
   return {
-    sanse: data,
-    loading: pending,
-    error,
-    refresh: execute,
+    sanse: readonly(sanse),
+    loading: readonly(loading),
+    error: readonly(error),
+    refresh,
   }
 }
