@@ -59,7 +59,7 @@ function handleAddToCart(slot: OpenHour & { gender: 'men' | 'women'; serviceName
   navigateTo({
     path: '/cart/detail',
     state: {
-      selectedSlot,
+      selectedSlot: JSON.parse(JSON.stringify(selectedSlot)),
       genderCode: gender,
       serviceName,
     },

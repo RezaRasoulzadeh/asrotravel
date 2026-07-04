@@ -135,7 +135,7 @@ function handleBuy(slot: any, genderCode: 'men' | 'women', serviceName: string) 
   navigateTo({
     path: '/cart/detail',
     state: {
-      selectedSlot: { ...slot, slug: props.poolSlug },
+      selectedSlot: JSON.parse(JSON.stringify({ ...slot, slug: props.poolSlug })),
       genderCode,
       serviceName
     }
