@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ArrowRight, ChevronLeft, Minus, Plus } from 'lucide-vue-next'
+import { ArrowRight, ChevronLeft, Minus, Plus, Tag } from 'lucide-vue-next'
 import type { VipChangeDateSlot } from '~/types/poolSingle.types'
 import type { VipParentInfo } from '~/types/cart.types'
+import { formatPrice } from '~/utils/price'
 
 interface Props {
   selectedSlot: VipChangeDateSlot
@@ -52,6 +53,16 @@ const submitting = ref(false)
 const touched = ref(false)
 
 const maxHeadcount = computed(() => Math.max(1, props.guestCapacity || 6))
+
+// VIP "sans" rooms are priced flat per session/room (capped by guestCapacity),
+// not per adult — mirrors the price shown per-slot in VipSanseCalendar.
+const originPriceRial = computed(() => Number(props.selectedSlot.price_per_sans ?? 0))
+const offerAmountRial = computed(() => Number(props.selectedSlot.offer ?? 0))
+const totalPriceWithOfferRial = computed(() => Math.max(0, originPriceRial.value - offerAmountRial.value))
+const offerPercent = computed(() => {
+  if (originPriceRial.value <= 0) return 0
+  return Math.ceil((offerAmountRial.value / originPriceRial.value) * 100)
+})
 
 function handleToggleSelf(e: Event) {
   const target = e.target as HTMLInputElement
@@ -138,8 +149,8 @@ const checkout = async () => {
       service: {
         ...props.selectedSlot,
         service_type: 'vip',
-        total_price: 0,
-        total_price_with_offer: 0,
+        total_price: originPriceRial.value,
+        total_price_with_offer: totalPriceWithOfferRial.value,
         quantity: { adult: { quantity: headcount.value } },
       },
       userInfo: {
@@ -157,10 +168,10 @@ const checkout = async () => {
       children: 0,
       date: '',
       display_date: '',
-      total_price_display: '',
-      total_price: 0,
-      total_price_with_offer_display: '',
-      total_price_with_offer: 0,
+      total_price_display: formatPrice(originPriceRial.value),
+      total_price: originPriceRial.value,
+      total_price_with_offer_display: formatPrice(totalPriceWithOfferRial.value),
+      total_price_with_offer: totalPriceWithOfferRial.value,
       rooms: [],
       parent: props.parent
     })
@@ -264,6 +275,20 @@ const checkout = async () => {
             :class="{ 'input-error': touched && errors.mobile }"
           />
           <span v-if="touched && errors.mobile" class="text-error text-xs mt-1">{{ errors.mobile }}</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-base-200/50 p-4 rounded-xl mb-6 gap-2">
+        <span class="text-base-content/70">مبلغ قابل پرداخت:</span>
+        <div class="flex items-center gap-2">
+          <span v-if="offerPercent > 0" class="badge badge-success badge-sm text-white font-mono">{{ offerPercent }}%</span>
+          <span v-if="offerAmountRial > 0" class="text-base-content/40 line-through text-xs">
+            {{ formatPrice(originPriceRial) }}
+          </span>
+          <span class="font-bold text-lg text-primary flex items-center gap-1">
+            <Tag v-if="offerAmountRial > 0" :size="14" class="text-error" />
+            {{ formatPrice(totalPriceWithOfferRial) }}
+          </span>
         </div>
       </div>
 

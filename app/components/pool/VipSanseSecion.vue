@@ -14,6 +14,9 @@ const props = defineProps<{
   vipServices?: VipCategoryMap | null
   loading?: boolean
   error?: string | null
+  poolId: number
+  poolTitle: string
+  poolSlug: string
 }>()
 
 defineEmits<{
@@ -190,7 +193,10 @@ function offerPercent(entry: VipSanseService | null | undefined): number {
             <div class="overflow-hidden">
               <VipSanseCalendar
                 v-if="openCalendars.has(entry.id)"
-                :service="entry" />
+                :service="entry"
+                :pool-id="props.poolId"
+                :pool-title="props.poolTitle"
+                :pool-slug="props.poolSlug" />
             </div>
           </div>
 

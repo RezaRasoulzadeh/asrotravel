@@ -200,6 +200,9 @@ useHead({
   <VipSanseSecion
     v-else-if="is_vip && aggregatedData.services?.vip"
     :vip-services="aggregatedData.services.vip"
+    :pool-id="aggregatedData.id"
+    :pool-title="aggregatedData.title"
+    :pool-slug="aggregatedData.slug ?? slug"
   />
 </div>
     <div v-if="blocks.length > 0"
