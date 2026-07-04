@@ -1,5 +1,5 @@
 // app/types/cart.types.ts
-import type { OpenHour } from '~/types/poolSingle.types'
+import type { OpenHour, VipChangeDateSlot } from '~/types/poolSingle.types'
 
 export interface CartAddQuantityItem {
   quantity: number
@@ -51,4 +51,37 @@ export interface CartAddResponse {
   booking_code: string
   need_offline_accept: boolean
   return: CartAddPayload
+}
+
+
+export interface VipCartAddServicePayload extends VipChangeDateSlot {
+  service_type: string
+  total_price: number | string
+  total_price_with_offer: number | string
+  quantity: CartAddQuantity
+}
+
+export interface VipParentInfo {
+  title: string
+  slug: string
+}
+
+export interface VipCartAddPayload {
+  service_type: string
+  service_id: number
+  service: VipCartAddServicePayload
+  userInfo: CartAddUserInfo
+  term_accepted: boolean
+  is_customer: "100" | "0"
+  customer_notes: string
+  adults: number
+  children: number
+  date: string
+  display_date: string
+  total_price_display: string
+  total_price: number | string
+  total_price_with_offer_display: string
+  total_price_with_offer: number | string
+  rooms: any[]
+  parent: VipParentInfo
 }

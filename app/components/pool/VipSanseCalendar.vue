@@ -14,6 +14,9 @@ interface DayTab {
 
 const props = defineProps<{
   service: VipSanseService
+  poolId: number
+  poolTitle: string
+  poolSlug: string
 }>()
 
 const loading = ref(false)
@@ -149,6 +152,29 @@ function basePrice(slot: SansSlot): string {
   return formatPrice(Number(slot.price_per_sans ?? 0) / 10)
 }
 
+function handleBuy(slot: SansSlot) {
+  if (slotStatus(slot) !== 'available') return
+
+  navigateTo({
+    path: '/cart/vip-detail',
+    state: {
+      selectedSlot: JSON.parse(JSON.stringify(slot)),
+      serviceId: props.poolId, 
+      serviceName: props.service.service_features?.name ?? '',
+      genderCode: props.service.service_features?.gender ?? 'any',
+      guestCapacity: Number(
+        props.service.service_features?.max_guest_capacity ??
+        props.service.service_features?.guest_capacity ??
+        6
+      ),
+      parent: {
+        title: props.poolTitle,
+        slug: props.poolSlug
+      }
+    },
+  })
+}
+
 onMounted(fetchSlots)
 onUnmounted(() => abortController?.abort())
 </script>
@@ -273,7 +299,8 @@ onUnmounted(() => abortController?.abort())
           </div>
           <span v-else class="text-xs text-base-content/40 me-auto">—</span>
 
-          <button v-if="slotStatus(slot) === 'available'" class="btn btn-sm btn-primary shrink-0 px-6 lg:px-10">
+          <button v-if="slotStatus(slot) === 'available'" class="btn btn-sm btn-primary shrink-0 px-6 lg:px-10"
+            @click="handleBuy(slot)">
             رزرو
           </button>
           <span v-else class="btn btn-xs btn-ghost btn-disabled shrink-0 opacity-40 cursor-not-allowed">

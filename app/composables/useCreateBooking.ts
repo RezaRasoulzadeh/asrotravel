@@ -1,9 +1,9 @@
 // app/composables/useCreateBooking.ts
-import type { CartAddPayload, CartAddResponse } from '~/types/cart.types'
+import type { CartAddPayload, VipCartAddPayload, CartAddResponse } from '~/types/cart.types'
 
 export function useCreateBooking() {
   async function createBooking(
-    payload: CartAddPayload,
+    payload: CartAddPayload | VipCartAddPayload,
   ): Promise<{ data: CartAddResponse | null; error: string | null }> {
     const result = await usePrivateApiFetch<CartAddResponse>(
       '/api/booking/cart/add',
