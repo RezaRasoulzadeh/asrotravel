@@ -30,14 +30,12 @@ if (import.meta.client) {
     genderCode.value = state.genderCode || 'men'
     serviceName.value = state.serviceName || ''
 
-    // persist so a redirect (e.g. login) doesn't lose it
     checkoutSlotState.value = {
       selectedSlot: state.selectedSlot,
       genderCode: state.genderCode || 'men',
       serviceName: state.serviceName || '',
     }
   } else if (checkoutSlotState.value) {
-    // fallback: returning here after a redirect, history.state is gone but we saved it
     selectedSlot.value = checkoutSlotState.value.selectedSlot
     genderCode.value = checkoutSlotState.value.genderCode
     serviceName.value = checkoutSlotState.value.serviceName

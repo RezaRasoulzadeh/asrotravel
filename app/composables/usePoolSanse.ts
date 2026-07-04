@@ -40,7 +40,7 @@ export function usePoolSanse(poolId: Ref<number | null>) {
   )
 
   return {
-    sanse: readonly(sanse),
+    sanse,
     loading: readonly(loading),
     error: readonly(error),
     refresh,
