@@ -1,3 +1,4 @@
+// components/cart/VipCartDetail.vue
 <script setup lang="ts">
 import { ArrowRight, ChevronLeft, Minus, Plus, Tag } from 'lucide-vue-next'
 import type { VipChangeDateSlot } from '~/types/poolSingle.types'
@@ -54,8 +55,6 @@ const touched = ref(false)
 
 const maxHeadcount = computed(() => Math.max(1, props.guestCapacity || 6))
 
-// VIP "sans" rooms are priced flat per session/room (capped by guestCapacity),
-// not per adult — mirrors the price shown per-slot in VipSanseCalendar.
 const originPriceRial = computed(() => Number(props.selectedSlot.price_per_sans ?? 0))
 const offerAmountRial = computed(() => Number(props.selectedSlot.offer ?? 0))
 const totalPriceWithOfferRial = computed(() => Math.max(0, originPriceRial.value - offerAmountRial.value))
@@ -140,6 +139,12 @@ const decrease = () => { if (headcount.value > 1) headcount.value-- }
 const checkout = async () => {
   touched.value = true
   if (!isFormValid.value || submitting.value) return
+
+  if (!props.serviceId || !props.parent?.slug) {
+    useToast().error('اطلاعات این سرویس ناقص است، لطفا دوباره از تقویم اقدام کنید')
+    return
+  }
+
   submitting.value = true
 
   try {
@@ -166,8 +171,8 @@ const checkout = async () => {
       customer_notes: customerNotes.value.trim(),
       adults: headcount.value,
       children: 0,
-      date: '',
-      display_date: '',
+      date: props.selectedSlot.day?.day_date ?? '',
+      display_date: props.selectedSlot.date_display,
       total_price_display: formatPrice(originPriceRial.value),
       total_price: originPriceRial.value,
       total_price_with_offer_display: formatPrice(totalPriceWithOfferRial.value),
@@ -201,6 +206,7 @@ const checkout = async () => {
         </div>
       </div>
 
+      <form @submit.prevent="checkout">
       <label class="flex items-center gap-3 mb-6 cursor-pointer w-fit">
         <input 
           type="checkbox" 
@@ -213,12 +219,15 @@ const checkout = async () => {
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <div class="form-control w-full">
-          <label class="label">
+          <label class="label" for="vip-first-name">
             <span class="label-text">نام <span class="text-error">*</span></span>
           </label>
           <input
+            id="vip-first-name"
             v-model="firstName"
             type="text"
+            name="given-name"
+            autocomplete="given-name"
             placeholder="نام"
             :disabled="isSelf && isAuthenticated && !!user?.first_name"
             class="input w-full"
@@ -228,12 +237,15 @@ const checkout = async () => {
         </div>
 
         <div class="form-control w-full">
-          <label class="label">
+          <label class="label" for="vip-last-name">
             <span class="label-text">نام خانوادگی <span class="text-error">*</span></span>
           </label>
           <input
+            id="vip-last-name"
             v-model="lastName"
             type="text"
+            name="family-name"
+            autocomplete="family-name"
             placeholder="نام خانوادگی"
             :disabled="isSelf && isAuthenticated && !!user?.last_name"
             class="input w-full"
@@ -243,13 +255,16 @@ const checkout = async () => {
         </div>
 
         <div class="form-control w-full">
-          <label class="label">
+          <label class="label" for="vip-national-code">
             <span class="label-text">کدملی <span class="text-error">*</span></span>
           </label>
           <input
+            id="vip-national-code"
             :value="nationalCode"
             @input="onNationalCodeInput"
             type="text"
+            name="national-code"
+            autocomplete="off"
             inputmode="numeric"
             placeholder="کدملی"
             :disabled="isSelf && isAuthenticated && !!user?.national_id"
@@ -260,13 +275,16 @@ const checkout = async () => {
         </div>
 
         <div class="form-control w-full">
-          <label class="label">
+          <label class="label" for="vip-mobile">
             <span class="label-text">شماره موبایل <span class="text-error">*</span></span>
           </label>
           <input
+            id="vip-mobile"
             :value="mobile"
             @input="onMobileInput"
-            type="text"
+            type="tel"
+            name="tel"
+            autocomplete="tel"
             inputmode="numeric"
             placeholder="0912XXXXXXX"
             dir="ltr"
@@ -295,22 +313,25 @@ const checkout = async () => {
       <div class="flex justify-between items-center bg-base-200/50 p-4 rounded-xl mb-6">
         <span class="text-base-content/70">تعداد نفرات:</span>
         <div class="flex items-center gap-3 bg-base-100 rounded-lg p-1 border border-base-300 shadow-sm">
-          <button @click="increase" :disabled="headcount >= maxHeadcount" class="btn btn-sm btn-ghost btn-square">
+          <button type="button" @click="increase" :disabled="headcount >= maxHeadcount" class="btn btn-sm btn-ghost btn-square">
             <Plus :size="16" />
           </button>
           <span class="w-8 text-center font-bold">{{ headcount.toLocaleString('fa-IR') }}</span>
-          <button @click="decrease" :disabled="headcount <= 1" class="btn btn-sm btn-ghost btn-square">
+          <button type="button" @click="decrease" :disabled="headcount <= 1" class="btn btn-sm btn-ghost btn-square">
             <Minus :size="16" />
           </button>
         </div>
       </div>
 
       <div class="form-control w-full mb-6">
-        <label class="label"><span class="label-text">نیازمندی‌های ویژه</span></label>
+        <label class="label" for="vip-notes"><span class="label-text">نیازمندی‌های ویژه</span></label>
         <textarea
+          id="vip-notes"
           v-model="customerNotes"
           maxlength="200"
           rows="4"
+          name="notes"
+          autocomplete="off"
           placeholder="نیازمندی‌های خود را برای مجموعه یادداشت کنید"
           class="textarea w-full"
         />
@@ -328,10 +349,9 @@ const checkout = async () => {
 
       <div class="pt-6 border-t border-base-300 flex justify-end">
         <button
-          type="button"
+          type="submit"
           class="group btn btn-primary btn-lg w-full sm:w-64 text-base gap-0"
           :disabled="submitting || !termsAccepted"
-          @click="checkout"
         >
           <span v-if="submitting" class="loading loading-spinner loading-sm" />
           <template v-else>
@@ -340,6 +360,7 @@ const checkout = async () => {
           </template>
         </button>
       </div>
+      </form>
     </div>
   </div>
 </template>

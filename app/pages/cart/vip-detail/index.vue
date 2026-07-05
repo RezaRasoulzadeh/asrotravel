@@ -30,25 +30,7 @@ const back = () => {
 }
 
 if (import.meta.client) {
-  const { state } = window.history
-
-  if (state?.selectedSlot) {
-    selectedSlot.value = state.selectedSlot
-    serviceId.value = state.serviceId || 0
-    serviceName.value = state.serviceName || ''
-    genderCode.value = state.genderCode || 'any'
-    guestCapacity.value = state.guestCapacity || 6
-    parent.value = state.parent || { title: '', slug: '' }
-
-    checkoutSlotState.value = {
-      selectedSlot: state.selectedSlot,
-      serviceId: state.serviceId || 0,
-      serviceName: state.serviceName || '',
-      genderCode: state.genderCode || 'any',
-      guestCapacity: state.guestCapacity || 6,
-      parent: state.parent || { title: '', slug: '' }
-    }
-  } else if (checkoutSlotState.value) {
+  if (checkoutSlotState.value) {
     selectedSlot.value = checkoutSlotState.value.selectedSlot
     serviceId.value = checkoutSlotState.value.serviceId
     serviceName.value = checkoutSlotState.value.serviceName

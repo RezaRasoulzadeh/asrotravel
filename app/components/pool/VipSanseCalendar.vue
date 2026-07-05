@@ -154,25 +154,33 @@ function basePrice(slot: SansSlot): string {
 
 function handleBuy(slot: SansSlot) {
   if (slotStatus(slot) !== 'available') return
-  navigateTo({
-    path: '/cart/vip-detail',
-    state: {
-      selectedSlot: JSON.parse(JSON.stringify(slot)),
-      serviceId: Number(slot.service_id),
 
-      serviceName: props.service.service_features?.name ?? '',
-      genderCode: props.service.service_features?.gender ?? 'any',
-      guestCapacity: Number(
-        props.service.service_features?.max_guest_capacity ??
-        props.service.service_features?.guest_capacity ??
-        6,
-      ),
-      parent: {
-        title: props.poolTitle,
-        slug: props.poolSlug,
-      },
+  const checkoutSlotState = useState<{
+    selectedSlot: SansSlot
+    serviceId: number
+    serviceName: string
+    genderCode: 'men' | 'women' | 'any'
+    guestCapacity: number
+    parent: { title: string; slug: string }
+  } | null>('vip-checkout-slot', () => null)
+
+  checkoutSlotState.value = {
+    selectedSlot: JSON.parse(JSON.stringify(slot)),
+    serviceId: Number(slot.service_id),
+    serviceName: props.service.service_features?.name ?? '',
+    genderCode: props.service.service_features?.gender ?? 'any',
+    guestCapacity: Number(
+      props.service.service_features?.max_guest_capacity ??
+      props.service.service_features?.guest_capacity ??
+      6,
+    ),
+    parent: {
+      title: props.poolTitle,
+      slug: props.poolSlug,
     },
-  })
+  }
+
+  navigateTo('/cart/vip-detail')
 }
 
 onMounted(fetchSlots)
