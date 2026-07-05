@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { Landmark, Loader2 } from 'lucide-vue-next'
 import type { CheckoutResponse } from '~/types/checkout.types'
+import { formatPrice } from '~/utils/price'
 
 interface Props {
   checkout: CheckoutResponse
@@ -30,6 +31,16 @@ const walletCredit = ref(0)
 
 const payableTotal = computed(() =>
   Number(props.checkout.booking.deposit || props.checkout.booking.total)
+)
+
+const hasDeposit = computed(() => {
+  const deposit = Number(props.checkout.booking.deposit || 0)
+  const total = Number(props.checkout.booking.total || 0)
+  return deposit > 0 && deposit < total
+})
+
+const remainingAtVenue = computed(() =>
+  Number(props.checkout.booking.total || 0) - Number(props.checkout.booking.deposit || 0)
 )
 
 const userWalletBalance = computed(() => Number(user.value?.wallet?.balance ?? 0))
@@ -73,8 +84,15 @@ function onPayClick() {
   <div dir="rtl" class="w-full flex flex-col gap-4">
     <div class="bg-base-100 rounded-3xl border border-base-300 p-6 shadow-sm">
       <div class="flex justify-between items-center">
-        <span class="text-base-content/70">مبلغ قابل پرداخت:</span>
-        <span class="font-bold text-xl text-primary">{{ checkout.booking.total_display }}</span>
+        <span class="text-base-content/70">{{ hasDeposit ? 'قابل پرداخت آنلاین (بیعانه):' : 'مبلغ قابل پرداخت:' }}</span>
+        <span class="font-bold text-xl text-primary">{{ formatPrice(payableTotal) }}</span>
+      </div>
+      <div v-if="hasDeposit" class="flex justify-between items-center mt-3 pt-3 border-t border-base-300/60 text-sm">
+        <span class="text-base-content/60">باقیمانده (پرداخت در محل):</span>
+        <span class="font-medium">{{ formatPrice(remainingAtVenue) }}</span>
+      </div>
+      <div v-if="hasDeposit" class="bg-warning/10 text-warning text-xs rounded-xl px-3 py-2 mt-3">
+        فقط مبلغ بیعانه اکنون پرداخت می‌شود؛ باقیمانده هنگام حضور در مجموعه دریافت خواهد شد.
       </div>
     </div>
 

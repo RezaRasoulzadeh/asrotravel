@@ -11,6 +11,8 @@ interface Props {
   serviceName: string
   genderCode: 'men' | 'women' | 'any'
   guestCapacity: number
+  includedGuestCapacity: number
+  pricePerPerson: number
   parent: VipParentInfo
 }
 
@@ -25,6 +27,14 @@ function toEnglishDigits(str: string): string {
   return str
     .replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 0x06F0))
     .replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x0660))
+}
+
+function toBackendDateTime(iso: string | undefined): string {
+  if (!iso) return ''
+  const match = iso.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/)
+  if (!match) return ''
+  const [, datePart, hh, mm] = match
+  return `${datePart} ${Number(hh)}:${mm}`
 }
 
 function normalizeMobile(phone: string): string {
@@ -55,6 +65,8 @@ const touched = ref(false)
 
 const maxHeadcount = computed(() => Math.max(1, props.guestCapacity || 6))
 
+// VIP "sans" rooms are priced flat per session/room (capped by guestCapacity),
+// not per adult — mirrors the price shown per-slot in VipSanseCalendar.
 const originPriceRial = computed(() => Number(props.selectedSlot.price_per_sans ?? 0))
 const offerAmountRial = computed(() => Number(props.selectedSlot.offer ?? 0))
 const totalPriceWithOfferRial = computed(() => Math.max(0, originPriceRial.value - offerAmountRial.value))
@@ -62,6 +74,13 @@ const offerPercent = computed(() => {
   if (originPriceRial.value <= 0) return 0
   return Math.ceil((offerAmountRial.value / originPriceRial.value) * 100)
 })
+
+const extraGuestCount = computed(() => Math.max(0, headcount.value - (props.includedGuestCapacity || 0)))
+const extraGuestFeeRial = computed(() => extraGuestCount.value * (props.pricePerPerson || 0))
+
+// Grand totals include the per-extra-guest fee on top of the base session price.
+const grandOriginRial = computed(() => originPriceRial.value + extraGuestFeeRial.value)
+const grandTotalWithOfferRial = computed(() => totalPriceWithOfferRial.value + extraGuestFeeRial.value)
 
 function handleToggleSelf(e: Event) {
   const target = e.target as HTMLInputElement
@@ -148,15 +167,20 @@ const checkout = async () => {
   submitting.value = true
 
   try {
+    const startDate = toBackendDateTime(props.selectedSlot.start ?? props.selectedSlot.en_date)
+    const endDate = toBackendDateTime(props.selectedSlot.end)
+
     const { data, error } = await createBooking({
       service_type: 'Pool',
       service_id: props.serviceId,
       service: {
         ...props.selectedSlot,
         service_type: 'vip',
-        total_price: originPriceRial.value,
-        total_price_with_offer: totalPriceWithOfferRial.value,
+        total_price: grandOriginRial.value,
+        total_price_with_offer: grandTotalWithOfferRial.value,
         quantity: { adult: { quantity: headcount.value } },
+        start_date: startDate,
+        end_date: endDate,
       },
       userInfo: {
         first_name: firstName.value.trim(),
@@ -169,14 +193,18 @@ const checkout = async () => {
       term_accepted: termsAccepted.value,
       is_customer: isSelf.value ? '100' : '0',
       customer_notes: customerNotes.value.trim(),
+      night_count: 0,
+      max_offer_percent: 0,
+      start_date: startDate,
+      end_date: endDate,
       adults: headcount.value,
       children: 0,
-      date: props.selectedSlot.day?.day_date ?? '',
-      display_date: props.selectedSlot.date_display,
-      total_price_display: formatPrice(originPriceRial.value),
-      total_price: originPriceRial.value,
-      total_price_with_offer_display: formatPrice(totalPriceWithOfferRial.value),
-      total_price_with_offer: totalPriceWithOfferRial.value,
+      date: '',
+      display_date: '',
+      total_price_display: formatPrice(grandOriginRial.value),
+      total_price: grandOriginRial.value,
+      total_price_with_offer_display: formatPrice(grandTotalWithOfferRial.value),
+      total_price_with_offer: grandTotalWithOfferRial.value,
       rooms: [],
       parent: props.parent
     })
@@ -296,20 +324,6 @@ const checkout = async () => {
         </div>
       </div>
 
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-base-200/50 p-4 rounded-xl mb-6 gap-2">
-        <span class="text-base-content/70">مبلغ قابل پرداخت:</span>
-        <div class="flex items-center gap-2">
-          <span v-if="offerPercent > 0" class="badge badge-success badge-sm text-white font-mono">{{ offerPercent }}%</span>
-          <span v-if="offerAmountRial > 0" class="text-base-content/40 line-through text-xs">
-            {{ formatPrice(originPriceRial) }}
-          </span>
-          <span class="font-bold text-lg text-primary flex items-center gap-1">
-            <Tag v-if="offerAmountRial > 0" :size="14" class="text-error" />
-            {{ formatPrice(totalPriceWithOfferRial) }}
-          </span>
-        </div>
-      </div>
-
       <div class="flex justify-between items-center bg-base-200/50 p-4 rounded-xl mb-6">
         <span class="text-base-content/70">تعداد نفرات:</span>
         <div class="flex items-center gap-3 bg-base-100 rounded-lg p-1 border border-base-300 shadow-sm">
@@ -320,6 +334,34 @@ const checkout = async () => {
           <button type="button" @click="decrease" :disabled="headcount <= 1" class="btn btn-sm btn-ghost btn-square">
             <Minus :size="16" />
           </button>
+        </div>
+      </div>
+
+      <div class="bg-base-200/50 p-4 rounded-xl mb-6 flex flex-col gap-2">
+        <div class="flex justify-between items-center text-sm">
+          <span class="text-base-content/70">قیمت پایه (تا {{ includedGuestCapacity.toLocaleString('fa-IR') }} نفر):</span>
+          <div class="flex items-center gap-2">
+            <span v-if="offerPercent > 0" class="badge badge-success badge-sm text-white font-mono">{{ offerPercent }}%</span>
+            <span v-if="offerAmountRial > 0" class="text-base-content/40 line-through text-xs">
+              {{ formatPrice(originPriceRial) }}
+            </span>
+            <span class="font-medium flex items-center gap-1">
+              <Tag v-if="offerAmountRial > 0" :size="14" class="text-error" />
+              {{ formatPrice(totalPriceWithOfferRial) }}
+            </span>
+          </div>
+        </div>
+
+        <div v-if="extraGuestCount > 0" class="flex justify-between items-center text-sm">
+          <span class="text-base-content/70">
+            هزینه {{ extraGuestCount.toLocaleString('fa-IR') }} نفر اضافه ({{ formatPrice(pricePerPerson) }} × {{ extraGuestCount.toLocaleString('fa-IR') }}):
+          </span>
+          <span class="font-medium">{{ formatPrice(extraGuestFeeRial) }}</span>
+        </div>
+
+        <div class="flex justify-between items-center pt-2 mt-1 border-t border-base-300">
+          <span class="font-bold text-base-content/70">مبلغ قابل پرداخت:</span>
+          <span class="font-bold text-lg text-primary">{{ formatPrice(grandTotalWithOfferRial) }}</span>
         </div>
       </div>
 

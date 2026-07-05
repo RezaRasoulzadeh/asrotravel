@@ -17,6 +17,7 @@ function toFaDigitsInString(str: string): string {
 }
 
 const formattedTime = computed(() => checkout.service.time_display ? toFaDigitsInString(checkout.service.time_display) : null)
+const isVip = computed(() => checkout.service.service_type === 'vip')
 </script>
 
 <template>
@@ -40,8 +41,13 @@ const formattedTime = computed(() => checkout.service.time_display ? toFaDigitsI
 
       <div class="flex flex-col gap-3 text-sm">
         <div class="flex justify-between items-center">
-          <span class="text-base-content/60">قیمت بلیت انتخاب شده:</span>
-          <span class="font-medium">{{ checkout.service.origin_price_display }}</span>
+          <span class="text-base-content/60">{{ isVip ? 'قیمت پایه سانس:' : 'قیمت بلیت انتخاب شده:' }}</span>
+          <span class="font-medium">{{ isVip ? formatPrice(checkout.service.price) : checkout.service.origin_price_display }}</span>
+        </div>
+
+        <div v-if="isVip && checkout.service.price_for_extra_person" class="flex justify-between items-center">
+          <span class="text-base-content/60">هزینه نفرات اضافه:</span>
+          <span class="font-medium">{{ formatPrice(checkout.service.price_for_extra_person) }}</span>
         </div>
 
         <div class="flex justify-between items-center">
@@ -60,9 +66,20 @@ const formattedTime = computed(() => checkout.service.time_display ? toFaDigitsI
         </div>
 
         <div class="flex justify-between items-center pt-3 border-t border-base-300">
-          <span class="font-bold">مجموع مبلغ قابل پرداخت:</span>
+          <span class="font-bold">مجموع مبلغ رزرو:</span>
           <span class="font-bold text-lg text-primary">{{ checkout.booking.total_display }}</span>
         </div>
+
+        <template v-if="checkout.booking.deposit && Number(checkout.booking.deposit) < Number(checkout.booking.total)">
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/60">قابل پرداخت آنلاین (بیعانه):</span>
+            <span class="font-medium text-primary">{{ formatPrice(checkout.booking.deposit) }}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-base-content/60">باقیمانده (پرداخت در محل):</span>
+            <span class="font-medium">{{ formatPrice(Number(checkout.booking.total) - Number(checkout.booking.deposit)) }}</span>
+          </div>
+        </template>
       </div>
     </div>
   </div>

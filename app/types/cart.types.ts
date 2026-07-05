@@ -59,6 +59,8 @@ export interface VipCartAddServicePayload extends VipChangeDateSlot {
   total_price: number | string
   total_price_with_offer: number | string
   quantity: CartAddQuantity
+  start_date: string
+  end_date: string
 }
 
 export interface VipParentInfo {
@@ -74,6 +76,10 @@ export interface VipCartAddPayload {
   term_accepted: boolean
   is_customer: "100" | "0"
   customer_notes: string
+  night_count: number
+  max_offer_percent: number
+  start_date: string
+  end_date: string
   adults: number
   children: number
   date: string

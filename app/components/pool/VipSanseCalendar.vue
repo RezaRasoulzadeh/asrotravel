@@ -161,12 +161,14 @@ function handleBuy(slot: SansSlot) {
     serviceName: string
     genderCode: 'men' | 'women' | 'any'
     guestCapacity: number
+    includedGuestCapacity: number
+    pricePerPerson: number
     parent: { title: string; slug: string }
   } | null>('vip-checkout-slot', () => null)
 
   checkoutSlotState.value = {
     selectedSlot: JSON.parse(JSON.stringify(slot)),
-    serviceId: Number(slot.service_id),
+    serviceId: Number(props.service.pool_id),
     serviceName: props.service.service_features?.name ?? '',
     genderCode: props.service.service_features?.gender ?? 'any',
     guestCapacity: Number(
@@ -174,6 +176,8 @@ function handleBuy(slot: SansSlot) {
       props.service.service_features?.guest_capacity ??
       6,
     ),
+    includedGuestCapacity: Number(props.service.service_features?.guest_capacity ?? 6),
+    pricePerPerson: Number(props.service.service_features?.price_per_person ?? 0),
     parent: {
       title: props.poolTitle,
       slug: props.poolSlug,

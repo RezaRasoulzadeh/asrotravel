@@ -28,46 +28,52 @@ export interface CheckoutDisplayPriceObject {
 
 export interface CheckoutService {
   uuid: string
-  day_number: string
-  enable: string
-  from: string
-  to: string
-  sanse_time: string | null
-  adult_price: string
-  child_price: string | null
-  marketer_price: string
-  marketer_sale_price: string
-  offer: number
-  unit: string
-  type: string
+  day_number?: string
+  enable?: string
+  from?: string
+  to?: string
+  sanse_time?: string | null
+  adult_price?: string
+  child_price?: string | null
+  marketer_price?: string
+  marketer_sale_price?: string
+  offer: number | string
+  offer_unit?: string
+  unit?: string
+  type?: string
   time_display: string
-  date: string
+  date?: string
   en_date: string
   end_date: string
   start_date: string
-  day: string
+  day?: string | { day_name: string; day_date: string }
   date_display: string
-  child_price_display: string
-  adult_price_with_offer: number
-  min: number
-  status: boolean
-  status_text: string
+  child_price_display?: string
+  adult_price_with_offer?: number
+  min?: number
+  status?: boolean
+  status_text?: string
   service_id: number
   service_type: string
-  service_module: string
+  service_module?: string
   number: number
   id: number
-  origin_price_display: string
-  price_with_offer_display: string
-  child_price_with_offer: number | null
-  display_price_object: CheckoutDisplayPriceObject
-  adult_price_html: string
+  origin_price_display?: string
+  price_with_offer_display?: string
+  child_price_with_offer?: number | null
+  display_price_object?: CheckoutDisplayPriceObject
+  adult_price_html?: string
   slug: string
   quantity: CheckoutQuantity
   total_price: number
   total_price_with_offer: number
   reservation_code: string
   total_offer: number
+  // VIP-only fields
+  price?: string
+  price_per_sans?: string
+  price_for_extra_person?: number
+  name?: string
   created_ticket: string
   total_price_display: string
   title: string

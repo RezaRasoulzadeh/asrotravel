@@ -14,6 +14,7 @@ export type BookingStatus =
   | 'completed'
   | 'cancelled'
   | 'expire'
+  | 'Cancelled_By_System'
 
 export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
   draft: 'تکمیل‌نشده',
@@ -26,6 +27,7 @@ export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
   completed: 'تکمیل شد',
   cancelled: 'کنسل شد',
   expire: 'منقضی شده',
+  Cancelled_By_System: 'کنسل شده توسط سیستم'
 }
 
 export const BOOKING_STATUS_BADGE: Record<BookingStatus, string> = {
@@ -39,12 +41,11 @@ export const BOOKING_STATUS_BADGE: Record<BookingStatus, string> = {
   completed: 'badge-success',
   cancelled: 'badge-error',
   expire: 'badge-error',
+  Cancelled_By_System: 'badge-error'
 }
 
 export type BookingAction = 'continue' | 'pay' | 'cancel' | 'rebook' | 'review'
 
-// TODO: guessed mapping — confirm which statuses actually allow cancel/pay/continue
-// against the real backend once non-draft samples exist.
 export const BOOKING_STATUS_ACTIONS: Record<BookingStatus, BookingAction[]> = {
   draft: ['continue'],
   unpaid: ['continue', 'cancel'],
@@ -56,6 +57,7 @@ export const BOOKING_STATUS_ACTIONS: Record<BookingStatus, BookingAction[]> = {
   completed: ['rebook', 'review'],
   cancelled: ['rebook'],
   expire: ['rebook'],
+  Cancelled_By_System: ['rebook']
 }
 
 // TODO: guessed — confirm which statuses actually carry a meaningful reservation_code.

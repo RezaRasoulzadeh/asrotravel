@@ -11,6 +11,8 @@ interface VipCheckoutState {
   serviceName: string
   genderCode: 'men' | 'women' | 'any'
   guestCapacity: number
+  includedGuestCapacity: number
+  pricePerPerson: number
   parent: VipParentInfo
 }
 
@@ -21,6 +23,8 @@ const serviceId = ref(0)
 const serviceName = ref('')
 const genderCode = ref<'men' | 'women' | 'any'>('any')
 const guestCapacity = ref(6)
+const includedGuestCapacity = ref(6)
+const pricePerPerson = ref(0)
 const parent = ref<VipParentInfo>({ title: '', slug: '' })
 
 const router = useRouter()
@@ -36,6 +40,8 @@ if (import.meta.client) {
     serviceName.value = checkoutSlotState.value.serviceName
     genderCode.value = checkoutSlotState.value.genderCode
     guestCapacity.value = checkoutSlotState.value.guestCapacity
+    includedGuestCapacity.value = checkoutSlotState.value.includedGuestCapacity
+    pricePerPerson.value = checkoutSlotState.value.pricePerPerson
     parent.value = checkoutSlotState.value.parent
   } else {
     navigateTo('/')
@@ -54,6 +60,8 @@ if (import.meta.client) {
         :service-name="serviceName"
         :gender-code="genderCode"
         :guest-capacity="guestCapacity"
+        :included-guest-capacity="includedGuestCapacity"
+        :price-per-person="pricePerPerson"
         :parent="parent"
         @back="back"
       />
