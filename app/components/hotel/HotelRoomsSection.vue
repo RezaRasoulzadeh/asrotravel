@@ -4,8 +4,10 @@ import {
   BedDouble, Users, Baby, Plus,
   ChevronDown, AlertCircle, RefreshCw,
   ShieldCheck, BadgeInfoIcon, Calendar,
+  Check, X,
 } from 'lucide-vue-next'
 import type { HotelRoom, HotelRoomSearchParams } from '~/types/hotelSingle.types'
+import { formatPrice } from '~/utils/price'
 import PersianDateRangePicker from '../ui/PersianDateRangePicker.vue'
 import GuestCountPicker from '../ui/GuestCountPicker.vue'
 
@@ -19,7 +21,38 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'search', val?: Partial<HotelRoomSearchParams>): void
   (e: 'update:params', val: HotelRoomSearchParams): void
+  (e: 'continue', selectedRooms: HotelRoom[]): void
 }>()
+
+const selectedRoomIds = ref<Set<number>>(new Set())
+
+function toggleRoomSelection(room: HotelRoom) {
+  if (room.number < 1) return
+  selectedRoomIds.value.has(room.id)
+    ? selectedRoomIds.value.delete(room.id)
+    : selectedRoomIds.value.add(room.id)
+  // trigger reactivity on the Set
+  selectedRoomIds.value = new Set(selectedRoomIds.value)
+}
+
+const selectedRooms = computed(() =>
+  props.rooms.filter(r => selectedRoomIds.value.has(r.id))
+)
+
+const selectedRoomsTotal = computed(() =>
+  selectedRooms.value.reduce((sum, r) => sum + (r.price_with_offer || 0), 0)
+)
+
+function clearSelection() {
+  selectedRoomIds.value = new Set()
+}
+
+function handleContinue() {
+  if (!selectedRooms.value.length) return
+  emit('continue', selectedRooms.value)
+}
+
+watch(() => props.rooms, () => clearSelection())
 
 const PLACEHOLDER = '/placeholder.png'
 
@@ -236,12 +269,19 @@ const showLoading = computed(() =>
                 </span>
               </div>
 
+              <span v-if="!room.is_online" class="inline-flex items-center gap-1 self-start text-[10px] text-warning bg-warning/10 px-2 py-0.5 rounded-full">
+                نیازمند تایید رزرو
+              </span>
+
               <button
+                type="button"
                 class="btn btn-sm w-full gap-1.5 mt-1"
-                :class="room.is_online ? 'btn-primary' : 'btn-primary btn-outline'"
-                :disabled="room.number < 1">
-                <BedDouble :size="14" />
-                {{ room.number < 1 ? 'ظرفیت تکمیل' : (room.is_online ? 'رزرو آنلاین' : 'رزرو تلفنی') }}
+                :class="selectedRoomIds.has(room.id) ? 'btn-success' : 'btn-primary'"
+                :disabled="room.number < 1"
+                @click="toggleRoomSelection(room)">
+                <Check v-if="selectedRoomIds.has(room.id)" :size="14" />
+                <BedDouble v-else :size="14" />
+                {{ room.number < 1 ? 'ظرفیت تکمیل' : (selectedRoomIds.has(room.id) ? 'انتخاب شد' : 'انتخاب اتاق') }}
               </button>
             </div>
           </div>
@@ -274,6 +314,40 @@ const showLoading = computed(() =>
 
         </div>
       </div>
+
+      <Transition
+        enter-active-class="transition-all duration-200 ease-out"
+        enter-from-class="opacity-0 translate-y-4"
+        leave-active-class="transition-all duration-150 ease-in"
+        leave-to-class="opacity-0 translate-y-4">
+        <div
+          v-if="selectedRooms.length"
+          class="sticky bottom-4 z-20 bg-base-100 border border-base-300 shadow-lg rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm btn-circle order-2 sm:order-1"
+            @click="clearSelection"
+            aria-label="حذف انتخاب‌ها">
+            <X :size="16" />
+          </button>
+
+          <div class="flex-1 text-center sm:text-start order-1 sm:order-2">
+            <p class="text-sm font-medium">
+              {{ selectedRooms.length.toLocaleString('fa-IR') }} اتاق انتخاب شد
+            </p>
+            <p class="text-primary font-bold">
+              {{ formatPrice(selectedRoomsTotal) }}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-primary rounded-xl w-full sm:w-auto order-3"
+            @click="handleContinue">
+            ادامه رزرو
+          </button>
+        </div>
+      </Transition>
 
     </div>
   </section>

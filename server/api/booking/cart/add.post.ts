@@ -1,8 +1,8 @@
 // server/api/booking/cart/add.post.ts
-import type { CartAddPayload, CartAddResponse } from '~/types/cart.types'
+import type { CartAddPayload, VipCartAddPayload, HotelCartAddPayload, CartAddResponse } from '~/types/cart.types'
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody<CartAddPayload>(event)
+  const body = await readBody<CartAddPayload | VipCartAddPayload | HotelCartAddPayload>(event)
 
   const result = await authApiFetch<CartAddResponse>(
     event,

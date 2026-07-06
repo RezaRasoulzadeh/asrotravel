@@ -1,7 +1,10 @@
+// app/pages/hotel/[slug].vue
 <script setup lang="ts">
 import { WifiOff, RefreshCw, SearchX, ScrollText } from 'lucide-vue-next'
 import { parseBlogHtml } from '~/utils/blog/parser'
 import type { HotelCardItem, HotelMedia } from '~/types/hotel.types'
+import type { HotelRoom } from '~/types/hotelSingle.types'
+import type { HotelCheckoutSlotState, HotelCheckoutSummaryState } from '~/types/cart.types'
 import HotelList from '~/components/hotel/HotelList.vue'
 import FAQ from '~/components/ui/FAQ.vue'
 import ReviewSecion from '~/components/ui/review/ReviewSecion.vue'
@@ -37,6 +40,40 @@ const locationLink = computed(() => hotel.value?.location?.slug
     ? `/hotel/search?location=${hotel.value.location.slug}`
     : '/hotel'
 )
+
+function handleContinueBooking(selectedRooms: HotelRoom[]) {
+    if (!hotel.value || !selectedRooms.length) return
+
+    const nightCount = selectedRooms[0]?.night_count || 1
+
+    const slotState: HotelCheckoutSlotState = {
+        hotelId: hotel.value.id,
+        hotelTitle: hotel.value.title,
+        hotelSlug: hotel.value.slug,
+        startDate: roomParams.value.start_date,
+        endDate: roomParams.value.end_date,
+        nightCount,
+        selectedRooms: JSON.parse(JSON.stringify(selectedRooms)),
+    }
+
+    const summaryState: HotelCheckoutSummaryState = {
+        hotelTitle: hotel.value.title,
+        startDate: roomParams.value.start_date,
+        endDate: roomParams.value.end_date,
+        nightCount,
+        rooms: selectedRooms.map(r => ({
+            title: r.title,
+            numberSelected: r.number_selected || 1,
+            priceWithOffer: r.price_with_offer,
+            price: r.price,
+        })),
+    }
+
+    useState<HotelCheckoutSlotState | null>('hotel-checkout-slot', () => null).value = slotState
+    useState<HotelCheckoutSummaryState | null>('hotel-checkout-summary', () => null).value = summaryState
+
+    navigateTo('/cart/hotel-detail')
+}
 
 useHead({
     title: computed(() => seo.value?.title ?? hotel.value?.title ?? 'جزئیات هتل'),
@@ -97,7 +134,7 @@ useHead({
             <HotelSingleHeader :hotel="hotel" :gallery="gallery" />
 
             <HotelRoomsSection :rooms="rooms" :loading="roomsLoading" :error="roomsErrorBool"
-                v-model:params="roomParams" @search="searchRooms" />
+                v-model:params="roomParams" @search="searchRooms" @continue="handleContinueBooking" />
 
             <BlogRenderer v-if="blocks.length" :blocks="blocks" />
 
