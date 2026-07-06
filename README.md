@@ -2,7 +2,7 @@
 
 > Source: reverse-engineered directly from `github.com/RezaRasoulzadeh/asrotravel` (public repo, current `main`).
 > Existing `README.md` / `DASHBOARD.md` / `checkout.md` in the repo are flagged as **stale** — this doc supersedes them.
-> Last synced: 2026-07-04.
+> Last synced: 2026-07-06 (booking-flow audit added, see §11).
 
 ---
 
@@ -296,7 +296,7 @@ These are the rules the codebase actually follows — deviate deliberately, not 
 ### Known unresolved / in-progress items
 
 - `useDashboardBookings.cancelBooking()` — endpoint contract unconfirmed (see §6 detail above).
-- `pages/pool/[slug].vue` → `handleAddToCart()` currently just does `console.log('add to cart', slot)` — **not wired** to `useCreateBooking()` yet. The real cart-add composable exists and works (`useCreateBooking` → `POST /api/booking/cart/add`), it's just not called from this page yet.
+- `pages/pool/[slug].vue` → `handleAddToCart()` — **this note is stale, corrected in §11.** As of 2026-07-06 the flow *is* wired to `useCreateBooking()` → `POST /api/booking/cart/add`, but a full audit found several bugs in it (see §11.2). `main` still has the original, unfixed code as of this writing.
 - `README.md`, `DASHBOARD.md`, `checkout.md` in the repo are explicitly flagged by you as stale — don't trust their content; this doc was built by reading source directly instead.
 
 ---
@@ -338,3 +338,31 @@ Font: Vazirmatn, self-hosted `/fonts/*.woff2`, weights 400/500/600/700, `font-di
 - **Is this composable `useFetch`-based (SSR, cached by key) or raw `$fetch`-based (client-triggered action)?** Determines whether 401 handling is automatic or must be added manually.
 - **Does the target page already have a real backend endpoint**, or is it one of the still-stubbed dashboard nav items (`/dashboard/profile`, `/dashboard/my-wallet`, `/dashboard/my-favorites`, `/dashboard/support` are linked in the sidebar but no corresponding `pages/dashboard/*` files exist yet beyond `index.vue` and `bookings.vue`).
 - **Persian RTL + Jalali dates + toman formatting** apply to *any* new page touching dates or prices — don't reach for a new date/currency library, use the existing `utils/date.ts`/`utils/jalali.ts`/`utils/price.ts`.
+
+---
+
+## 11. VIP pool booking — payload contract
+
+`POST /api/booking/cart/add` with `service_type: 'vip'` has a field-to-meaning mapping that isn't obvious from names alone. There are three distinct numeric IDs in play, and mixing them up produces a 500 (`Cannot read properties of null (reading 'isBookable')`) because the backend does a lookup that fails silently into a null:
+
+| ID | Meaning | Where it comes from |
+|---|---|---|
+| `service_id` (top level of the payload) | The VIP room's `pool_id` — a mid-level grouping, not the venue and not the session variant | `VipSanseService.pool_id` (the `service` prop on `VipSanseCalendar.vue`) |
+| `service.id` / `service.service_id` (nested) | The specific session/sans variant (e.g. "1.5-hour family session") | The slot itself (`VipChangeDateSlot.service_id`) |
+| `parent.id` | The venue-level `Pool.id` | `aggregatedData.id` on `pages/pool/[slug].vue` |
+
+Other payload requirements:
+
+- `start_date`/`end_date` are required, both at the top level and nested inside `service`, formatted as `"YYYY-MM-DD H:mm"` — no `T` separator, no timezone offset, no leading zero on the hour (e.g. `"2026-07-08 9:00"`). Built via `toBackendDateTime()` in `VipCartDetail.vue`.
+- `date`/`display_date` are sent as empty strings for VIP bookings. The backend's "selected date must be after this moment" validation is keyed off `start_date`, not `date`.
+- `parent.title`/`parent.slug` (venue title/slug) are required alongside `parent.id`.
+
+**State hand-off**: the calendar step and `/cart/vip-detail` communicate via `useState('vip-checkout-slot', ...)`, not `window.history.state` — Nuxt's `navigateTo` does not reliably forward a `state` option into `history.pushState`, so anything read back via `window.history.state` on the next page can silently come back `undefined`. The ticket/pool flow (`checkout-slot` key) uses the same pattern for the same reason.
+
+**Error surfacing**: `server/api/booking/cart/add.post.ts` uses `authApiFetch()` (`server/utils/auth.ts`), not `safeAuthApiFetch()`. The latter swallows backend errors into a generic fallback (used by `checkout.get.ts`, `bookings.get.ts`, `cancel.post.ts`, where a swallowed fallback is fine); `authApiFetch()` re-throws the real backend `statusCode`/`message`/`data`, which matters here because cart/add is a user-triggered mutation where the real validation reason needs to reach the client. Don't consolidate these two helpers — the swallow-vs-surface behavior is intentional in both places.
+
+**Pricing**: VIP rooms are priced flat per session (`service.price_per_sans` minus `service.offer`), not per adult. `service_features.guest_capacity` is the headcount included in that flat price; `service_features.price_per_person` is the fee for each guest beyond it, computed client-side in `VipCartDetail.vue` and passed through `useState` as `includedGuestCapacity`/`pricePerPerson` alongside `guestCapacity` (the hard cap on the headcount stepper, from `max_guest_capacity`).
+
+The checkout response (`GET /api/booking/{code}/checkout`) carries `booking.deposit` separately from `booking.total` — only the deposit is charged online through the payment gateway; the remainder is collected at the venue. `CheckoutSummary.vue`/`CheckoutBookingSummary.vue` branch on `service.service_type === 'vip'` to show this breakdown, since the ticket-flow checkout response has a different shape (`origin_price_display`, no `deposit` concept) — see `checkout.types.ts`'s `CheckoutService` for both shapes.
+
+The ticket/pool (non-VIP) booking flow does not follow this same `service_id`/`parent` contract — it has its own, separately verified working payload shape in `CartDetail.vue`/`PoolSanseCalendar.vue`. Don't port the VIP field mapping over to it.
