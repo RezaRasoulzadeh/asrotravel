@@ -83,7 +83,11 @@ const checkout = async () => {
             total_price_with_offer: totalPriceRial.value,
         })
 
-        if (error || !data?.booking_code) return
+        if (error) return
+        if (!data?.booking_code) {
+            useToast().error('خطا در ثبت رزرو، لطفا دوباره تلاش کنید')
+            return
+        }
 
         await navigateTo(`/cart/checkout/${data.booking_code}`)
     } finally {

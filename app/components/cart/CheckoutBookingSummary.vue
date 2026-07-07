@@ -80,6 +80,11 @@ const isVip = computed(() => checkout.service.service_type === 'vip')
           <span class="font-medium">{{ formatPrice(checkout.service.price_for_extra_person) }}</span>
         </div>
 
+        <div v-if="isHotel && hotelSummary?.extraPersonTotal" class="flex justify-between items-center">
+          <span class="text-base-content/60">هزینه نفرات اضافه:</span>
+          <span class="font-medium">{{ formatPrice(hotelSummary.extraPersonTotal) }}</span>
+        </div>
+
         <div class="flex justify-between items-center">
           <span class="text-base-content/60">تعداد:</span>
           <span class="font-medium">{{ checkout.booking.total_guests.toLocaleString('fa-IR') }}</span>
@@ -100,7 +105,7 @@ const isVip = computed(() => checkout.service.service_type === 'vip')
           <span class="font-bold text-lg text-primary">{{ checkout.booking.total_display }}</span>
         </div>
 
-        <template v-if="checkout.booking.deposit && Number(checkout.booking.deposit) < Number(checkout.booking.total)">
+        <template v-if="Number(checkout.booking.deposit) > 0 && Number(checkout.booking.deposit) < Number(checkout.booking.total)">
           <div class="flex justify-between items-center">
             <span class="text-base-content/60">قابل پرداخت آنلاین (بیعانه):</span>
             <span class="font-medium text-primary">{{ formatPrice(checkout.booking.deposit) }}</span>

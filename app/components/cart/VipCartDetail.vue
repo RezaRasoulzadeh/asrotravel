@@ -157,7 +157,17 @@ const decrease = () => { if (headcount.value > 1) headcount.value-- }
 
 const checkout = async () => {
   touched.value = true
-  if (!isFormValid.value || submitting.value) return
+
+  if (!isFormValid.value) {
+    if (errors.value.firstName || errors.value.lastName || errors.value.nationalCode || errors.value.mobile) {
+      useToast().error('لطفا اطلاعات مسافر را کامل و صحیح وارد کنید')
+    } else if (!termsAccepted.value) {
+      useToast().error('لطفا قوانین و مقررات را تایید کنید')
+    }
+    return
+  }
+
+  if (submitting.value) return
 
   if (!props.serviceId || !props.parent?.slug) {
     useToast().error('اطلاعات این سرویس ناقص است، لطفا دوباره از تقویم اقدام کنید')
@@ -209,7 +219,11 @@ const checkout = async () => {
       parent: props.parent
     })
 
-    if (error || !data?.booking_code) return
+    if (error) return
+    if (!data?.booking_code) {
+      useToast().error('خطا در ثبت رزرو، لطفا دوباره تلاش کنید')
+      return
+    }
     await navigateTo(`/cart/checkout/${data.booking_code}`)
   } finally {
     submitting.value = false

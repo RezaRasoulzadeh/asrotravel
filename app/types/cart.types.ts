@@ -179,7 +179,8 @@ export interface HotelCheckoutSlotState {
   selections: HotelRoomSelection[]
 }
 
-/** Persisted alongside HotelCheckoutSlotState so the checkout summary can render room details the checkout GET endpoint doesn't return */
+/** Persisted alongside HotelCheckoutSlotState so the checkout summary can render room details the checkout GET endpoint doesn't return.
+ * Must be re-synced from the final submitted selections at checkout-submit time, not just once when entering the room cart. */
 export interface HotelCheckoutSummaryState {
   hotelTitle: string
   startDate: string
@@ -191,4 +192,5 @@ export interface HotelCheckoutSummaryState {
     priceWithOffer: number
     price: number
   }>
+  extraPersonTotal: number
 }

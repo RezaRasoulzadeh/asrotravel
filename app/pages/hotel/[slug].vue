@@ -67,6 +67,7 @@ function handleContinueBooking(selections: HotelRoomSelection[]) {
             priceWithOffer: s.room.price_with_offer,
             price: s.room.price,
         })),
+        extraPersonTotal: 0,
     }
 
     useState<HotelCheckoutSlotState | null>('hotel-checkout-slot', () => null).value = slotState
