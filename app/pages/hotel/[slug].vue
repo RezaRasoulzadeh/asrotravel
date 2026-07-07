@@ -3,8 +3,7 @@
 import { WifiOff, RefreshCw, SearchX, ScrollText } from 'lucide-vue-next'
 import { parseBlogHtml } from '~/utils/blog/parser'
 import type { HotelCardItem, HotelMedia } from '~/types/hotel.types'
-import type { HotelRoom } from '~/types/hotelSingle.types'
-import type { HotelCheckoutSlotState, HotelCheckoutSummaryState } from '~/types/cart.types'
+import type { HotelCheckoutSlotState, HotelCheckoutSummaryState, HotelRoomSelection } from '~/types/cart.types'
 import HotelList from '~/components/hotel/HotelList.vue'
 import FAQ from '~/components/ui/FAQ.vue'
 import ReviewSecion from '~/components/ui/review/ReviewSecion.vue'
@@ -41,10 +40,10 @@ const locationLink = computed(() => hotel.value?.location?.slug
     : '/hotel'
 )
 
-function handleContinueBooking(selectedRooms: HotelRoom[]) {
-    if (!hotel.value || !selectedRooms.length) return
+function handleContinueBooking(selections: HotelRoomSelection[]) {
+    if (!hotel.value || !selections.length) return
 
-    const nightCount = selectedRooms[0]?.night_count || 1
+    const nightCount = selections[0]?.room.night_count || 1
 
     const slotState: HotelCheckoutSlotState = {
         hotelId: hotel.value.id,
@@ -53,7 +52,8 @@ function handleContinueBooking(selectedRooms: HotelRoom[]) {
         startDate: roomParams.value.start_date,
         endDate: roomParams.value.end_date,
         nightCount,
-        selectedRooms: JSON.parse(JSON.stringify(selectedRooms)),
+        allRooms: JSON.parse(JSON.stringify(rooms.value)),
+        selections: JSON.parse(JSON.stringify(selections)),
     }
 
     const summaryState: HotelCheckoutSummaryState = {
@@ -61,11 +61,11 @@ function handleContinueBooking(selectedRooms: HotelRoom[]) {
         startDate: roomParams.value.start_date,
         endDate: roomParams.value.end_date,
         nightCount,
-        rooms: selectedRooms.map(r => ({
-            title: r.title,
-            numberSelected: r.number_selected || 1,
-            priceWithOffer: r.price_with_offer,
-            price: r.price,
+        rooms: selections.map(s => ({
+            title: s.room.title,
+            numberSelected: s.guests.length,
+            priceWithOffer: s.room.price_with_offer,
+            price: s.room.price,
         })),
     }
 

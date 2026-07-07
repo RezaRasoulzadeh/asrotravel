@@ -12,7 +12,8 @@ const hotelSlug = ref('')
 const startDate = ref('')
 const endDate = ref('')
 const nightCount = ref(1)
-const selectedRooms = ref<HotelCheckoutSlotState['selectedRooms']>([])
+const allRooms = ref<HotelCheckoutSlotState['allRooms']>([])
+const selections = ref<HotelCheckoutSlotState['selections']>([])
 
 const router = useRouter()
 
@@ -21,14 +22,15 @@ const back = () => {
 }
 
 if (import.meta.client) {
-  if (checkoutSlotState.value?.selectedRooms?.length) {
+  if (checkoutSlotState.value?.selections?.length) {
     hotelId.value = checkoutSlotState.value.hotelId
     hotelTitle.value = checkoutSlotState.value.hotelTitle
     hotelSlug.value = checkoutSlotState.value.hotelSlug
     startDate.value = checkoutSlotState.value.startDate
     endDate.value = checkoutSlotState.value.endDate
     nightCount.value = checkoutSlotState.value.nightCount
-    selectedRooms.value = checkoutSlotState.value.selectedRooms
+    allRooms.value = checkoutSlotState.value.allRooms
+    selections.value = checkoutSlotState.value.selections
   } else {
     navigateTo('/')
   }
@@ -40,14 +42,15 @@ if (import.meta.client) {
     <CartSteps :current-step="1" />
     <ClientOnly>
       <HotelCartDetail
-        v-if="selectedRooms.length"
+        v-if="selections.length"
         :hotel-id="hotelId"
         :hotel-title="hotelTitle"
         :hotel-slug="hotelSlug"
         :start-date="startDate"
         :end-date="endDate"
         :night-count="nightCount"
-        :selected-rooms="selectedRooms"
+        :all-rooms="allRooms"
+        :selections="selections"
         @back="back"
       />
       <template #fallback>

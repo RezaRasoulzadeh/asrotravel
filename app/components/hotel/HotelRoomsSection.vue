@@ -1,12 +1,13 @@
 // components/hotel/HotelRoomsSection.vue
 <script setup lang="ts">
 import {
-  BedDouble, Users, Baby, Plus,
+  BedDouble, Users, Baby, Plus, Minus, Trash2,
   ChevronDown, AlertCircle, RefreshCw,
   ShieldCheck, BadgeInfoIcon, Calendar,
-  Check, X,
+  X,
 } from 'lucide-vue-next'
 import type { HotelRoom, HotelRoomSearchParams } from '~/types/hotelSingle.types'
+import type { HotelRoomSelection } from '~/types/cart.types'
 import { formatPrice } from '~/utils/price'
 import PersianDateRangePicker from '../ui/PersianDateRangePicker.vue'
 import GuestCountPicker from '../ui/GuestCountPicker.vue'
@@ -21,35 +22,71 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'search', val?: Partial<HotelRoomSearchParams>): void
   (e: 'update:params', val: HotelRoomSearchParams): void
-  (e: 'continue', selectedRooms: HotelRoom[]): void
+  (e: 'continue', selections: HotelRoomSelection[]): void
 }>()
 
-const selectedRoomIds = ref<Set<number>>(new Set())
-
-function toggleRoomSelection(room: HotelRoom) {
-  if (room.number < 1) return
-  selectedRoomIds.value.has(room.id)
-    ? selectedRoomIds.value.delete(room.id)
-    : selectedRoomIds.value.add(room.id)
-  // trigger reactivity on the Set
-  selectedRoomIds.value = new Set(selectedRoomIds.value)
+function makeGuestId(): string {
+  return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`
 }
 
-const selectedRooms = computed(() =>
-  props.rooms.filter(r => selectedRoomIds.value.has(r.id))
-)
+/** roomId -> selection (quantity is derived from guests.length) */
+const selectionMap = ref<Map<number, HotelRoomSelection>>(new Map())
+
+function quantityOf(roomId: number): number {
+  return selectionMap.value.get(roomId)?.guests.length ?? 0
+}
+
+function addRoomUnit(room: HotelRoom) {
+  if (room.number < 1) return
+  const current = selectionMap.value.get(room.id)
+  const qty = current?.guests.length ?? 0
+  if (qty >= room.number) return // capped by availability
+
+  const next = new Map(selectionMap.value)
+  const guest = { localId: makeGuestId(), name: '', nationalCode: '', guestCount: 1, isSupervisor: false }
+  if (current) {
+    next.set(room.id, { room, guests: [...current.guests, guest] })
+  } else {
+    next.set(room.id, { room, guests: [guest] })
+  }
+  selectionMap.value = next
+}
+
+function removeRoomUnit(roomId: number) {
+  const current = selectionMap.value.get(roomId)
+  if (!current) return
+  const next = new Map(selectionMap.value)
+  if (current.guests.length <= 1) {
+    next.delete(roomId)
+  } else {
+    next.set(roomId, { room: current.room, guests: current.guests.slice(0, -1) })
+  }
+  selectionMap.value = next
+}
+
+function removeRoomType(roomId: number) {
+  const next = new Map(selectionMap.value)
+  next.delete(roomId)
+  selectionMap.value = next
+}
+
+const selections = computed(() => Array.from(selectionMap.value.values()))
 
 const selectedRoomsTotal = computed(() =>
-  selectedRooms.value.reduce((sum, r) => sum + (r.price_with_offer || 0), 0)
+  selections.value.reduce((sum, s) => sum + (s.room.price_with_offer || 0) * s.guests.length, 0)
+)
+
+const selectedUnitsCount = computed(() =>
+  selections.value.reduce((sum, s) => sum + s.guests.length, 0)
 )
 
 function clearSelection() {
-  selectedRoomIds.value = new Set()
+  selectionMap.value = new Map()
 }
 
 function handleContinue() {
-  if (!selectedRooms.value.length) return
-  emit('continue', selectedRooms.value)
+  if (!selections.value.length) return
+  emit('continue', selections.value)
 }
 
 watch(() => props.rooms, () => clearSelection())
@@ -274,15 +311,43 @@ const showLoading = computed(() =>
               </span>
 
               <button
+                v-if="quantityOf(room.id) === 0"
                 type="button"
-                class="btn btn-sm w-full gap-1.5 mt-1"
-                :class="selectedRoomIds.has(room.id) ? 'btn-success' : 'btn-primary'"
+                class="btn btn-sm btn-primary w-full gap-1.5 mt-1"
                 :disabled="room.number < 1"
-                @click="toggleRoomSelection(room)">
-                <Check v-if="selectedRoomIds.has(room.id)" :size="14" />
-                <BedDouble v-else :size="14" />
-                {{ room.number < 1 ? 'ظرفیت تکمیل' : (selectedRoomIds.has(room.id) ? 'انتخاب شد' : 'انتخاب اتاق') }}
+                @click="addRoomUnit(room)">
+                <BedDouble :size="14" />
+                {{ room.number < 1 ? 'ظرفیت تکمیل' : 'انتخاب اتاق' }}
               </button>
+
+              <div v-else class="flex items-center justify-between gap-2 mt-1 bg-success/10 rounded-xl p-1.5">
+                <button
+                  type="button"
+                  class="btn btn-xs btn-circle btn-ghost text-error"
+                  aria-label="حذف این اتاق"
+                  @click="removeRoomType(room.id)">
+                  <Trash2 :size="14" />
+                </button>
+
+                <div class="flex items-center gap-3">
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-circle btn-success"
+                    aria-label="کاهش تعداد"
+                    @click="removeRoomUnit(room.id)">
+                    <Minus :size="14" />
+                  </button>
+                  <span class="font-bold text-success min-w-4 text-center">{{ quantityOf(room.id).toLocaleString('fa-IR') }}</span>
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-circle btn-success"
+                    aria-label="افزودن اتاق دیگر"
+                    :disabled="quantityOf(room.id) >= room.number"
+                    @click="addRoomUnit(room)">
+                    <Plus :size="14" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -321,7 +386,7 @@ const showLoading = computed(() =>
         leave-active-class="transition-all duration-150 ease-in"
         leave-to-class="opacity-0 translate-y-4">
         <div
-          v-if="selectedRooms.length"
+          v-if="selections.length"
           class="sticky bottom-4 z-20 bg-base-100 border border-base-300 shadow-lg rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
           <button
             type="button"
@@ -333,7 +398,7 @@ const showLoading = computed(() =>
 
           <div class="flex-1 text-center sm:text-start order-1 sm:order-2">
             <p class="text-sm font-medium">
-              {{ selectedRooms.length.toLocaleString('fa-IR') }} اتاق انتخاب شد
+              {{ selectedUnitsCount.toLocaleString('fa-IR') }} اتاق انتخاب شد
             </p>
             <p class="text-primary font-bold">
               {{ formatPrice(selectedRoomsTotal) }}

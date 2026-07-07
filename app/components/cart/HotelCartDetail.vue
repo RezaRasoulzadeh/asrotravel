@@ -1,8 +1,8 @@
 // components/cart/HotelCartDetail.vue
 <script setup lang="ts">
-import { ArrowRight, ChevronLeft, BedDouble, Users, Baby } from 'lucide-vue-next'
+import { ArrowRight, ChevronLeft, BedDouble, Users, Baby, Plus, Minus, Trash2, UserRound } from 'lucide-vue-next'
 import type { HotelRoom } from '~/types/hotelSingle.types'
-import type { HotelCartAddPayload, HotelCartAddRoom } from '~/types/cart.types'
+import type { HotelCartAddPayload, HotelCartAddRoom, HotelRoomGuest, HotelRoomSelection } from '~/types/cart.types'
 import { formatPrice } from '~/utils/price'
 
 interface Props {
@@ -12,11 +12,120 @@ interface Props {
   startDate: string
   endDate: string
   nightCount: number
-  selectedRooms: HotelRoom[]
+  allRooms: HotelRoom[]
+  selections: HotelRoomSelection[]
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits(['back'])
+
+function makeGuestId(): string {
+  return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`
+}
+
+// local, editable copy of the room cart — quantities & guest forms can still change here before checkout
+const localSelections = ref<HotelRoomSelection[]>(
+  JSON.parse(JSON.stringify(props.selections)) as HotelRoomSelection[],
+)
+
+function quantityOf(roomId: number): number {
+  return localSelections.value.find(s => s.room.id === roomId)?.guests.length ?? 0
+}
+
+function addRoomUnit(room: HotelRoom) {
+  if (room.number < 1) return
+  const existing = localSelections.value.find(s => s.room.id === room.id)
+  const qty = existing?.guests.length ?? 0
+  if (qty >= room.number) return
+
+  const guest: HotelRoomGuest = { localId: makeGuestId(), name: '', nationalCode: '', guestCount: 1, isSupervisor: false }
+  if (existing) {
+    existing.guests.push(guest)
+  } else {
+    localSelections.value.push({ room, guests: [guest] })
+  }
+}
+
+function removeRoomUnit(roomId: number) {
+  const entry = localSelections.value.find(s => s.room.id === roomId)
+  if (!entry) return
+  if (entry.guests.length <= 1) {
+    localSelections.value = localSelections.value.filter(s => s.room.id !== roomId)
+  } else {
+    entry.guests.pop()
+  }
+}
+
+function removeGuest(roomId: number, guestLocalId: string) {
+  const entry = localSelections.value.find(s => s.room.id === roomId)
+  if (!entry) return
+  entry.guests = entry.guests.filter(g => g.localId !== guestLocalId)
+  if (!entry.guests.length) {
+    localSelections.value = localSelections.value.filter(s => s.room.id !== roomId)
+  }
+}
+
+function removeRoomType(roomId: number) {
+  localSelections.value = localSelections.value.filter(s => s.room.id !== roomId)
+}
+
+// rooms from this hotel not yet added (or with remaining capacity), offered via the "add another room" picker
+const addableRooms = computed(() =>
+  props.allRooms.filter((r) => {
+    if (r.number < 1) return false
+    return quantityOf(r.id) < r.number
+  }),
+)
+
+const roomToAdd = ref<number | ''>('')
+function handleAddAnotherRoom() {
+  const room = props.allRooms.find(r => r.id === roomToAdd.value)
+  if (!room) return
+  addRoomUnit(room)
+  roomToAdd.value = ''
+}
+
+// flattened, globally-numbered guest forms — "اتاق ۱: <title>", "اتاق ۲: <title>", ...
+const guestEntries = computed(() => {
+  let n = 0
+  return localSelections.value.flatMap(selection =>
+    selection.guests.map((guest) => {
+      n += 1
+      return { index: n, room: selection.room, guest }
+    }),
+  )
+})
+
+function isValidGuestNationalCode(code: string): boolean {
+  if (!/^\d{10}$/.test(code)) return false
+  if (/^(\d)\1{9}$/.test(code)) return false
+  const check = Number(code[9])
+  const sum = Array.from({ length: 9 }, (_, i) => Number(code[i]) * (10 - i)).reduce((a, b) => a + b, 0)
+  const remainder = sum % 11
+  return remainder < 2 ? check === remainder : check === 11 - remainder
+}
+
+function onGuestNationalCodeInput(guest: HotelRoomGuest, e: Event) {
+  const raw = (e.target as HTMLInputElement).value.replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 0x06F0)).replace(/\D/g, '')
+  guest.nationalCode = raw.slice(0, 10)
+}
+
+function increaseGuestCount(guest: HotelRoomGuest, room: HotelRoom) {
+  const max = room.adults + room.children
+  if (guest.guestCount < max) guest.guestCount += 1
+}
+
+function decreaseGuestCount(guest: HotelRoomGuest) {
+  if (guest.guestCount > 1) guest.guestCount -= 1
+}
+
+const guestsTouched = ref(false)
+
+const guestsValid = computed(() =>
+  guestEntries.value.every(({ guest }) =>
+    guest.name.trim().length > 0 && isValidGuestNationalCode(guest.nationalCode) && guest.guestCount >= 1 && guest.isSupervisor,
+  ),
+)
 
 const { user, isAuthenticated } = useAuth()
 const { createBooking } = useCreateBooking()
@@ -137,8 +246,8 @@ const errors = computed(() => ({
   lastName: lastName.value.trim() ? '' : 'لطفا نام خانوادگی خود را وارد کنید',
   nationalCode: isValidNationalCode(nationalCode.value) ? '' : 'کدملی وارد شده معتبر نیست',
   mobile: isValidMobile(mobile.value) ? '' : 'شماره تلفن وارد شده اشتباه است',
-  email: isValidEmail(email.value) ? '' : 'ایمیل وارد شده معتبر نیست',
-  gender: gender.value ? '' : 'لطفا جنسیت را انتخاب کنید',
+  email: !email.value.trim() || isValidEmail(email.value) ? '' : 'ایمیل وارد شده معتبر نیست',
+  gender: '',
 }))
 
 const isFormValid = computed(() =>
@@ -147,24 +256,22 @@ const isFormValid = computed(() =>
   !errors.value.nationalCode &&
   !errors.value.mobile &&
   !errors.value.email &&
-  !errors.value.gender &&
-  termsAccepted.value
+  termsAccepted.value &&
+  guestsValid.value &&
+  guestEntries.value.length > 0
 )
 
 const totalPriceRial = computed(() =>
-  props.selectedRooms.reduce((sum, r) => sum + (r.price || 0) * (r.number_selected || 1), 0)
+  localSelections.value.reduce((sum, s) => sum + (s.room.price || 0) * s.guests.length, 0)
 )
 
 const totalPriceWithOfferRial = computed(() =>
-  props.selectedRooms.reduce((sum, r) => sum + (r.price_with_offer || 0) * (r.number_selected || 1), 0)
+  localSelections.value.reduce((sum, s) => sum + (s.room.price_with_offer || 0) * s.guests.length, 0)
 )
 
-const totalAdults = computed(() =>
-  props.selectedRooms.reduce((sum, r) => sum + (r.adults || 0) * (r.number_selected || 1), 0)
-)
-
-const totalChildren = computed(() =>
-  props.selectedRooms.reduce((sum, r) => sum + (r.children || 0) * (r.number_selected || 1), 0)
+// each room instance's occupancy comes from its own guest form (تعداد نفرات), capped by the room's own capacity
+const totalGuestsCount = computed(() =>
+  guestEntries.value.reduce((sum, { guest }) => sum + (guest.guestCount || 0), 0)
 )
 
 function stripZeroPad(jalali: string): string {
@@ -180,9 +287,10 @@ const displayDate = computed(() => {
 
 const checkout = async () => {
   touched.value = true
+  guestsTouched.value = true
   if (!isFormValid.value || submitting.value) return
 
-  if (!props.hotelId || !props.selectedRooms.length) {
+  if (!props.hotelId || !guestEntries.value.length) {
     useToast().error('اطلاعات این رزرو ناقص است، لطفا دوباره اتاق مورد نظر را انتخاب کنید')
     return
   }
@@ -190,24 +298,23 @@ const checkout = async () => {
   submitting.value = true
 
   try {
-    const guestName = `${firstName.value.trim()} ${lastName.value.trim()}`.trim()
-
-    const rooms: HotelCartAddRoom[] = props.selectedRooms.map(r => ({
-      adults: r.adults,
-      children: r.children,
-      price: r.price,
-      price_with_offer: r.price_with_offer,
-      number: r.number,
-      id: r.id,
-      number_selected: r.number_selected || 1,
-      extra_person_count: r.extra_person_count,
-      extra_person_price: r.extra_person_price,
-      title: r.title,
+    // one array entry per physical room instance, each carrying its own guest (room supervisor) info
+    const rooms: HotelCartAddRoom[] = guestEntries.value.map(({ room, guest }) => ({
+      adults: guest.guestCount,
+      children: 0,
+      price: room.price,
+      price_with_offer: room.price_with_offer,
+      number: room.number,
+      id: room.id,
+      number_selected: 1,
+      extra_person_count: room.extra_person_count,
+      extra_person_price: room.extra_person_price,
+      title: room.title,
       userInfo: {
-        name: guestName,
-        national_code: nationalCode.value,
+        name: guest.name.trim(),
+        national_code: guest.nationalCode,
       },
-      tmp_dates: r.tmp_dates,
+      tmp_dates: room.tmp_dates,
       is_customer: true,
     }))
 
@@ -231,8 +338,8 @@ const checkout = async () => {
       date: [props.startDate, props.endDate],
       display_date: displayDate.value,
       rooms,
-      adults: totalAdults.value,
-      children: totalChildren.value,
+      adults: totalGuestsCount.value,
+      children: 0,
       is_changed: false,
       total_price_display: formatPrice(totalPriceRial.value),
       total_price: totalPriceRial.value,
@@ -266,25 +373,152 @@ const checkout = async () => {
         </div>
       </div>
 
-      <div class="flex flex-col gap-3 mb-6">
+      <div class="flex flex-col gap-3 mb-4">
         <div
-          v-for="room in selectedRooms"
-          :key="room.id"
-          class="flex items-center justify-between gap-3 bg-base-200/50 p-3 rounded-xl">
+          v-for="selection in localSelections"
+          :key="selection.room.id"
+          class="flex items-center justify-between gap-3 bg-base-200/50 p-3 rounded-xl flex-wrap">
           <div class="flex items-center gap-2">
             <BedDouble :size="16" class="text-primary shrink-0" />
-            <span class="text-sm font-medium">{{ room.title }}</span>
+            <span class="text-sm font-medium">{{ selection.room.title }}</span>
           </div>
           <div class="flex items-center gap-3 text-xs text-base-content/60 shrink-0">
             <span class="flex items-center gap-1">
               <Users :size="12" />
-              {{ room.adults.toLocaleString('fa-IR') }}
+              {{ selection.room.adults.toLocaleString('fa-IR') }}
             </span>
             <span class="flex items-center gap-1">
               <Baby :size="12" />
-              {{ room.children.toLocaleString('fa-IR') }}
+              {{ selection.room.children.toLocaleString('fa-IR') }}
             </span>
-            <span class="font-bold text-primary">{{ formatPrice(room.price_with_offer) }}</span>
+            <span class="font-bold text-primary">{{ formatPrice(selection.room.price_with_offer) }}</span>
+
+            <button
+              type="button"
+              class="btn btn-xs btn-circle btn-ghost text-error"
+              aria-label="حذف این نوع اتاق"
+              @click="removeRoomType(selection.room.id)">
+              <Trash2 :size="14" />
+            </button>
+            <button
+              type="button"
+              class="btn btn-xs btn-circle btn-outline"
+              aria-label="کاهش تعداد"
+              @click="removeRoomUnit(selection.room.id)">
+              <Minus :size="14" />
+            </button>
+            <span class="font-bold min-w-4 text-center">{{ selection.guests.length.toLocaleString('fa-IR') }}</span>
+            <button
+              type="button"
+              class="btn btn-xs btn-circle btn-outline"
+              aria-label="افزودن اتاق دیگر از همین نوع"
+              :disabled="quantityOf(selection.room.id) >= selection.room.number"
+              @click="addRoomUnit(selection.room)">
+              <Plus :size="14" />
+            </button>
+          </div>
+        </div>
+
+        <div v-if="addableRooms.length" class="flex items-center gap-2 flex-wrap">
+          <select v-model="roomToAdd" class="select select-sm w-full sm:w-auto sm:min-w-64">
+            <option value="" disabled>افزودن نوع اتاق دیگر...</option>
+            <option v-for="r in addableRooms" :key="r.id" :value="r.id">{{ r.title }}</option>
+          </select>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline btn-primary gap-1"
+            :disabled="!roomToAdd"
+            @click="handleAddAnotherRoom">
+            <Plus :size="14" />
+            افزودن اتاق
+          </button>
+        </div>
+      </div>
+
+      <div v-if="guestEntries.length" class="flex flex-col gap-4 mb-6">
+        <div
+          v-for="{ index, room, guest } in guestEntries"
+          :key="guest.localId"
+          class="bg-base-200/40 border border-base-300 rounded-2xl p-4">
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <div class="flex items-center gap-2">
+              <UserRound :size="16" class="text-primary shrink-0" />
+              <span class="font-bold text-sm">اتاق {{ index.toLocaleString('fa-IR') }}: {{ room.title }}</span>
+            </div>
+            <button
+              type="button"
+              class="btn btn-xs btn-circle btn-ghost text-error"
+              aria-label="حذف این اتاق"
+              @click="removeGuest(room.id, guest.localId)">
+              <Trash2 :size="14" />
+            </button>
+          </div>
+          <label class="flex items-center gap-3 mb-1 cursor-pointer w-fit">
+            <input
+              type="checkbox"
+              v-model="guest.isSupervisor"
+              class="toggle toggle-primary toggle-sm"
+            />
+            <span class="text-xs text-base-content/70">رزرو کننده سرپرست اتاق می‌باشد</span>
+          </label>
+          <span v-if="guestsTouched && !guest.isSupervisor" class="text-error text-xs block mb-3">
+            لطفا تایید کنید رزرو کننده سرپرست اتاق می‌باشد
+          </span>
+          <div v-else class="mb-3" />
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="form-control w-full">
+              <label class="label" :for="`guest-name-${guest.localId}`">
+                <span class="label-text text-xs">نام و نام خانوادگی <span class="text-error">*</span></span>
+              </label>
+              <input
+                :id="`guest-name-${guest.localId}`"
+                v-model="guest.name"
+                type="text"
+                placeholder="نام و نام خانوادگی"
+                class="input input-sm w-full h-10"
+                :class="{ 'input-error': guestsTouched && !guest.name.trim() }"
+              />
+            </div>
+
+            <div class="form-control w-full">
+              <label class="label" :for="`guest-code-${guest.localId}`">
+                <span class="label-text text-xs">کدملی <span class="text-error">*</span></span>
+              </label>
+              <input
+                :id="`guest-code-${guest.localId}`"
+                :value="guest.nationalCode"
+                @input="onGuestNationalCodeInput(guest, $event)"
+                type="text"
+                inputmode="numeric"
+                placeholder="کدملی"
+                class="input input-sm w-full h-10"
+                :class="{ 'input-error': guestsTouched && !isValidGuestNationalCode(guest.nationalCode) }"
+              />
+            </div>
+
+            <div class="form-control w-full">
+              <label class="label">
+                <span class="label-text text-xs">تعداد نفرات <span class="text-error">*</span></span>
+              </label>
+              <div class="input input-sm w-full h-10 flex items-center justify-between px-2">
+                <button
+                  type="button"
+                  @click="decreaseGuestCount(guest)"
+                  :disabled="guest.guestCount <= 1"
+                  class="btn btn-xs btn-ghost btn-square -ms-2">
+                  <Minus :size="14" />
+                </button>
+                <span class="font-mono font-bold text-sm">{{ guest.guestCount }}</span>
+                <button
+                  type="button"
+                  @click="increaseGuestCount(guest, room)"
+                  :disabled="guest.guestCount >= room.adults + room.children"
+                  class="btn btn-xs btn-ghost btn-square -me-2">
+                  <Plus :size="14" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -380,7 +614,7 @@ const checkout = async () => {
 
           <div class="form-control w-full">
             <label class="label" for="hotel-email">
-              <span class="label-text">ایمیل <span class="text-error">*</span></span>
+              <span class="label-text">ایمیل <span class="text-base-content/40 text-xs">(اختیاری)</span></span>
             </label>
             <input
               id="hotel-email"
@@ -399,18 +633,16 @@ const checkout = async () => {
 
           <div class="form-control w-full">
             <label class="label" for="hotel-gender">
-              <span class="label-text">جنسیت <span class="text-error">*</span></span>
+              <span class="label-text">جنسیت <span class="text-base-content/40 text-xs">(اختیاری)</span></span>
             </label>
             <select
               id="hotel-gender"
               v-model="gender"
-              class="select w-full"
-              :class="{ 'select-error': touched && errors.gender }">
-              <option value="" disabled>انتخاب کنید</option>
+              class="select w-full">
+              <option value="">انتخاب کنید</option>
               <option value="men">مرد</option>
               <option value="women">زن</option>
             </select>
-            <span v-if="touched && errors.gender" class="text-error text-xs mt-1">{{ errors.gender }}</span>
           </div>
         </div>
 
