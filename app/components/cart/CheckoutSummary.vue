@@ -1,8 +1,9 @@
 <!-- app/components/cart/CheckoutSummary.vue -->
 <script setup lang="ts">
 import { Landmark, Loader2 } from 'lucide-vue-next'
-import type { CheckoutResponse } from '~/types/checkout.types'
+import type { CheckoutResponse, CouponApplyBooking } from '~/types/checkout.types'
 import { formatPrice } from '~/utils/price'
+import CouponInput from '~/components/cart/CouponInput.vue'
 
 interface Props {
   checkout: CheckoutResponse
@@ -13,7 +14,10 @@ const props = withDefaults(defineProps<Props>(), {
   loading: false
 })
 
-const emit = defineEmits<{ pay: [payload: { gateway: string; credit: number; howToPay: 'full' | 'deposit' }] }>()
+const emit = defineEmits<{
+  pay: [payload: { gateway: string; credit: number; howToPay: 'full' | 'deposit' }]
+  couponApplied: [booking: CouponApplyBooking]
+}>()
 
 const { user } = useAuth()
 
@@ -24,14 +28,14 @@ const selectedGateway = ref<string | null>(
   Object.keys(props.checkout.gateways)[0] ?? null
 )
 
-const hasDiscountCode = ref(false)
-
 const useWallet = ref(false)
 const walletCredit = ref(0)
 
-const payableTotal = computed(() =>
-  Number(props.checkout.booking.deposit || props.checkout.booking.total)
-)
+const payableTotal = computed(() => {
+  const deposit = Number(props.checkout.booking.deposit || 0)
+  const total = Number(props.checkout.booking.total || 0)
+  return deposit > 0 ? deposit : total
+})
 
 const hasDeposit = computed(() => {
   const deposit = Number(props.checkout.booking.deposit || 0)
@@ -97,10 +101,7 @@ function onPayClick() {
     </div>
 
     <div class="bg-base-100 rounded-3xl border border-base-300 p-6 shadow-sm">
-      <label class="flex items-center justify-between cursor-pointer">
-        <span class="text-sm text-base-content/70">کد تخفیف دارید؟</span>
-        <input v-model="hasDiscountCode" type="checkbox" class="toggle toggle-primary toggle-sm" disabled>
-      </label>
+      <CouponInput :booking-code="checkout.booking.booking_code" @applied="emit('couponApplied', $event)" />
     </div>
 
     <div class="bg-base-100 rounded-3xl border border-base-300 p-6 shadow-sm">

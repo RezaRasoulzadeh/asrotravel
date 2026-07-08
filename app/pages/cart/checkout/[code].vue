@@ -5,6 +5,7 @@ import CartSteps from '~/components/cart/CartSteps.vue'
 import CheckoutBookingSummary from '~/components/cart/CheckoutBookingSummary.vue'
 import CheckoutSummary from '~/components/cart/CheckoutSummary.vue'
 import LoadingState from '~/components/ui/LoadingState.vue'
+import type { CouponApplyBooking } from '~/types/checkout.types'
 
 const { isAuthenticated } = useAuth()
 const route = useRoute()
@@ -34,6 +35,14 @@ async function onPay(payload: { gateway: string; credit: number; howToPay: 'full
     isPaying.value = false
   }
 }
+
+// Coupon-apply response only returns a subset of booking fields (totals, discount display,
+// status) — merge into the existing booking object rather than replacing it, so fields the
+// coupon endpoint doesn't know about (e.g. total_guests, quantity) are preserved.
+function onCouponApplied(booking: CouponApplyBooking) {
+  if (!checkout.value) return
+  Object.assign(checkout.value.booking, booking)
+}
 </script>
 
 <template>
@@ -56,7 +65,7 @@ async function onPay(payload: { gateway: string; credit: number; howToPay: 'full
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <CheckoutBookingSummary :checkout="checkout" />
-      <CheckoutSummary :checkout="checkout" :loading="isPaying" @pay="onPay" />
+      <CheckoutSummary :checkout="checkout" :loading="isPaying" @pay="onPay" @coupon-applied="onCouponApplied" />
     </div>
   </div>
 </template>

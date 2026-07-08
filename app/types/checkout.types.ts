@@ -93,6 +93,39 @@ export interface CheckoutGateway {
 
 export type CheckoutGateways = Record<string, CheckoutGateway>
 
+// Response from GET /coupon/{code}/check?coupon_code=X (proxied via /api/booking/{code}/coupon).
+// Confirmed against real backend traffic. Note: the backend's success field is literally
+// spelled "statue" (not "status") — keep as-is, don't "fix" the typo in code that reads it.
+// `booking` fields are known to mix real numbers and numeric strings (e.g. `total` is a number
+// but `total_before_discount` is a numeric string like "2750000.00") — only tested so far on a
+// Pool booking; Hotel/Ticket may include additional fields.
+export interface CouponApplyBooking {
+  total_display: string
+  offer_display: string
+  coupon_amount_display: string
+  status_text: string
+  id: number
+  code: string
+  object_model: string
+  total: number
+  total_guests: number
+  status: string
+  deposit: string | null
+  total_before_fees: string
+  total_before_discount: string
+  coupon_amount: string
+  mobile: string
+  created_at: string
+  updated_at: string
+  [key: string]: unknown
+}
+
+export interface CouponApplyResponse {
+  statue: number
+  message: string
+  booking: CouponApplyBooking
+}
+
 export interface CheckoutResponse {
   page_title: string
   booking: CheckoutBooking

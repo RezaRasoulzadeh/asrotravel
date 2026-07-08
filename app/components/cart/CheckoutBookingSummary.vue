@@ -26,6 +26,38 @@ const formattedTime = computed(() =>
   !isHotel.value && checkout.service.time_display ? toFaDigitsInString(checkout.service.time_display) : null
 )
 const isVip = computed(() => checkout.service.service_type === 'vip')
+
+function stripZeroPad(jalali: string): string {
+  if (!jalali) return ''
+  return jalali.split('/').map(part => String(Number(part))).join('/')
+}
+
+// Normalize possible backend formats (e.g. full ISO timestamps) down to YYYY-MM-DD
+// before handing off to useJalaliDates, which expects that exact shape.
+function toDateOnly(value?: string | null): string | undefined {
+  if (!value) return undefined
+  const match = value.match(/^\d{4}-\d{2}-\d{2}/)
+  return match ? match[0] : undefined
+}
+
+// Prefer hotelSummary (client state set right before navigating to checkout) since its
+// format is already proven elsewhere in the app (see HotelCartDetail.vue). Fall back to
+// checkout.booking's dates so a direct link / hard refresh still has a chance to show something.
+const { jalaliStart, jalaliEnd } = useJalaliDates(
+  computed(() => hotelSummary.value?.startDate || toDateOnly(checkout.booking.start_date)),
+  computed(() => hotelSummary.value?.endDate || toDateOnly(checkout.booking.end_date)),
+)
+const formattedCheckIn = computed(() => toFaDigitsInString(stripZeroPad(jalaliStart.value)))
+const formattedCheckOut = computed(() => toFaDigitsInString(stripZeroPad(jalaliEnd.value)))
+
+const nightCount = computed(() => {
+  if (hotelSummary.value?.nightCount) return hotelSummary.value.nightCount
+  const start = checkout.booking.start_date ? new Date(checkout.booking.start_date) : null
+  const end = checkout.booking.end_date ? new Date(checkout.booking.end_date) : null
+  if (!start || !end) return null
+  const diff = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  return diff > 0 ? diff : null
+})
 </script>
 
 <template>
@@ -37,11 +69,27 @@ const isVip = computed(() => checkout.service.service_type === 'vip')
       </div>
 
       <template v-if="isHotel">
-        <div v-if="hotelSummary" class="flex items-center justify-between pb-4 border-b border-base-300 mb-4">
-          <span class="text-sm text-base-content/60 flex items-center gap-1.5">
-            <CalendarDays class="size-4" />
-            {{ hotelSummary.nightCount.toLocaleString('fa-IR') }} شب
-          </span>
+        <div
+          v-if="formattedCheckIn || formattedCheckOut"
+          class="flex flex-col gap-2 pb-4 border-b border-base-300 mb-4">
+          <div v-if="formattedCheckIn" class="flex items-center justify-between">
+            <span class="text-sm text-base-content/60 flex items-center gap-1.5">
+              <CalendarDays class="size-4" />
+              تاریخ ورود:
+            </span>
+            <span class="text-sm font-medium">{{ formattedCheckIn }}</span>
+          </div>
+          <div v-if="formattedCheckOut" class="flex items-center justify-between">
+            <span class="text-sm text-base-content/60 flex items-center gap-1.5">
+              <CalendarDays class="size-4" />
+              تاریخ خروج:
+            </span>
+            <span class="text-sm font-medium">{{ formattedCheckOut }}</span>
+          </div>
+          <div v-if="nightCount" class="flex items-center justify-between">
+            <span class="text-sm text-base-content/60">مدت اقامت:</span>
+            <span class="text-sm font-medium">{{ nightCount.toLocaleString('fa-IR') }} شب</span>
+          </div>
         </div>
 
         <div v-if="hotelSummary" class="flex flex-col gap-2 pb-4 border-b border-base-300 mb-4">

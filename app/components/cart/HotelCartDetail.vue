@@ -132,7 +132,6 @@ function decreaseGuestCount(guest: HotelRoomGuest) {
   if (guest.guestCount > 1) guest.guestCount -= 1
 }
 
-/** guests booked beyond the room's base adults+children capacity, charged at extra_person_price per extra guest per night */
 function extraGuestCount(guest: HotelRoomGuest, room: HotelRoom): number {
   return Math.max(0, guest.guestCount - baseCapacity(room))
 }
@@ -185,8 +184,6 @@ const lastName = ref('')
 const nationalCode = ref('')
 const fullName = computed(() => `${firstName.value.trim()} ${lastName.value.trim()}`.trim())
 
-/** guest.isSupervisor means: the top-level booker themselves is this room's supervisor, so the guest's
- * name/national code mirror the booker's info and are locked; guestCount stays editable regardless. */
 function applySupervisorInfoToGuest(guest: HotelRoomGuest) {
   guest.name = fullName.value
   guest.nationalCode = nationalCode.value
