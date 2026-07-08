@@ -36,12 +36,12 @@ async function onPay(payload: { gateway: string; credit: number; howToPay: 'full
   }
 }
 
-// Coupon-apply response only returns a subset of booking fields (totals, discount display,
-// status) — merge into the existing booking object rather than replacing it, so fields the
-// coupon endpoint doesn't know about (e.g. total_guests, quantity) are preserved.
 function onCouponApplied(booking: CouponApplyBooking) {
   if (!checkout.value) return
-  Object.assign(checkout.value.booking, booking)
+  checkout.value = {
+    ...checkout.value,
+    booking: { ...checkout.value.booking, ...booking },
+  }
 }
 </script>
 

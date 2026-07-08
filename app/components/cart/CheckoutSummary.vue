@@ -31,21 +31,7 @@ const selectedGateway = ref<string | null>(
 const useWallet = ref(false)
 const walletCredit = ref(0)
 
-const payableTotal = computed(() => {
-  const deposit = Number(props.checkout.booking.deposit || 0)
-  const total = Number(props.checkout.booking.total || 0)
-  return deposit > 0 ? deposit : total
-})
-
-const hasDeposit = computed(() => {
-  const deposit = Number(props.checkout.booking.deposit || 0)
-  const total = Number(props.checkout.booking.total || 0)
-  return deposit > 0 && deposit < total
-})
-
-const remainingAtVenue = computed(() =>
-  Number(props.checkout.booking.total || 0) - Number(props.checkout.booking.deposit || 0)
-)
+const { hasDeposit, payableTotal, remainingAtVenue } = useCheckoutTotals(() => props.checkout)
 
 const userWalletBalance = computed(() => Number(user.value?.wallet?.balance ?? 0))
 

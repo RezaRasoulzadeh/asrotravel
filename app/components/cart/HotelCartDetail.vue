@@ -23,7 +23,6 @@ function makeGuestId(): string {
   return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`
 }
 
-// local, editable copy of the room cart — quantities & guest forms can still change here before checkout
 const localSelections = ref<HotelRoomSelection[]>(
   JSON.parse(JSON.stringify(props.selections)) as HotelRoomSelection[],
 )
@@ -75,7 +74,6 @@ function removeRoomType(roomId: number) {
   localSelections.value = localSelections.value.filter(s => s.room.id !== roomId)
 }
 
-// rooms from this hotel not yet added (or with remaining capacity), offered via the "add another room" picker
 const addableRooms = computed(() =>
   props.allRooms.filter((r) => {
     if (r.number < 1) return false
@@ -91,7 +89,6 @@ function handleAddAnotherRoom() {
   roomToAdd.value = ''
 }
 
-// flattened, globally-numbered guest forms — "اتاق ۱: <title>", "اتاق ۲: <title>", ...
 const guestEntries = computed(() => {
   let n = 0
   return localSelections.value.flatMap(selection =>

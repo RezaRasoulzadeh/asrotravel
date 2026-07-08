@@ -149,24 +149,19 @@ export interface HotelCartAddPayload {
   total_price_with_offer: number
 }
 
-/** One physical room instance's guest form — the guest is the room's supervisor/head (سرپرست اتاق) */
 export interface HotelRoomGuest {
-  /** local-only id for list rendering & removal, not sent to the API */
   localId: string
   name: string
   nationalCode: string
   guestCount: number
-  /** must be confirmed true: the entered guest is the room's supervisor/head */
   isSupervisor: boolean
 }
 
-/** A selected room type + how many units of it, each unit carrying its own guest form */
 export interface HotelRoomSelection {
   room: HotelRoom
   guests: HotelRoomGuest[]
 }
 
-/** Hand-off state from HotelRoomsSection's room cart to /cart/hotel-detail, mirrors the vip-checkout-slot pattern */
 export interface HotelCheckoutSlotState {
   hotelId: number
   hotelTitle: string
@@ -174,13 +169,11 @@ export interface HotelCheckoutSlotState {
   startDate: string
   endDate: string
   nightCount: number
-  /** full list of rooms available for these dates, so the cart page can still offer adding another room type */
   allRooms: HotelRoom[]
   selections: HotelRoomSelection[]
 }
 
-/** Persisted alongside HotelCheckoutSlotState so the checkout summary can render room details the checkout GET endpoint doesn't return.
- * Must be re-synced from the final submitted selections at checkout-submit time, not just once when entering the room cart. */
+
 export interface HotelCheckoutSummaryState {
   hotelTitle: string
   startDate: string

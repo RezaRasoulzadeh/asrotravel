@@ -9,7 +9,7 @@ export interface CheckoutQuantity {
 }
 
 export interface CheckoutBooking {
-  total: string
+  total: string | number
   total_guests: number
   booking_code: string
   start_date: string
@@ -19,6 +19,8 @@ export interface CheckoutBooking {
   total_display: string
   offer_display: string
   quantity: CheckoutQuantity
+  coupon_amount_display?: string
+  coupon_amount?: string
 }
 
 export interface CheckoutDisplayPriceObject {
@@ -69,7 +71,6 @@ export interface CheckoutService {
   total_price_with_offer: number
   reservation_code: string
   total_offer: number
-  // VIP-only fields
   price?: string
   price_per_sans?: string
   price_for_extra_person?: number
@@ -93,12 +94,6 @@ export interface CheckoutGateway {
 
 export type CheckoutGateways = Record<string, CheckoutGateway>
 
-// Response from GET /coupon/{code}/check?coupon_code=X (proxied via /api/booking/{code}/coupon).
-// Confirmed against real backend traffic. Note: the backend's success field is literally
-// spelled "statue" (not "status") — keep as-is, don't "fix" the typo in code that reads it.
-// `booking` fields are known to mix real numbers and numeric strings (e.g. `total` is a number
-// but `total_before_discount` is a numeric string like "2750000.00") — only tested so far on a
-// Pool booking; Hotel/Ticket may include additional fields.
 export interface CouponApplyBooking {
   total_display: string
   offer_display: string

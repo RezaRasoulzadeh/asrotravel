@@ -11,6 +11,7 @@ interface Props {
 }
 
 const { checkout } = defineProps<Props>()
+const totals = useCheckoutTotals(() => checkout)
 
 function toFaDigitsInString(str: string): string {
   const digits = Array.from({ length: 10 }, (_, i) => i.toLocaleString('fa-IR'))
@@ -18,8 +19,6 @@ function toFaDigitsInString(str: string): string {
 }
 
 const isHotel = computed(() => checkout.service_type === 'hotel')
-// checkout GET doesn't return per-room detail for hotel bookings; read what
-// was persisted client-side right before navigating to checkout (see hotel/[slug].vue)
 const hotelSummary = useState<HotelCheckoutSummaryState | null>('hotel-checkout-summary', () => null)
 
 const formattedTime = computed(() =>
@@ -32,17 +31,12 @@ function stripZeroPad(jalali: string): string {
   return jalali.split('/').map(part => String(Number(part))).join('/')
 }
 
-// Normalize possible backend formats (e.g. full ISO timestamps) down to YYYY-MM-DD
-// before handing off to useJalaliDates, which expects that exact shape.
 function toDateOnly(value?: string | null): string | undefined {
   if (!value) return undefined
   const match = value.match(/^\d{4}-\d{2}-\d{2}/)
   return match ? match[0] : undefined
 }
 
-// Prefer hotelSummary (client state set right before navigating to checkout) since its
-// format is already proven elsewhere in the app (see HotelCartDetail.vue). Fall back to
-// checkout.booking's dates so a direct link / hard refresh still has a chance to show something.
 const { jalaliStart, jalaliEnd } = useJalaliDates(
   computed(() => hotelSummary.value?.startDate || toDateOnly(checkout.booking.start_date)),
   computed(() => hotelSummary.value?.endDate || toDateOnly(checkout.booking.end_date)),
@@ -140,27 +134,32 @@ const nightCount = computed(() => {
 
         <div class="flex justify-between items-center">
           <span class="text-base-content/60">مبلغ کل:</span>
-          <span class="font-medium">{{ formatPrice(checkout.booking.total_before_discount) }}</span>
+          <span class="font-medium">{{ formatPrice(checkout.service.total_price) }}</span>
         </div>
 
-        <div class="flex justify-between items-center">
+        <div v-if="!totals.hasCoupon.value" class="flex justify-between items-center">
           <span class="text-base-content/60">تخفیف/هدیه:</span>
-          <span class="font-medium text-success">{{ checkout.booking.offer_display }}</span>
+          <span class="font-medium text-success">{{ formatPrice(totals.offerAmount.value) }}</span>
+        </div>
+
+        <div v-else class="flex justify-between items-center">
+          <span class="text-base-content/60">تخفیف کد تخفیف:</span>
+          <span class="font-medium text-success">{{ checkout.booking.coupon_amount_display }}</span>
         </div>
 
         <div class="flex justify-between items-center pt-3 border-t border-base-300">
           <span class="font-bold">مجموع مبلغ رزرو:</span>
-          <span class="font-bold text-lg text-primary">{{ checkout.booking.total_display }}</span>
+          <span class="font-bold text-lg text-primary">{{ formatPrice(totals.finalTotal.value) }}</span>
         </div>
 
-        <template v-if="Number(checkout.booking.deposit) > 0 && Number(checkout.booking.deposit) < Number(checkout.booking.total)">
+        <template v-if="totals.hasDeposit.value">
           <div class="flex justify-between items-center">
             <span class="text-base-content/60">قابل پرداخت آنلاین (بیعانه):</span>
-            <span class="font-medium text-primary">{{ formatPrice(checkout.booking.deposit) }}</span>
+            <span class="font-medium text-primary">{{ formatPrice(totals.deposit.value) }}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-base-content/60">باقیمانده (پرداخت در محل):</span>
-            <span class="font-medium">{{ formatPrice(Number(checkout.booking.total) - Number(checkout.booking.deposit)) }}</span>
+            <span class="font-medium">{{ formatPrice(totals.remainingAtVenue.value) }}</span>
           </div>
         </template>
       </div>
