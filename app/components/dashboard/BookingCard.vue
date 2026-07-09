@@ -1,14 +1,11 @@
 <!-- app/components/dashboard/BookingCard.vue -->
 <script setup lang="ts">
-import { Calendar, MapPin, PlayCircle, RotateCcw, Star, Ticket, Users, Wallet, Wallet2, X } from 'lucide-vue-next'
+import { Calendar, MapPin, PlayCircle, RotateCcw, Star, Ticket, Users, Wallet, X } from 'lucide-vue-next'
 import type { DashboardBookingDto } from '~/types/dashboardBookings.types'
 import { BOOKING_STATUS_ACTIONS, BOOKING_STATUS_BADGE, BOOKING_STATUS_LABELS, RESERVATION_CODE_VISIBLE_STATUSES } from '~/types/dashboardBookings.types'
 
 const props = defineProps<{ booking: DashboardBookingDto }>()
 const emit = defineEmits<{ cancel: [string] }>()
-
-// TODO: flip to true once /cart/[code]/payment exists and is confirmed working.
-const PAY_ENABLED = false
 
 const cancelling = ref(false)
 
@@ -56,9 +53,10 @@ const hasDiscount = computed(() => !!props.booking.couponAmountDisplay && props.
 const hasOffer = computed(() => !!props.booking.offerDisplay && props.booking.offerDisplay.trim() !== '۰ تومان')
 const singleUrl = computed(() => `/${props.booking.objectModel.toLowerCase()}/${props.booking.slug ?? ''}`)
 const continueUrl = computed(() => `/cart/checkout/${props.booking.code}`)
+const continueLabel = computed(() => props.booking.status === 'partial_payment' ? 'پرداخت باقی‌مانده' : 'ادامه و پرداخت')
 
 async function handleCancel() {
-  if (!confirm('در صورت لغو، مطابق قوانین کسر هزینه اعمال می‌شود. ادامه می‌دهید؟')) return
+  if (!confirm('در صورت لغو، ۱۵٪ از مبلغ رزرو کسر خواهد شد. ادامه می‌دهید؟')) return
   cancelling.value = true
   emit('cancel', props.booking.code)
   cancelling.value = false
@@ -110,7 +108,7 @@ async function handleCancel() {
         <div class="flex justify-between font-medium border-t border-base-300 pt-1 mt-1">
           <span>پرداخت‌شده</span><span>{{ formatPrice(booking.paid) }}</span>
         </div>
-        <div v-if="booking.payNow && actions.includes('pay')" class="flex justify-between text-warning">
+        <div v-if="booking.payNow && booking.status === 'partial_payment'" class="flex justify-between text-warning">
           <span>باقی‌مانده برای پرداخت</span><span>{{ formatPrice(booking.payNow) }}</span>
         </div>
       </div>
@@ -119,11 +117,7 @@ async function handleCancel() {
 
       <div class="flex flex-wrap gap-2">
         <NuxtLink v-if="actions.includes('continue')" :to="continueUrl" class="btn btn-sm btn-primary gap-1">
-          <PlayCircle :size="16" />ادامه رزرو
-        </NuxtLink>
-
-        <NuxtLink v-if="actions.includes('pay') && PAY_ENABLED" :to="`/cart/${booking.code}/payment`" class="btn btn-sm btn-primary gap-1">
-          <Wallet2 :size="16" />پرداخت
+          <PlayCircle :size="16" />{{ continueLabel }}
         </NuxtLink>
 
         <NuxtLink v-if="actions.includes('rebook')" :to="singleUrl" class="btn btn-sm btn-soft btn-primary gap-1">

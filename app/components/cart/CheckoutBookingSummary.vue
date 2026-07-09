@@ -19,12 +19,13 @@ function toFaDigitsInString(str: string): string {
 }
 
 const isHotel = computed(() => checkout.service_type === 'hotel')
+const service = computed(() => (checkout.service && typeof checkout.service === 'object') ? checkout.service : null)
 const hotelSummary = useState<HotelCheckoutSummaryState | null>('hotel-checkout-summary', () => null)
 
 const formattedTime = computed(() =>
-  !isHotel.value && checkout.service.time_display ? toFaDigitsInString(checkout.service.time_display) : null
+  !isHotel.value && service.value?.time_display ? toFaDigitsInString(service.value.time_display) : null
 )
-const isVip = computed(() => checkout.service.service_type === 'vip')
+const isVip = computed(() => service.value?.service_type === 'vip')
 
 function stripZeroPad(jalali: string): string {
   if (!jalali) return ''
@@ -107,19 +108,19 @@ const nightCount = computed(() => {
         </span>
         <span class="text-sm text-base-content/60 flex items-center gap-1.5">
           <CalendarDays class="size-4" />
-          {{ checkout.service.date_display }}
+          {{ service?.date_display }}
         </span>
       </div>
 
       <div class="flex flex-col gap-3 text-sm">
         <div v-if="!isHotel" class="flex justify-between items-center">
           <span class="text-base-content/60">{{ isVip ? 'قیمت پایه سانس:' : 'قیمت بلیت انتخاب شده:' }}</span>
-          <span class="font-medium">{{ isVip ? formatPrice(checkout.service.price) : checkout.service.origin_price_display }}</span>
+          <span class="font-medium">{{ isVip ? formatPrice(service?.price) : service?.origin_price_display }}</span>
         </div>
 
-        <div v-if="isVip && checkout.service.price_for_extra_person" class="flex justify-between items-center">
+        <div v-if="isVip && service?.price_for_extra_person" class="flex justify-between items-center">
           <span class="text-base-content/60">هزینه نفرات اضافه:</span>
-          <span class="font-medium">{{ formatPrice(checkout.service.price_for_extra_person) }}</span>
+          <span class="font-medium">{{ formatPrice(service?.price_for_extra_person) }}</span>
         </div>
 
         <div v-if="isHotel && hotelSummary?.extraPersonTotal" class="flex justify-between items-center">
@@ -134,7 +135,7 @@ const nightCount = computed(() => {
 
         <div class="flex justify-between items-center">
           <span class="text-base-content/60">مبلغ کل:</span>
-          <span class="font-medium">{{ formatPrice(checkout.service.total_price) }}</span>
+          <span class="font-medium">{{ formatPrice(totals.totalBeforeDiscount.value) }}</span>
         </div>
 
         <div v-if="!totals.hasCoupon.value" class="flex justify-between items-center">

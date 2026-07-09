@@ -6,6 +6,7 @@ export type BookingObjectModel = 'Pool' | 'Hotel' | 'Ticket'
 export type BookingStatus =
   | 'draft'
   | 'unpaid'
+  | 'error_payment'
   | 'processing'
   | 'accepted'
   | 'confirmed'
@@ -19,6 +20,7 @@ export type BookingStatus =
 export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
   draft: 'تکمیل‌نشده',
   unpaid: 'پرداخت نشده',
+  error_payment: 'خطا در پرداخت',
   processing: 'در حال پردازش',
   accepted: 'پذیرفته شده',
   confirmed: 'تایید شده',
@@ -33,6 +35,7 @@ export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
 export const BOOKING_STATUS_BADGE: Record<BookingStatus, string> = {
   draft: 'badge-ghost',
   unpaid: 'badge-warning',
+  error_payment: 'badge-error',
   processing: 'badge-warning',
   accepted: 'badge-info',
   confirmed: 'badge-success',
@@ -44,24 +47,25 @@ export const BOOKING_STATUS_BADGE: Record<BookingStatus, string> = {
   Cancelled_By_System: 'badge-error'
 }
 
-export type BookingAction = 'continue' | 'pay' | 'cancel' | 'rebook' | 'review'
+export type BookingAction = 'continue' | 'cancel' | 'rebook' | 'review'
 
 export const BOOKING_STATUS_ACTIONS: Record<BookingStatus, BookingAction[]> = {
   draft: ['continue'],
-  unpaid: ['continue', 'cancel'],
+  unpaid: ['continue'],
+  error_payment: ['continue'],
   processing: [],
-  accepted: ['cancel'],
-  confirmed: ['cancel'],
-  partial_payment: ['pay', 'cancel'],
-  paid: ['review'],
+  accepted: [],
+  confirmed: ['continue'],
+  partial_payment: ['continue', 'cancel'],
+  paid: ['cancel', 'review'],
   completed: ['rebook', 'review'],
   cancelled: ['rebook'],
   expire: ['rebook'],
   Cancelled_By_System: ['rebook']
 }
 
-// TODO: guessed — confirm which statuses actually carry a meaningful reservation_code.
-export const RESERVATION_CODE_VISIBLE_STATUSES: BookingStatus[] = ['accepted', 'confirmed', 'paid', 'completed']
+// TODO: 'completed' inferred (implies previously paid), not directly confirmed.
+export const RESERVATION_CODE_VISIBLE_STATUSES: BookingStatus[] = ['paid', 'completed']
 
 export type BookingSortOption = 'newest' | 'oldest' | 'price_high' | 'price_low'
 
@@ -216,6 +220,7 @@ export interface DashboardBookingsResponse {
 // TODO: client-facing DTO — the only shape ever sent over /api/dashboard/bookings.
 
 export interface DashboardBookingDto {
+  id: number
   code: string
   reservationCode: string | null
   status: string
@@ -244,4 +249,14 @@ export interface DashboardBookingsDtoResponse {
   totalPages: number
   currentPage: number
   perPage: number
+}
+
+// TODO: "active" definition unconfirmed — excludes draft/cancelled/expired/completed.
+export const ACTIVE_BOOKING_STATUSES: BookingStatus[] = [
+  'unpaid', 'error_payment', 'processing', 'accepted', 'confirmed', 'partial_payment', 'paid',
+]
+
+export interface DashboardSummary {
+  activeCount: number
+  recent: DashboardBookingDto[]
 }

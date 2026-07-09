@@ -1,6 +1,29 @@
 // server/utils/dashboardBookings.ts
 import { toJalali } from '~/utils/date'
-import type { DashboardBooking, DashboardBookingDto } from '~/types/dashboardBookings.types'
+import type { BookingObjectModel, BookingTab, DashboardBooking, DashboardBookingDto } from '~/types/dashboardBookings.types'
+
+// object_model as returned in booking responses — always capitalized.
+export const TAB_TO_MODEL: Record<BookingTab, BookingObjectModel> = {
+  pool: 'Pool',
+  hotel: 'Hotel',
+  ticket: 'Ticket',
+}
+
+// Confirmed from old site's $api.cart calls: the `service` filter/body param sent
+// TO the backend is lowercase for hotel but capitalized for pool/ticket. This is
+// intentionally separate from TAB_TO_MODEL above (which is the casing the backend
+// sends BACK in object_model) — do not merge these two maps.
+export const TAB_TO_SERVICE_PARAM: Record<BookingTab, string> = {
+  pool: 'Pool',
+  hotel: 'hotel',
+  ticket: 'Ticket',
+}
+
+export const SERVICE_PARAM_BY_MODEL: Record<BookingObjectModel, string> = {
+  Pool: 'Pool',
+  Hotel: 'hotel',
+  Ticket: 'Ticket',
+}
 
 // TODO: duplicates the jalali-digit formatting also present in BookingCard.vue for
 // createdAt — consolidate into one shared formatter once toJalali usage settles.
@@ -18,6 +41,7 @@ export function mapBookingToDto(booking: DashboardBooking): DashboardBookingDto 
   const meta = booking.booking_meta?.val
 
   return {
+    id: booking.id,
     code: booking.code,
     reservationCode: meta?.reservation_code ?? null,
     status: booking.status,

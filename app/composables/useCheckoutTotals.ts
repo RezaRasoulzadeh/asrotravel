@@ -1,9 +1,21 @@
 // app/composables/useCheckoutTotals.ts
-import type { CheckoutResponse } from '~/types/checkout.types'
+import type { CheckoutResponse, CheckoutService } from '~/types/checkout.types'
+
+function isServiceObject(service: CheckoutResponse['service']): service is CheckoutService {
+  return !!service && typeof service === 'object'
+}
 
 export function useCheckoutTotals(checkout: MaybeRefOrGetter<CheckoutResponse>) {
-  const totalBeforeDiscount = computed(() => Number(toValue(checkout).service.total_price || 0))
-  const offerAmount = computed(() => Number(toValue(checkout).service.total_offer || 0))
+  const totalBeforeDiscount = computed(() => {
+    const c = toValue(checkout)
+    return isServiceObject(c.service)
+      ? Number(c.service.total_price || 0)
+      : Number(c.booking.total_before_discount || c.booking.total || 0)
+  })
+  const offerAmount = computed(() => {
+    const c = toValue(checkout)
+    return isServiceObject(c.service) ? Number(c.service.total_offer || 0) : 0
+  })
   const couponAmount = computed(() => Number(toValue(checkout).booking.coupon_amount || 0))
   const hasCoupon = computed(() => couponAmount.value > 0)
   const discountAmount = computed(() => hasCoupon.value ? couponAmount.value : offerAmount.value)

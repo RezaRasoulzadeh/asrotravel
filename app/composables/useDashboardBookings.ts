@@ -140,19 +140,20 @@ export function useDashboardBookings(initialTab: BookingTab = 'pool') {
     search.value = next
   }
 
-  // TODO: keyed on code (UUID), not the internal numeric id — real endpoint path/param
-  // is still unconfirmed, verify it accepts code before relying on this.
   async function cancelBooking(code: string) {
+    const item = rawItems.value.find(i => i.code === code)
+    if (!item) return false
+
     const result = await usePrivateApiFetch<{ message?: string }>(
-      `/api/dashboard/bookings/${code}/cancel`,
-      { method: 'POST' },
+      '/api/dashboard/bookings/cancel',
+      { method: 'POST', body: { id: item.id, service: item.objectModel } },
       'خطا در لغو رزرو',
     )
 
     if (result.error) return false
 
-    rawItems.value = rawItems.value.map(item =>
-      item.code === code ? { ...item, status: 'cancelled', statusText: BOOKING_STATUS_LABELS.cancelled } : item,
+    rawItems.value = rawItems.value.map(i =>
+      i.code === code ? { ...i, status: 'cancelled', statusText: BOOKING_STATUS_LABELS.cancelled } : i,
     )
     return true
   }

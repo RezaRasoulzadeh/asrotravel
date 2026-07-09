@@ -1,12 +1,5 @@
 // server/api/dashboard/bookings.get.ts
-import type { BookingObjectModel, BookingStatus, BookingTab, DashboardBookingsDtoResponse, DashboardBookingsResponse } from '~/types/dashboardBookings.types'
-
-// TODO: filter param name + casing unconfirmed — verify via Network tab.
-const TAB_TO_MODEL: Record<BookingTab, BookingObjectModel> = {
-  pool: 'Pool',
-  hotel: 'Hotel', 
-  ticket: 'Ticket',
-}
+import type { BookingStatus, BookingTab, DashboardBookingsDtoResponse, DashboardBookingsResponse } from '~/types/dashboardBookings.types'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
@@ -27,7 +20,7 @@ export default defineEventHandler(async (event) => {
     '/booking/list',
     {
       query: {
-        service: TAB_TO_MODEL[tab],
+        service: TAB_TO_SERVICE_PARAM[tab],
         page,
         ...(status ? { status } : {}), // TODO: unconfirmed the API even honors this
       },

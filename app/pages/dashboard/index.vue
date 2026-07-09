@@ -11,6 +11,9 @@ import {
   MapPin,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
+import { BOOKING_STATUS_BADGE, BOOKING_STATUS_LABELS } from '~/types/dashboardBookings.types'
+import type { BookingObjectModel, DashboardSummary } from '~/types/dashboardBookings.types'
+import LoadingState from '~/components/ui/LoadingState.vue'
 
 definePageMeta({ layout: 'dashboard' })
 useSeoMeta({ title: 'داشبورد | آسروتراول' })
@@ -25,6 +28,18 @@ const greeting = computed(() => {
   return 'شب بخیر'
 })
 
+const summaryLoading = ref(true)
+const summary = ref<DashboardSummary>({ activeCount: 0, recent: [] })
+
+async function fetchSummary() {
+  summaryLoading.value = true
+  const result = await safeApiFetch<DashboardSummary>('/api/dashboard/summary')
+  if (result.data) summary.value = result.data
+  summaryLoading.value = false
+}
+
+onMounted(fetchSummary)
+
 interface DashboardStat {
   label: string
   value: string
@@ -36,7 +51,7 @@ interface DashboardStat {
 const stats = computed<DashboardStat[]>(() => [
   {
     label: 'رزروهای فعال',
-    value: (0).toLocaleString('fa-IR'),
+    value: summary.value.activeCount.toLocaleString('fa-IR'),
     icon: CalendarCheck,
     color: 'text-primary',
     bg: 'bg-primary/10',
@@ -70,44 +85,20 @@ const quickActions: QuickAction[] = [
   { label: 'گردشگری', icon: MapPin, to: '/place/travel-guide/ardebil' },
 ]
 
-type BookingType = 'hotel' | 'pool' | 'ticket' | 'place'
-type BookingStatus = 'active' | 'done' | 'cancelled'
-
-interface Booking {
-  id: number
-  title: string
-  type: BookingType
-  date: string
-  status: BookingStatus
+const bookingIconMap: Record<BookingObjectModel, Component> = {
+  Hotel,
+  Pool: Waves,
+  Ticket,
 }
 
-const recentBookings: Booking[] = [
-  { id: 1, title: 'هتل پارسیان اصفهان', type: 'hotel', date: '۱۴۰۳/۰۴/۱۵', status: 'active' },
-  { id: 2, title: 'استخر ملت تهران', type: 'pool', date: '۱۴۰۳/۰۴/۱۰', status: 'done' },
-  { id: 3, title: 'پرواز تهران - مشهد', type: 'ticket', date: '۱۴۰۳/۰۳/۲۸', status: 'cancelled' },
-]
-
-const bookingIconMap: Record<BookingType, Component> = {
-  hotel: Hotel,
-  pool: Waves,
-  ticket: Ticket,
-  place: MapPin,
-}
-
-const statusMap: Record<BookingStatus, { label: string; cls: string }> = {
-  active: { label: 'فعال', cls: 'badge-success' },
-  done: { label: 'انجام شده', cls: 'badge-secondary' },
-  cancelled: { label: 'لغو شده', cls: 'badge-error' },
-}
-
-const bookingRows = computed(() => recentBookings.map(booking => ({
+const bookingRows = computed(() => summary.value.recent.map(booking => ({
   ...booking,
-  icon: bookingIconMap[booking.type] ?? Ticket,
-  statusLabel: statusMap[booking.status]?.label ?? '',
-  statusClass: statusMap[booking.status]?.cls ?? 'badge-neutral',
+  icon: bookingIconMap[booking.objectModel] ?? Ticket,
+  statusLabel: BOOKING_STATUS_LABELS[booking.status as keyof typeof BOOKING_STATUS_LABELS] ?? booking.statusText,
+  statusClass: BOOKING_STATUS_BADGE[booking.status as keyof typeof BOOKING_STATUS_BADGE] ?? 'badge-neutral',
 })))
 
-const hasBookings = computed(() => bookingRows.value.length > 0)
+const hasBookings = computed(() => !summaryLoading.value && bookingRows.value.length > 0)
 </script>
 
 <template>
@@ -164,14 +155,14 @@ const hasBookings = computed(() => bookingRows.value.length > 0)
       </div>
 
       <div class="card bg-base-100 shadow-sm divide-y divide-base-200">
-        <div v-for="booking in bookingRows" :key="booking.id" class="flex items-center gap-3 px-4 py-3">
+        <div v-for="booking in bookingRows" :key="booking.code" class="flex items-center gap-3 px-4 py-3">
           <div class="w-9 h-9 rounded-xl bg-base-200 flex items-center justify-center shrink-0">
             <component :is="booking.icon" :size="16" class="text-base-content/50" />
           </div>
 
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium truncate">{{ booking.title }}</p>
-            <p class="text-xs text-base-content/40 mt-0.5">{{ booking.date }}</p>
+            <p class="text-sm font-medium truncate">{{ booking.title || '—' }}</p>
+            <p class="text-xs text-base-content/40 mt-0.5">{{ booking.dateDisplay }}</p>
           </div>
 
           <span class="badge badge-sm badge-soft" :class="booking.statusClass">
@@ -179,7 +170,11 @@ const hasBookings = computed(() => bookingRows.value.length > 0)
           </span>
         </div>
 
-        <div v-if="!hasBookings" class="flex flex-col items-center justify-center py-12 gap-3 text-center px-4">
+        <div v-if="summaryLoading" class="flex justify-center py-12">
+          <LoadingState label="در حال دریافت رزروها..." />
+        </div>
+
+        <div v-else-if="!hasBookings" class="flex flex-col items-center justify-center py-12 gap-3 text-center px-4">
           <div class="w-12 h-12 rounded-full bg-base-200 flex items-center justify-center">
             <CalendarCheck :size="22" class="text-base-content/30" />
           </div>

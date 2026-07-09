@@ -126,7 +126,7 @@ export interface CheckoutResponse {
   booking: CheckoutBooking
   service_id: number
   service_type: string
-  service: CheckoutService
+  service: CheckoutService | ''
   parent: CheckoutParent
   gateways: CheckoutGateways
 }

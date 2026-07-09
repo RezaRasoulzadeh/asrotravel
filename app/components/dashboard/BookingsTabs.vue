@@ -7,7 +7,7 @@ const emit = defineEmits<{ 'update:modelValue': [BookingTab] }>()
 
 const tabs: { value: BookingTab, label: string, disabled?: boolean }[] = [
   { value: 'pool', label: 'استخر' },
-  { value: 'hotel', label: 'هتل', disabled: true },
+  { value: 'hotel', label: 'هتل' },
   { value: 'ticket', label: 'بلیط' },
 ]
 </script>
