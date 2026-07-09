@@ -6,6 +6,10 @@ const props = defineProps<{
   hotel: any
 }>()
 
+const hotelId = computed(() => props.hotel?.id ?? null)
+const hotelWishList = computed(() => props.hotel?.wish_list)
+const { isWish, toggleWish } = useWish('Hotel', hotelId, hotelWishList)
+
 function formatScore(score: any) {
   const s = parseFloat(score)
   return isNaN(s) || s === 0 ? null : s.toLocaleString('fa-IR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
@@ -68,11 +72,12 @@ const originalDisplay = hasDiscount ? (props.hotel?.min_price_display ?? null) :
     </NuxtLink>
 
     <button
-      class="absolute top-3 left-3 btn btn-circle btn-sm bg-base-100/80 border-none backdrop-blur-md text-base-content/60 hover:text-error hover:bg-base-100 z-10 shadow-sm"
+      class="absolute top-3 left-3 btn btn-circle btn-sm bg-base-100/80 border-none backdrop-blur-md hover:bg-base-100 z-10 shadow-sm"
+      :class="isWish ? 'text-error' : 'text-base-content/60 hover:text-error'"
       aria-label="افزودن به علاقه‌مندی‌ها"
-      @click.prevent="() => {}"
+      @click.prevent="toggleWish"
     >
-      <Heart class="size-4" />
+      <Heart class="size-4" :class="{ 'fill-error': isWish }" />
     </button>
 
     <div class="flex flex-col flex-1 p-4 gap-2.5 min-w-0">

@@ -116,6 +116,7 @@ export interface PoolItem {
   location:                  PoolCardLocation
   terms?:          PoolTermRef[]
   reviewsLength?:  number
+  wish_list?:      boolean | null
 }
 
 // ─── Group & Endpoint Wrapper Envelopes ──────────────────────────────────────

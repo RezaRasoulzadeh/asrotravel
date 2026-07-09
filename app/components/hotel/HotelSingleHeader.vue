@@ -8,11 +8,18 @@ import {
 } from 'lucide-vue-next'
 import type { HotelDetail, HotelSingleImage } from '~/types/hotelSingle.types'
 import FullscreenImageViewer from '~/components/ui/FullscreenImageViewer.vue'
+import ShareModal from '~/components/ui/ShareModal.vue'
 
 const props = defineProps<{
   hotel: HotelDetail
   gallery: HotelSingleImage[]
 }>()
+
+const hotelId = computed(() => props.hotel.id ?? null)
+const hotelWishList = computed(() => props.hotel.wish_list)
+const { isWish, toggleWish } = useWish('Hotel', hotelId, hotelWishList)
+const { isSubscribed, subscribe } = useNotifySubscription('Hotel', hotelId)
+const isShareOpen = ref(false)
 
 const PLACEHOLDER = '/placeholder.png'
 
@@ -163,13 +170,15 @@ onMounted(() => {
       class="lg:col-span-5 bg-base-100 text-base-content rounded-3xl p-6 lg:p-8 pe-10 flex flex-col gap-4 relative border border-base-200 shadow-sm">
       <div
         class="hidden lg:flex flex-col gap-3 absolute -left-14 top-6 bg-base-100/80 backdrop-blur-md p-2 rounded-xl border border-base-200 shadow-xs z-20">
-        <button class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer" title="افزودن به علاقه‌مندی‌ها">
-          <Heart class="w-4 h-4" />
+        <button @click="toggleWish" class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer"
+          :class="{ 'text-error hover:text-error': isWish }" title="افزودن به علاقه‌مندی‌ها">
+          <Heart class="w-4 h-4" :class="{ 'fill-error': isWish }" />
         </button>
-        <button class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer" title="اطلاع‌رسانی">
-          <Bell class="w-4 h-4" />
+        <button @click="subscribe" class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer"
+          :class="{ 'text-primary': isSubscribed }" :title="isSubscribed ? 'اطلاع‌رسانی فعال است' : 'اطلاع‌رسانی'">
+          <Bell class="w-4 h-4" :class="{ 'fill-primary': isSubscribed }" />
         </button>
-        <button class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer" title="اشتراک‌گذاری">
+        <button @click="isShareOpen = true" class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer" title="اشتراک‌گذاری">
           <Share2 class="w-4 h-4" />
         </button>
         <button v-if="hotel?.map_lat && hotel?.map_lng" @click="openGoogleMap"
@@ -319,5 +328,7 @@ onMounted(() => {
       :initial-index="activeImageIdx"
       @close="isViewerOpen = false"
     />
+
+    <ShareModal :is-open="isShareOpen" :title="hotel?.title" @close="isShareOpen = false" />
   </section>
 </template>

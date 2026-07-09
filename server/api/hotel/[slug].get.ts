@@ -5,5 +5,5 @@ export default defineEventHandler(async (event) => {
   const slug = getRouterParam(event, 'slug')
   if (!slug) return null
 
-  return await safeApiFetch<HotelSingleResponse | null>(`/hotel/${encodeURIComponent(slug)}/single`, {}, null)
+  return await safeOptionalAuthApiFetch<HotelSingleResponse | null>(event, `/hotel/${encodeURIComponent(slug)}/single`, {}, null)
 })

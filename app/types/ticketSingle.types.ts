@@ -72,6 +72,7 @@ export interface Ticket {
   is_featured: number
   gallery: string | null
   video: string | null
+  wish_list?: boolean | null
   enable_extra_price: unknown | null
   extra_price: unknown | null
   faqs: Faq[] | null

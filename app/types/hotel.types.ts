@@ -122,6 +122,7 @@ export interface HotelCardItem {
   media:             HotelMedia
   location:          HotelLocationRef
   terms:             HotelTermRef[]
+  wish_list?:        boolean | null
 }
 
 // ─── API Response Wrappers ─────────────────────────────────────────────────

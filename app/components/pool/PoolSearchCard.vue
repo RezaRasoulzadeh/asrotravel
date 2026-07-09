@@ -5,6 +5,10 @@ import type { PoolItem } from '~/types/pool.types'
 
 const props = defineProps<{ pool: PoolItem }>()
 
+const poolId = computed(() => props.pool.id ?? null)
+const poolWishList = computed(() => props.pool.wish_list)
+const { isWish, toggleWish } = useWish('Pool', poolId, poolWishList)
+
 function formatScore(score: string | undefined): string | null {
   const s = parseFloat(score ?? '')
   if (Number.isNaN(s) || s === 0) return null
@@ -81,11 +85,12 @@ const canOpenMap = computed(() => {
 
     <!-- Favorite -->
     <button
-      class="absolute top-3 left-3 btn btn-circle btn-sm bg-base-100/80 border-none backdrop-blur-md text-base-content/60 hover:text-error hover:bg-base-100 z-10 shadow-sm"
+      class="absolute top-3 left-3 btn btn-circle btn-sm bg-base-100/80 border-none backdrop-blur-md hover:bg-base-100 z-10 shadow-sm"
+      :class="isWish ? 'text-error' : 'text-base-content/60 hover:text-error'"
       aria-label="افزودن به علاقه‌مندی‌ها"
-      @click.prevent="() => {}"
+      @click.prevent="toggleWish"
     >
-      <Heart class="size-4" />
+      <Heart class="size-4" :class="{ 'fill-error': isWish }" />
     </button>
 
     <div class="flex flex-col flex-1 p-4 gap-2.5 min-w-0">

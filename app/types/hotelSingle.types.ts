@@ -45,7 +45,6 @@ export interface HotelSurroundingItem {
   type:    'km' | 'm' | string
 }
 
-/** Keys are numeric category string IDs (e.g. "1", "2") */
 export type HotelSurrounding = Record<string, HotelSurroundingItem[]>
 
 export interface HotelSingleTermRef {
@@ -97,6 +96,7 @@ export interface HotelDetail {
   gallery:                string 
   gallery_array:          string[]
   video:                  string | null
+  wish_list?:             boolean | null
   check_in_time:          string
   check_out_time:         string
   allow_full_day:         boolean | null

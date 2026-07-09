@@ -9,7 +9,8 @@ export default defineEventHandler(async (event) => {
 
   const encodedSlug = encodeURIComponent(slug)
 
-  return await safeApiFetch<TicketSingleApiResponse | null>(
+  return await safeOptionalAuthApiFetch<TicketSingleApiResponse | null>(
+    event,
     `/ticket/${encodedSlug}/single`,
     {},
     null,

@@ -52,6 +52,7 @@ export interface TicketItem {
   max_offer_percent: number | null;
   is_featured: number | null;
   reviewsLength: number;
+  wish_list?: boolean | null;
   banner: TicketBanner | null;
   location: TicketLocation | null;
   terms: number[];

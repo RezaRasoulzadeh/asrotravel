@@ -38,12 +38,29 @@ export async function safeAuthApiFetch<T>(
   }
 }
 
-/**
- * Same auth handling as safeAuthApiFetch, but never swallows the failure.
- * Use this for user-triggered mutations (booking creation, payments, etc.)
- * where the real backend error (validation message, missing field, etc.)
- * needs to reach the client instead of being replaced by a generic fallback.
- */
+export async function safeOptionalAuthApiFetch<T>(
+  event: H3Event,
+  path: string,
+  options: FetchOptions = {},
+  fallback: T,
+): Promise<T> {
+  const token = getCookie(event, TOKEN_COOKIE)
+
+  const headers = new Headers(options.headers as HeadersInit | undefined)
+  headers.set('Accept', 'application/json')
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+
+  try {
+    return await $fetch<T>(apiUrl(path), {
+      ...options,
+      headers,
+    })
+  } catch (error) {
+    console.warn(`[api] ${path} failed`, error)
+    return fallback
+  }
+}
+
 export async function authApiFetch<T>(
   event: H3Event,
   path: string,

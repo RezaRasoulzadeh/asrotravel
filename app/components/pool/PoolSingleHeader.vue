@@ -10,12 +10,19 @@ import {
 } from 'lucide-vue-next'
 import type { GalleryImage, PoolSingleWithSanse } from '~/types/poolSingle.types'
 import FullscreenImageViewer from '../ui/FullscreenImageViewer.vue';
+import ShareModal from '../ui/ShareModal.vue';
 
 const props = defineProps<{
   pool: PoolSingleWithSanse
   gallery: GalleryImage[]
   is_vip?: boolean
 }>()
+
+const poolId = computed(() => props.pool.id ?? null)
+const poolWishList = computed(() => props.pool.wish_list)
+const { isWish, toggleWish } = useWish('Pool', poolId, poolWishList)
+const { isSubscribed, subscribe } = useNotifySubscription('Pool', poolId)
+const isShareOpen = ref(false)
 
 const serviceCategories = computed(() => {
   const cats: string[] = []
@@ -188,15 +195,17 @@ watch(allImages, () => nextTick(onThumbsScroll))
 
       <div
         class="hidden lg:flex flex-col gap-3 absolute -left-14 top-6 bg-base-100/80 backdrop-blur-md p-2 rounded-xl border border-base-200 shadow-xs z-20">
-        <button class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer"
+        <button @click="toggleWish" class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer"
+          :class="{ 'text-error hover:text-error': isWish }"
           title="افزودن به علاقه‌مندی‌ها">
-          <Heart class="w-4 h-4" />
+          <Heart class="w-4 h-4" :class="{ 'fill-error': isWish }" />
         </button>
-        <button class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer"
-          title="اطلاع‌رسانی">
-          <Bell class="w-4 h-4" />
+        <button @click="subscribe" class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer"
+          :class="{ 'text-primary': isSubscribed }"
+          :title="isSubscribed ? 'اطلاع‌رسانی فعال است' : 'اطلاع‌رسانی'">
+          <Bell class="w-4 h-4" :class="{ 'fill-primary': isSubscribed }" />
         </button>
-        <button class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer"
+        <button @click="isShareOpen = true" class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer"
           title="اشتراک‌گذاری">
           <Share2 class="w-4 h-4" />
         </button>
@@ -360,6 +369,8 @@ watch(allImages, () => nextTick(onThumbsScroll))
 
     <FullscreenImageViewer :is-open="isViewerOpen" :images="allImages" :initial-index="activeImageIdx"
       @close="isViewerOpen = false" />
+
+    <ShareModal :is-open="isShareOpen" :title="pool.title" @close="isShareOpen = false" />
 
   </section>
 </template>

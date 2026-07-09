@@ -228,6 +228,7 @@ export interface PoolSingle {
   cancel_policy: string | null
   terms_information: string | null
   review_score: string | null
+  wish_list?: boolean | null
   reviewsLength: number
   status: string
   service_active: number

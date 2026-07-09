@@ -5,6 +5,10 @@ import type { TicketItem } from '~/types/ticket.types'
 
 const props = defineProps<{ ticket: TicketItem }>()
 
+const ticketId = computed(() => props.ticket.id ?? null)
+const ticketWishList = computed(() => props.ticket.wish_list)
+const { isWish, toggleWish } = useWish('Ticket', ticketId, ticketWishList)
+
 function formatScore(score?: string | number | null) {
   const s = typeof score === 'number' ? score : parseFloat(score ?? '')
   return isNaN(s) || s === 0 ? null : s.toFixed(1)
@@ -50,11 +54,12 @@ const originalDisplay = hasDiscount ? (props.ticket?.min_price_display ?? null) 
     </NuxtLink>
 
     <button
-      class="absolute top-3 left-3 btn btn-circle btn-sm bg-base-100/80 border-none backdrop-blur-md text-base-content/60 hover:text-error hover:bg-base-100 z-10 shadow-sm"
+      class="absolute top-3 left-3 btn btn-circle btn-sm bg-base-100/80 border-none backdrop-blur-md hover:bg-base-100 z-10 shadow-sm"
+      :class="isWish ? 'text-error' : 'text-base-content/60 hover:text-error'"
       aria-label="افزودن به علاقه‌مندی‌ها"
-      @click.prevent="() => {}"
+      @click.prevent="toggleWish"
     >
-      <Heart class="size-4" />
+      <Heart class="size-4" :class="{ 'fill-error': isWish }" />
     </button>
 
     <div class="flex flex-col flex-1 p-4 gap-2.5 min-w-0">
