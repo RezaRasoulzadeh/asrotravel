@@ -76,4 +76,5 @@ export interface PlaceSingleProfile {
   author:               null
   location:             PlaceLocation
   gallery:              PlaceGalleryItem[]
+  wish_list?:           boolean | null
 }

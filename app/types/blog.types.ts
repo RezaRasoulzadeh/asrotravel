@@ -70,4 +70,5 @@ export interface BlogSingle {
   banner?: BlogBanner
   seo?: BlogSeo
   author?: BlogAuthor
+  wish_list?: boolean | null
 }

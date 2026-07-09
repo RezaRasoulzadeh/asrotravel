@@ -1,6 +1,6 @@
 // types/wishNotification.types.ts
 
-export type WishableObjectModel = 'Pool' | 'Hotel' | 'Ticket'
+export type WishableObjectModel = 'Pool' | 'Hotel' | 'Ticket' | 'Place' | 'Blog'
 
 export interface AddWishPayload {
   object_model: WishableObjectModel

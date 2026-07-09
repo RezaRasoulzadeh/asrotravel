@@ -3,18 +3,24 @@
 import {
   MapPin, Clock, Eye, Heart, Bookmark, MessageCircle, Star,
   ChevronRight, ChevronLeft, Maximize2, WifiOff, RefreshCw,
-  Compass, Share2, StarIcon, Bell,
+  Compass, Share2, StarIcon,
 } from 'lucide-vue-next'
 import { parseBlogHtml } from '~/utils/blog/parser'
 import BlogRenderer from '~/components/blog/BlogRenderer.vue'
 import FullscreenImageViewer from '~/components/ui/FullscreenImageViewer.vue'
 import ReviewSection from '~/components/ui/review/ReviewSecion.vue'
+import ShareModal from '~/components/ui/ShareModal.vue'
 
 const route = useRoute()
 const router = useRouter()
 const slug = computed(() => (Array.isArray(route.params.slug) ? route.params.slug[0] : route.params.slug) ?? '')
 
 const { place, loading, error, refresh: fetchPlace } = usePlace(slug)
+
+const placeId = computed(() => place.value?.id ?? null)
+const placeWishList = computed(() => place.value?.wish_list)
+const { isWish, toggleWish } = useWish('Place', placeId, placeWishList)
+const isShareOpen = ref(false)
 
 useHead({
   title: computed(() => place.value?.translate?.title ?? 'راهنمای سفر'),
@@ -96,15 +102,6 @@ function openMap() {
 
 function scrollToReviews() {
   reviewsRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
-function sharePlace() {
-  if (typeof window === 'undefined') return
-  if (navigator.share) {
-    navigator.share({ title: place.value?.translate?.title ?? '', url: window.location.href })
-  } else {
-    navigator.clipboard.writeText(window.location.href)
-  }
 }
 
 const reviewParams = computed(() => {
@@ -268,22 +265,17 @@ function handleImgError(e: Event) {
             <div
               class="hidden lg:flex flex-col gap-3 absolute -left-14 top-6 bg-base-100/80 backdrop-blur-md p-2 rounded-xl border border-base-200 shadow-xs z-20">
               <button 
-                class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer" 
-                title="Add to favorites"
-                @click="() => {}"
+                @click="toggleWish"
+                class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer"
+                :class="{ 'text-error hover:text-error': isWish }"
+                title="افزودن به علاقه‌مندی‌ها"
               >
-                <Heart class="w-4 h-4" />
+                <Heart class="w-4 h-4" :class="{ 'fill-error': isWish }" />
               </button>
               <button 
+                @click="isShareOpen = true"
                 class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer" 
-                title="Notifications"
-              >
-                <Bell class="w-4 h-4" />
-              </button>
-              <button 
-                class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer" 
-                title="Share"
-                @click="sharePlace"
+                title="اشتراک‌گذاری"
               >
                 <Share2 class="w-4 h-4" />
               </button>
@@ -344,10 +336,11 @@ function handleImgError(e: Event) {
 
                 <button
                   class="flex-1 flex items-center justify-center gap-2 p-2.5 rounded-xl bg-base-200 hover:text-primary hover:bg-base-300 transition-colors text-sm cursor-pointer"
-                  title="Add to favorites"
-                  @click="() => {}"
+                  :class="{ 'text-error hover:text-error': isWish }"
+                  title="افزودن به علاقه‌مندی‌ها"
+                  @click="toggleWish"
                 >
-                  <Heart class="size-4 shrink-0" />
+                  <Heart class="size-4 shrink-0" :class="{ 'fill-error': isWish }" />
                   <span class="hidden sm:inline">علاقه‌مندی</span>
                 </button>
 
@@ -381,8 +374,8 @@ function handleImgError(e: Event) {
 
                 <button
                   class="flex-1 flex items-center justify-center gap-2 px-2.5 py-2 rounded-xl bg-base-200 hover:text-primary hover:bg-base-300 transition-colors text-sm cursor-pointer"
-                  title="Share"
-                  @click="sharePlace"
+                  title="اشتراک‌گذاری"
+                  @click="isShareOpen = true"
                 >
                   <Share2 class="size-4 shrink-0" />
                   <span class="hidden sm:inline">اشتراک</span>
@@ -436,6 +429,8 @@ function handleImgError(e: Event) {
     :initial-index="activeImageIdx"
     @close="isViewerOpen = false"
   />
+
+  <ShareModal :is-open="isShareOpen" :title="place?.translate?.title" @close="isShareOpen = false" />
 </template>
 
 <style scoped>

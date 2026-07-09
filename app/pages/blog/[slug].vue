@@ -1,8 +1,9 @@
 <!-- pages/blog/[slug].vue -->
 <script setup lang="ts">
-import { CalendarDays, Eye, Heart, MessageCircle, User } from 'lucide-vue-next'
+import { CalendarDays, Eye, Heart, MessageCircle, User, Share2 } from 'lucide-vue-next'
 import { parseBlogHtml } from '~/utils/blog/parser'
 import ReviewSecion from '~/components/ui/review/ReviewSecion.vue'
+import ShareModal from '~/components/ui/ShareModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -13,6 +14,11 @@ const postFetch = useBlogSingle(slug)
 const sideFetch = useBlogSide()
 
 const [{ data: post, status: postStatus }, { data: side }] = await Promise.all([postFetch, sideFetch])
+
+const postId = computed(() => post.value?.id ?? null)
+const postWishList = computed(() => post.value?.wish_list)
+const { isWish, toggleWish } = useWish('Blog', postId, postWishList)
+const isShareOpen = ref(false)
 
 const loading = computed(() => postStatus.value === 'pending')
 const error = computed(() => postStatus.value === 'error')
@@ -85,10 +91,28 @@ useHead({
                     </div>
 
                     <!-- HEADER -->
-                    <header class="mb-6">
+                    <header class="mb-6 flex items-start justify-between gap-4">
                         <h1 class="text-2xl lg:text-4xl font-black text-base-content">
                             {{ post?.title }}
                         </h1>
+
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button
+                                @click="toggleWish"
+                                class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer"
+                                :class="{ 'text-error hover:text-error': isWish }"
+                                title="افزودن به علاقه‌مندی‌ها"
+                            >
+                                <Heart class="w-4 h-4" :class="{ 'fill-error': isWish }" />
+                            </button>
+                            <button
+                                @click="isShareOpen = true"
+                                class="p-2 hover:text-primary transition-colors bg-base-200 rounded-lg cursor-pointer"
+                                title="اشتراک‌گذاری"
+                            >
+                                <Share2 class="w-4 h-4" />
+                            </button>
+                        </div>
                     </header>
 
                     <!-- META -->
@@ -138,4 +162,6 @@ useHead({
             </aside>
         </div>
     </main>
+
+    <ShareModal :is-open="isShareOpen" :title="post?.title" @close="isShareOpen = false" />
 </template>
