@@ -3,21 +3,24 @@ import type { UpdateProfilePayload, UpdateProfileResponse } from '~/types/profil
 
 export function useUpdateProfile() {
   const loading = ref(false)
-  const { user } = useAuth()
+  const { user, handleSessionExpiry } = useAuth()
 
   async function updateProfile(payload: UpdateProfilePayload): Promise<{ ok: boolean; error?: string }> {
     if (loading.value) return { ok: false }
 
     loading.value = true
-    const result = await usePrivateApiFetch<UpdateProfileResponse>(
+    const result = await safeApiFetch<UpdateProfileResponse>(
       '/api/users/update-profile',
       { method: 'PUT', body: payload },
-      'خطا در بروزرسانی پروفایل',
     )
     loading.value = false
 
     if (result.error || !result.data) {
-      return { ok: false, error: result.error ?? undefined }
+      if (result.status === 401) {
+        await handleSessionExpiry()
+        return { ok: false }
+      }
+      return { ok: false, error: 'خطا در بروزرسانی پروفایل. لطفا دوباره تلاش کنید' }
     }
 
     const updated = result.data.userData
@@ -41,7 +44,6 @@ export function useUpdateProfile() {
       }
     }
 
-    useToast().success(result.data.message || 'پروفایل با موفقیت بروزرسانی شد')
     return { ok: true }
   }
 

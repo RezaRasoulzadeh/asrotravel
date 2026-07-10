@@ -13,6 +13,15 @@ const { loading: avatarLoading, uploadAvatar } = useUploadAvatar()
 const photoInput = ref<HTMLInputElement | null>(null)
 const localPreview = ref<string | null>(null)
 
+const success = ref('')
+let successTimeout: ReturnType<typeof setTimeout> | null = null
+
+function showSuccess(message: string) {
+  success.value = message
+  if (successTimeout) clearTimeout(successTimeout)
+  successTimeout = setTimeout(() => { success.value = '' }, 4000)
+}
+
 async function handleAvatarChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
@@ -26,6 +35,8 @@ async function handleAvatarChange(e: Event) {
 
   if (result.ok && result.url) {
     form.imageUrl = result.url
+    error.value = ''
+    showSuccess('تصویر پروفایل بروزرسانی شد')
   } else if (result.error) {
     error.value = result.error
   }
@@ -82,6 +93,21 @@ const days = computed(() => {
 
 const error = ref('')
 
+watch(
+  () => [
+    form.first_name,
+    form.last_name,
+    form.national_id,
+    form.email,
+    form.address,
+    form.gender,
+    form.birthYear,
+    form.birthMonth,
+    form.birthDay,
+  ],
+  () => { success.value = '' },
+)
+
 async function handleSubmit() {
   error.value = ''
 
@@ -105,7 +131,11 @@ async function handleSubmit() {
   }
 
   const result = await updateProfile(payload)
-  if (!result.ok && result.error) error.value = result.error
+  if (result.ok) {
+    showSuccess('تغییرات با موفقیت ذخیره شد')
+  } else if (result.error) {
+    error.value = result.error
+  }
 }
 </script>
 
@@ -216,6 +246,7 @@ async function handleSubmit() {
           </div>
 
           <p v-if="error" class="text-xs text-error">{{ error }}</p>
+          <p v-if="success" class="text-xs text-success">{{ success }}</p>
 
           <button
             class="btn btn-primary w-full sm:w-auto rounded-xl self-end"

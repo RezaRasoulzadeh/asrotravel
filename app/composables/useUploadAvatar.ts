@@ -3,7 +3,7 @@ import type { UploadAvatarResponse } from '~/types/profile.types'
 
 export function useUploadAvatar() {
   const loading = ref(false)
-  const { user } = useAuth()
+  const { user, handleSessionExpiry } = useAuth()
 
   async function uploadAvatar(file: File): Promise<{ ok: boolean; url?: string; error?: string }> {
     if (loading.value) return { ok: false }
@@ -12,15 +12,18 @@ export function useUploadAvatar() {
     const body = new FormData()
     body.append('file', file)
 
-    const result = await usePrivateApiFetch<UploadAvatarResponse>(
+    const result = await safeApiFetch<UploadAvatarResponse>(
       '/api/users/profile-avatar',
       { method: 'POST', body },
-      'خطا در آپلود تصویر پروفایل',
     )
     loading.value = false
 
     if (result.error || !result.data) {
-      return { ok: false, error: result.error ?? undefined }
+      if (result.status === 401) {
+        await handleSessionExpiry()
+        return { ok: false }
+      }
+      return { ok: false, error: 'خطا در آپلود تصویر. لطفا دوباره تلاش کنید' }
     }
 
     const url = result.data.ImageUrl ?? result.data.image_url ?? result.data.avatar?.image_url ?? null
@@ -30,7 +33,6 @@ export function useUploadAvatar() {
     }
 
     if (user.value) user.value = { ...user.value, ImageUrl: url }
-    useToast().success('تصویر پروفایل بروزرسانی شد')
 
     return { ok: true, url }
   }

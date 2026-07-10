@@ -95,7 +95,8 @@ export async function authApiFetch<T>(
 
     throw createError({
       statusCode: status,
-      statusMessage: backendMessage,
+      statusMessage: 'Request failed',
+      message: backendMessage,
       data: backendData,
     })
   }
