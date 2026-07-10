@@ -109,12 +109,7 @@ function isActive(to: string) {
 
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2.5">
-          <div class="avatar placeholder">
-            <div class="flex justify-center items-center bg-primary text-primary-content text-center rounded-full w-10 font-bold">
-              <img v-if="user?.ImageUrl" :src="user.ImageUrl" :alt="fullName" loading="lazy" class="rounded-full" />
-              <span class="pt-0.5" v-else>{{ fullName.charAt(0) }}</span>
-            </div>
-          </div>
+          <UiAvatar :src="user?.ImageUrl" :name="fullName" size="md" />
           <div class="leading-tight">
             <p class="text-sm font-semibold">{{ fullName }}</p>
             <p class="text-xs text-base-content/40">گردشگر</p>

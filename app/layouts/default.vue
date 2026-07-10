@@ -17,7 +17,7 @@ const { y } = useWindowScroll()
 const scrolled = computed(() => y.value > 40)
 const logoSrc = computed(() => theme.value === 'dark' ? logoDark : logoLight)
 
-const { isAuthenticated, fullName, logout } = useAuth()
+const { isAuthenticated, user, fullName, logout } = useAuth()
 
 const isMobileMenuOpen = ref(false)
 const mobileMenuRef = ref<HTMLElement | null>(null)
@@ -105,7 +105,7 @@ function handleLogout() {
               class="btn btn-ghost btn-sm btn-circle transition-colors text-base-content"
               @click="isMobileUserOpen = !isMobileUserOpen"
             >
-              <User2 class="size-5" />
+              <UiAvatar :src="user?.ImageUrl" :name="fullName" size="sm" />
             </button>
             <Transition name="menu-fade">
               <ul 
@@ -140,7 +140,7 @@ function handleLogout() {
         <template v-if="isAuthenticated">
           <div class="dropdown dropdown-end hidden lg:block">
             <button tabindex="0" class="btn btn-ghost btn-sm gap-2 transition-colors text-base-content">
-              <User2 class="size-4" />
+              <UiAvatar :src="user?.ImageUrl" :name="fullName" size="sm" />
               <span class="max-w-24 truncate text-sm">{{ fullName }}</span>
             </button>
             <ul tabindex="0"

@@ -9,9 +9,10 @@ export interface AsroUser {
   user_name: string
   balance: number
   birthday: string
-  gender: number
+  gender: number | null
   national_id: string
   ImageUrl: string | null
+  address?: string | null
   is_organization: boolean
   IsActive: boolean
   wallet: {
