@@ -15,6 +15,7 @@ export interface AsroUser {
   address?: string | null
   is_organization: boolean
   IsActive: boolean
+  Token?: string | null
   wallet: {
     id: number
     balance: string

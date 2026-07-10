@@ -6,6 +6,7 @@ export interface UpdateProfilePayload {
   last_name: string
   national_id: string
   email: string
+  mobile: string
   birthday: string
   gender: number | null
   address: string | null
@@ -27,6 +28,7 @@ export interface UpdateProfileUserData {
   is_organization: boolean
   IsActive: boolean
   avatar: string | null
+  Token?: string | null
 }
 
 export interface UpdateProfileResponse {

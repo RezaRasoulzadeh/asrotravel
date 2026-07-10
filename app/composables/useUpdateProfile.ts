@@ -41,6 +41,7 @@ export function useUpdateProfile() {
         is_organization: updated.is_organization,
         IsActive: updated.IsActive,
         address: payload.address,
+        Token: updated.Token ?? user.value.Token,
       }
     }
 

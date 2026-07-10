@@ -16,4 +16,6 @@ useHead(() => ({
   htmlAttrs: { 'data-theme': theme.value },
 }))
 
+const { captureReferral } = useReferral()
+onMounted(() => captureReferral())
 </script>

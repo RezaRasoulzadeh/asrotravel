@@ -123,18 +123,7 @@ function isActive(to: string) {
 
       <DashboardMiniCalendar />
 
-      <div class="flex flex-col gap-2">
-        <div class="flex items-center justify-between mb-1">
-          <p class="text-sm font-semibold">رزروهای پیش رو</p>
-        </div>
-
-        <div class="flex flex-col items-center justify-center py-6 gap-2 text-center">
-          <div class="w-10 h-10 rounded-full bg-base-200 flex items-center justify-center">
-            <CalendarCheck :size="18" class="text-base-content/30" />
-          </div>
-          <p class="text-xs text-base-content/40">رزروی برای نمایش وجود ندارد</p>
-        </div>
-      </div>
+      <DashboardReferralInvite class="mt-auto" />
 
     </aside>
 

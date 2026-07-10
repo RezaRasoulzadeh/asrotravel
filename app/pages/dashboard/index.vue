@@ -183,5 +183,13 @@ const hasBookings = computed(() => !summaryLoading.value && bookingRows.value.le
       </div>
     </section>
 
+    <section class="xl:hidden">
+      <div class="card bg-base-100 shadow-sm">
+        <div class="card-body p-6">
+          <DashboardReferralInvite />
+        </div>
+      </div>
+    </section>
+
   </div>
 </template>

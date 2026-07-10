@@ -124,6 +124,7 @@ async function handleSubmit() {
     last_name: form.last_name.trim(),
     national_id: form.national_id.trim(),
     email: form.email.trim(),
+    mobile: user.value.mobile,
     birthday: `${form.birthYear}/${String(form.birthMonth).padStart(2, '0')}/${String(form.birthDay).padStart(2, '0')}`,
     gender: form.gender,
     address: form.address.trim() || null,
@@ -234,7 +235,7 @@ async function handleSubmit() {
             <p class="fieldset-legend">تاریخ تولد</p>
             <div class="grid grid-cols-3 gap-3">
               <select v-model="form.birthYear" class="select-custom">
-                <option v-for="y in years" :key="y" :value="y">{{ y.toLocaleString('fa-IR') }}</option>
+                <option v-for="y in years" :key="y" :value="y">{{ y.toLocaleString('fa-IR', { useGrouping: false }) }}</option>
               </select>
               <select v-model="form.birthMonth" class="select-custom">
                 <option v-for="(m, i) in months" :key="i" :value="i + 1">{{ m }}</option>

@@ -32,6 +32,9 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     apiBase: process.env.API_BASE_URL || "https://api.asrotravel.com/api",
+    public: {
+      siteUrl: process.env.SITE_URL || "https://asrotravel.com",
+    },
   },
 
   nitro: {
