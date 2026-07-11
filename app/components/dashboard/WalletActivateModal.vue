@@ -22,7 +22,7 @@ const form = reactive({
 
 watch(() => props.isOpen, (open) => {
   if (!open) return
-  form.account_name = ''
+  form.account_name = props.initial?.account_name ?? ''
   form.bank_name = props.initial?.bank_name ?? ''
   form.cardDigits = (props.initial?.bank_cart ?? '').replace(/\D/g, '')
   form.sheba_number = props.initial?.sheba_number ?? ''

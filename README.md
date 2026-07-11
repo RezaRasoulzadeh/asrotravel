@@ -366,3 +366,7 @@ Other payload requirements:
 The checkout response (`GET /api/booking/{code}/checkout`) carries `booking.deposit` separately from `booking.total` — only the deposit is charged online through the payment gateway; the remainder is collected at the venue. `CheckoutSummary.vue`/`CheckoutBookingSummary.vue` branch on `service.service_type === 'vip'` to show this breakdown, since the ticket-flow checkout response has a different shape (`origin_price_display`, no `deposit` concept) — see `checkout.types.ts`'s `CheckoutService` for both shapes.
 
 The ticket/pool (non-VIP) booking flow does not follow this same `service_id`/`parent` contract — it has its own, separately verified working payload shape in `CartDetail.vue`/`PoolSanseCalendar.vue`. Don't port the VIP field mapping over to it.
+
+
+TODO: update the checkout flow, it should add to cart if it was from dashboard or direct url in background fetch its response and show in chekout. it will done to always fetch updated prices. 
+TODO: disable wishlist for now. remove from dashboard menu and disable page(do not remove)

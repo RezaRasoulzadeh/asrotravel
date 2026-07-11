@@ -28,7 +28,11 @@ export function useWallet() {
   const error = ref<string | null>(null)
   const actionLoading = ref(false)
 
-  const payoutInfo = computed<WalletPayoutInfo | null>(() => walletUser.value?.user_meta?.val?.payout_method ?? null)
+  const payoutMethodId = computed(() => activePayoutMethod.value?.id ?? 'user_wallet')
+  const payoutInfo = computed<WalletPayoutInfo | null>(() =>
+    walletUser.value?.user_meta?.val?.[payoutMethodId.value]
+    ?? activePayoutMethod.value?.user
+    ?? null)
   const hasPayoutInfo = computed(() => !!payoutInfo.value?.bank_cart && !!payoutInfo.value?.sheba_number)
   const balance = computed(() => Number(walletUser.value?.wallet?.balance ?? authUser.value?.wallet?.balance ?? 0))
   const minDepositRial = computed(() => Number(activePayoutMethod.value?.min ?? 100000))
@@ -67,11 +71,17 @@ export function useWallet() {
     actionLoading.value = true
 
     const methodId = activePayoutMethod.value?.id ?? 'user_wallet'
+    const metaId = walletUser.value?.user_meta?.id
     const result = await usePrivateApiFetch<ActivateWalletResponse>(
       '/api/users/add-wallet',
       {
         method: 'POST',
-        body: { ...payload, name: methodId, method_payout: methodId },
+        body: {
+          ...payload,
+          name: methodId,
+          method_payout: methodId,
+          ...(metaId ? { id: metaId } : {}),
+        },
       },
       'خطا در ثبت اطلاعات حساب. لطفا داده‌های ورودی را کنترل کنید',
     )
@@ -84,7 +94,10 @@ export function useWallet() {
     } else if (walletUser.value) {
       walletUser.value = {
         ...walletUser.value,
-        user_meta: { val: { payout_method: { ...payload } } },
+        user_meta: {
+          ...walletUser.value.user_meta,
+          val: { ...walletUser.value.user_meta?.val, [methodId]: { ...payload } },
+        },
       }
     }
 

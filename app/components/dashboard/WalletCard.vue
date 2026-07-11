@@ -1,10 +1,11 @@
 <!-- app/components/dashboard/WalletCard.vue -->
 <script setup lang="ts">
-import { Wallet, Sparkles } from 'lucide-vue-next'
+import { Wallet, Sparkles, Eye, EyeOff } from 'lucide-vue-next'
 import { formatPrice } from '~/utils/price'
 
 interface Props {
   fullName: string
+  accountName?: string | null
   balance: number
   cardNumber?: string | null
   bankName?: string | null
@@ -12,17 +13,35 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  accountName: null,
   cardNumber: null,
   bankName: null,
 })
 
-const balanceDisplay = computed(() => props.balance > 0 ? formatPrice(props.balance) : '۰ تومان')
+const displayName = computed(() => (props.active && props.accountName) ? props.accountName : props.fullName)
+
+const revealed = ref(false)
+
+const balanceDisplay = computed(() => {
+  if (!revealed.value) return '•••••••'
+  return props.balance > 0 ? formatPrice(props.balance) : '۰ تومان'
+})
+
+const cardDigits = computed(() => (props.cardNumber ?? '').replace(/\D/g, ''))
 
 const maskedCard = computed(() => {
-  const digits = (props.cardNumber ?? '').replace(/\D/g, '')
-  if (digits.length !== 16) return '••••   ••••   ••••   ••••'
-  return `${digits.slice(0, 4)}   ••••   ••••   ${digits.slice(12)}`
+  if (cardDigits.value.length !== 16) return '••••   ••••   ••••   ••••'
+
+  if (revealed.value) {
+    return `${cardDigits.value.slice(0, 4)}   ${cardDigits.value.slice(4, 8)}   ${cardDigits.value.slice(8, 12)}   ${cardDigits.value.slice(12)}`
+  }
+
+  return `${cardDigits.value.slice(0, 4)}   ••••   ••••   ${cardDigits.value.slice(12)}`
 })
+
+function toggleReveal() {
+  revealed.value = !revealed.value
+}
 </script>
 
 <template>
@@ -37,7 +56,18 @@ const maskedCard = computed(() => {
         </span>
         <span class="text-sm font-medium text-primary-content/80">کیف پول آسرو</span>
       </div>
-      <Sparkles :size="18" class="text-primary-content/50" />
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          class="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center backdrop-blur-sm cursor-pointer hover:bg-white/25 transition-colors"
+          :aria-label="revealed ? 'پنهان کردن اطلاعات' : 'نمایش اطلاعات'"
+          @click="toggleReveal"
+        >
+          <EyeOff v-if="revealed" :size="15" />
+          <Eye v-else :size="15" />
+        </button>
+        <Sparkles :size="18" class="text-primary-content/50" />
+      </div>
     </div>
 
     <div class="relative mt-8">
@@ -49,7 +79,7 @@ const maskedCard = computed(() => {
       <div class="min-w-0">
         <p class="font-[monospace] text-lg sm:text-xl tracking-widest" dir="ltr">{{ maskedCard }}</p>
         <p class="text-xs text-primary-content/70 mt-2 truncate">
-          {{ fullName || 'کاربر آسروتراول' }}<span v-if="active && bankName"> · بانک {{ bankName }}</span>
+          {{ displayName || 'کاربر آسروتراول' }}<span v-if="active && bankName"> · بانک {{ bankName }}</span>
         </p>
       </div>
       <span
