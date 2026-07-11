@@ -40,6 +40,7 @@ if (import.meta.client) {
     genderCode.value = checkoutSlotState.value.genderCode
     serviceName.value = checkoutSlotState.value.serviceName
   } else {
+    useToast().error('اطلاعات رزرو یافت نشد. لطفا دوباره تلاش کنید')
     navigateTo('/')
   }
 }

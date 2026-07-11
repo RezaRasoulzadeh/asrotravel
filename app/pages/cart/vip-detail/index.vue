@@ -44,6 +44,7 @@ if (import.meta.client) {
     pricePerPerson.value = checkoutSlotState.value.pricePerPerson
     parent.value = checkoutSlotState.value.parent
   } else {
+    useToast().error('اطلاعات رزرو یافت نشد. لطفا دوباره تلاش کنید')
     navigateTo('/')
   }
 }

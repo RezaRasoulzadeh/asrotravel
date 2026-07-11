@@ -20,6 +20,13 @@ const emit = defineEmits<{
 }>()
 
 const { user } = useAuth()
+const {
+  balance: liveWalletBalance,
+  loading: walletLoading,
+  fetchWallet,
+} = useWallet()
+
+onMounted(() => { fetchWallet() })
 
 const { primaryStatusMessage, accessToPaid, countdownDisplay, countdownExpired, statusLoading } =
   useBookingStatus(props.checkout.booking.booking_code)
@@ -28,12 +35,13 @@ const selectedGateway = ref<string | null>(
   Object.keys(props.checkout.gateways)[0] ?? null
 )
 
-const useWallet = ref(false)
+const payWithWallet = ref(false)
 const walletCredit = ref(0)
 
 const { hasDeposit, payableTotal, remainingAtVenue } = useCheckoutTotals(() => props.checkout)
 
-const userWalletBalance = computed(() => Number(user.value?.wallet?.balance ?? 0))
+const userWalletBalance = computed(() =>
+  walletLoading.value ? Number(user.value?.wallet?.balance ?? 0) : liveWalletBalance.value)
 
 const neededCredit = computed(() => {
   return Math.ceil(
@@ -43,10 +51,23 @@ const neededCredit = computed(() => {
   )
 })
 
-watch(useWallet, (enabled) => {
-  walletCredit.value = enabled && userWalletBalance.value > 0
-    ? Math.min(userWalletBalance.value, neededCredit.value)
-    : 0
+const maxWalletCredit = computed(() => Math.max(0, Math.min(neededCredit.value, userWalletBalance.value)))
+
+watch(payWithWallet, (enabled) => {
+  walletCredit.value = enabled ? maxWalletCredit.value : 0
+})
+
+watch(maxWalletCredit, (max) => {
+  if (walletCredit.value > max) walletCredit.value = max
+})
+
+const walletCreditDisplay = computed({
+  get: () => walletCredit.value > 0 ? walletCredit.value.toLocaleString('fa-IR') : '',
+  set: (val: string) => {
+    const digits = val.replace(/[^\d]/g, '')
+    const num = digits ? Number(digits) : 0
+    walletCredit.value = Math.min(num, maxWalletCredit.value)
+  },
 })
 
 const remainingAfterWallet = computed(() => payableTotal.value - walletCredit.value)
@@ -57,7 +78,7 @@ const payDisabled = computed(() =>
 )
 
 function onPayClick() {
-  if (useWallet.value && userWalletBalance.value <= 0) {
+  if (payWithWallet.value && userWalletBalance.value <= 0) {
     useToast().error('مجاز به پرداخت از طریق کیف پول نیستید.')
     return
   }
@@ -65,7 +86,7 @@ function onPayClick() {
   emit('pay', {
     gateway: selectedGateway.value ?? '',
     credit: walletCredit.value,
-    howToPay: useWallet.value ? 'deposit' : 'full',
+    howToPay: payWithWallet.value ? 'deposit' : 'full',
   })
 }
 </script>
@@ -94,31 +115,35 @@ function onPayClick() {
       <h3 class="font-bold text-base mb-4 pb-4 border-b border-base-300">پرداخت</h3>
 
       <label class="flex items-center gap-3 cursor-pointer">
-        <input v-model="useWallet" type="checkbox" class="toggle toggle-primary toggle-sm">
+        <input v-model="payWithWallet" type="checkbox" class="toggle toggle-primary toggle-sm" :disabled="walletLoading || userWalletBalance <= 0">
         <span class="text-sm">پرداخت از کیف پول</span>
+        <Loader2 v-if="walletLoading" class="size-3.5 animate-spin text-base-content/40" />
+        <span v-else-if="userWalletBalance <= 0" class="text-xs text-base-content/40">(موجودی ندارید)</span>
       </label>
 
-      <ul v-if="useWallet" class="mt-4 space-y-2 text-sm">
+      <ul v-if="payWithWallet" class="mt-4 space-y-2 text-sm">
         <li class="flex justify-between">
           <span class="text-base-content/70">اعتبار کیف پول شما:</span>
           <span class="text-primary font-medium">{{ userWalletBalance.toLocaleString('fa-IR') }} تومان</span>
         </li>
         <li class="flex justify-between items-center">
           <span class="text-base-content/70">اعتبار مورد نیاز:</span>
-          <span class="cursor-pointer text-base-content/80" @click="walletCredit = neededCredit">
-            {{ neededCredit.toLocaleString('fa-IR') }} تومان
+          <span class="cursor-pointer text-base-content/80" @click="walletCredit = maxWalletCredit">
+            {{ maxWalletCredit.toLocaleString('fa-IR') }} تومان
           </span>
         </li>
         <li class="flex justify-between items-center gap-3">
           <span class="text-base-content/70 shrink-0">مبلغ پرداخت از کیف پول:</span>
-          <input
-            v-model.number="walletCredit"
-            type="number"
-            :max="neededCredit"
-            min="0"
-            step="1000"
-            class="input input-bordered input-sm w-32 text-left"
-          >
+          <label class="input input-bordered input-sm w-40" dir="ltr">
+            <input
+              v-model="walletCreditDisplay"
+              type="text"
+              inputmode="numeric"
+              placeholder="0"
+              class="grow text-left"
+            >
+            <span class="text-xs text-base-content/50 shrink-0">تومان</span>
+          </label>
         </li>
       </ul>
 

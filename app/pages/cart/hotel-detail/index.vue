@@ -32,6 +32,7 @@ if (import.meta.client) {
     allRooms.value = checkoutSlotState.value.allRooms
     selections.value = checkoutSlotState.value.selections
   } else {
+    useToast().error('اطلاعات رزرو هتل یافت نشد. لطفا دوباره تلاش کنید')
     navigateTo('/')
   }
 }
