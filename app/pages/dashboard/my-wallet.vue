@@ -40,7 +40,7 @@ async function handleActivate(payload: ActivateWalletFormPayload) {
 
 const activeTab = ref<'deposit' | 'withdraw'>('deposit')
 
-const depositForm = reactive({
+const depositForm = reactive<{ amount: string; gateway: string; option: number | ''; confirmed: boolean }>({
   amount: '',
   gateway: '',
   option: '',
@@ -97,7 +97,7 @@ const depositErrors = computed(() => {
 
 const depositValid = computed(() => !depositErrors.value.amount && !depositErrors.value.gateway && !depositErrors.value.confirmed)
 
-function selectPackage(item: { amount: string; credit: string }, key: string) {
+function selectPackage(item: { amount: string; credit: string }, key: number) {
   depositForm.amount = item.amount
   depositForm.option = key
 }
@@ -110,7 +110,7 @@ async function submitDeposit() {
     deposit_amount: depositForm.amount,
     payment_gateway: depositForm.gateway,
     confirmed: depositForm.confirmed,
-    deposit_option: depositForm.option,
+    ...(depositForm.option !== '' ? { deposit_option: depositForm.option } : {}),
   })
 
   if (result.error) useToast().error(result.error)
@@ -173,7 +173,7 @@ async function submitWithdraw() {
       <div class="lg:col-span-2 space-y-6">
         <DashboardWalletCard
           :full-name="fullName"
-          :account-name="payoutInfo?.account_name"
+          :account-name="payoutInfo?.account_name || fullName"
           :balance="balance"
           :card-number="payoutInfo?.bank_cart"
           :bank-name="payoutInfo?.bank_name"
@@ -200,7 +200,7 @@ async function submitWithdraw() {
             <span class="text-sm font-medium">حساب بانکی متصل</span>
           </div>
           <p class="text-sm text-base-content/60">
-            {{ payoutInfo?.bank_name }} · {{ payoutInfo?.account_name }}
+            {{ payoutInfo?.bank_name }} · {{ payoutInfo?.account_name || fullName }}
           </p>
           <button class="btn btn-ghost btn-sm rounded-xl mt-4" @click="activateModalOpen = true">
             ویرایش اطلاعات حساب
@@ -259,7 +259,7 @@ async function submitWithdraw() {
                 :class="depositForm.amount == item.amount
                   ? 'border-primary text-primary bg-primary/5'
                   : 'border-base-300 text-base-content/60 hover:border-base-content/30'"
-                @click="selectPackage(item, String(key))"
+                @click="selectPackage(item, Number(key))"
               >
                 {{ formatPrice(item.amount) }}
               </button>
@@ -342,6 +342,7 @@ async function submitWithdraw() {
       :is-open="activateModalOpen"
       :loading="actionLoading"
       :initial="payoutInfo"
+      :default-account-name="fullName"
       @close="activateModalOpen = false"
       @submit="handleActivate"
     />

@@ -8,9 +8,10 @@ interface Props {
   isOpen: boolean
   loading: boolean
   initial?: WalletPayoutInfo | null
+  defaultAccountName?: string
 }
 
-const props = withDefaults(defineProps<Props>(), { initial: null })
+const props = withDefaults(defineProps<Props>(), { initial: null, defaultAccountName: '' })
 const emit = defineEmits<{ close: []; submit: [payload: ActivateWalletFormPayload] }>()
 
 const form = reactive({
@@ -22,7 +23,7 @@ const form = reactive({
 
 watch(() => props.isOpen, (open) => {
   if (!open) return
-  form.account_name = props.initial?.account_name ?? ''
+  form.account_name = props.initial?.account_name || props.defaultAccountName || ''
   form.bank_name = props.initial?.bank_name ?? ''
   form.cardDigits = (props.initial?.bank_cart ?? '').replace(/\D/g, '')
   form.sheba_number = props.initial?.sheba_number ?? ''

@@ -370,3 +370,4 @@ The ticket/pool (non-VIP) booking flow does not follow this same `service_id`/`p
 
 TODO: update the checkout flow, it should add to cart if it was from dashboard or direct url in background fetch its response and show in chekout. it will done to always fetch updated prices. 
 TODO: disable wishlist for now. remove from dashboard menu and disable page(do not remove)
+TODO: check dashboard bookings enums, actions and unify in mobile and desktop. dont show paid amount and its label if wasnt available. show the reservation code bigger. 

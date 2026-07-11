@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
 
   return await authApiFetch<WalletDepositResponse>(
     event,
-    '/users/wallet-deposit',
+    '/wallet/wallet-deposit',
     { method: 'POST', body },
   )
 })

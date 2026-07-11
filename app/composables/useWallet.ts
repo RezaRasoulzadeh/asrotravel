@@ -1,12 +1,12 @@
 // app/composables/useWallet.ts
 import type {
-  ActivateWalletResponse,
+  ActivateWalletResponseDto,
   GetWalletDepositResponse,
-  GetWalletResponse,
-  GetWalletUser,
+  GetWalletResponseDto,
   WalletDepositPayload,
   WalletDepositResponse,
   WalletPayoutInfo,
+  WalletUserDto,
   WalletWithdrawPayload,
 } from '~/types/wallet.types'
 
@@ -20,19 +20,31 @@ export interface ActivateWalletFormPayload {
 export function useWallet() {
   const { user: authUser, handleSessionExpiry } = useAuth()
 
-  const walletUser = ref<GetWalletUser | null>(null)
+  const walletUser = ref<WalletUserDto | null>(null)
   const depositData = ref<GetWalletDepositResponse | null>(null)
-  const activePayoutMethod = ref<GetWalletResponse['active_payout_method']>(null)
+  const activePayoutMethod = ref<GetWalletResponseDto['active_payout_method']>(null)
 
   const loading = ref(true)
   const error = ref<string | null>(null)
   const actionLoading = ref(false)
 
   const payoutMethodId = computed(() => activePayoutMethod.value?.id ?? 'user_wallet')
-  const payoutInfo = computed<WalletPayoutInfo | null>(() =>
-    walletUser.value?.user_meta?.val?.[payoutMethodId.value]
-    ?? activePayoutMethod.value?.user
-    ?? null)
+
+  const resolvedPayoutKey = computed<string | null>(() => {
+    const val = walletUser.value?.user_meta?.val
+    if (!val) return null
+    if (val[payoutMethodId.value]) return payoutMethodId.value
+    if (val.payout_method) return 'payout_method'
+    const keys = Object.keys(val)
+    return keys.length === 1 ? (keys[0] ?? null) : null
+  })
+
+  const payoutInfo = computed<WalletPayoutInfo | null>(() => {
+    const val = walletUser.value?.user_meta?.val
+    const key = resolvedPayoutKey.value
+    if (val && key) return val[key] ?? null
+    return activePayoutMethod.value?.user ?? null
+  })
   const hasPayoutInfo = computed(() => !!payoutInfo.value?.bank_cart && !!payoutInfo.value?.sheba_number)
   const balance = computed(() => Number(walletUser.value?.wallet?.balance ?? authUser.value?.wallet?.balance ?? 0))
   const minDepositRial = computed(() => Number(activePayoutMethod.value?.min ?? 100000))
@@ -44,7 +56,7 @@ export function useWallet() {
     error.value = null
 
     const [walletResult, depositResult] = await Promise.all([
-      safeApiFetch<GetWalletResponse>('/api/users/get-wallet'),
+      safeApiFetch<GetWalletResponseDto>('/api/users/get-wallet'),
       safeApiFetch<GetWalletDepositResponse>('/api/users/get-wallet-deposit'),
     ])
 
@@ -70,9 +82,9 @@ export function useWallet() {
     if (actionLoading.value) return { ok: false }
     actionLoading.value = true
 
-    const methodId = activePayoutMethod.value?.id ?? 'user_wallet'
+    const methodId = resolvedPayoutKey.value ?? activePayoutMethod.value?.id ?? 'user_wallet'
     const metaId = walletUser.value?.user_meta?.id
-    const result = await usePrivateApiFetch<ActivateWalletResponse>(
+    const result = await usePrivateApiFetch<ActivateWalletResponseDto>(
       '/api/users/add-wallet',
       {
         method: 'POST',
