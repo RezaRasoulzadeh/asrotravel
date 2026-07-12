@@ -3,6 +3,12 @@ import type { SupportSort, SupportTicketListDtoResponse, SupportTicketListRespon
 
 const VALID_SORTS: SupportSort[] = ['all', 'opening', 'closed']
 
+const BACKEND_SORT_PARAM: Record<SupportSort, SupportSort> = {
+  all: 'all',
+  opening: 'closed',
+  closed: 'opening',
+}
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const sort = (typeof query.sort === 'string' && VALID_SORTS.includes(query.sort as SupportSort)
@@ -21,7 +27,7 @@ export default defineEventHandler(async (event) => {
   const raw = await safeAuthApiFetch<SupportTicketListResponse>(
     event,
     '/support/list',
-    { query: { sort, page } },
+    { query: { sort: BACKEND_SORT_PARAM[sort], page } },
     fallback,
   )
 

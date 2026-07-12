@@ -48,9 +48,9 @@ async function handleSubmit() {
     file: file.value,
   })
 
-  if (result.ok && result.ticket) {
+  if (result.ok) {
     useToast().success('تیکت شما با موفقیت ثبت شد')
-    await navigateTo(`/dashboard/support/${result.ticket.id}`)
+    await navigateTo('/dashboard/support')
   }
   else if (result.error) {
     error.value = result.error

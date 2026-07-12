@@ -1,5 +1,4 @@
 // server/api/support/new.post.ts
-import type { SupportTicketDto, SupportTicketRaw } from '~/types/support.types'
 
 export default defineEventHandler(async (event) => {
   const parts = await readMultipartFormData(event)
@@ -28,18 +27,15 @@ export default defineEventHandler(async (event) => {
     body.append('file', new Blob([new Uint8Array(filePart.data)], { type: filePart.type }), safeName)
   }
 
-  const raw = await authApiFetch<SupportTicketRaw | { ticket?: SupportTicketRaw }>(
+  const raw = await authApiFetch<{ success?: string }>(
     event,
     '/support/new',
     { method: 'POST', body },
   )
 
-  const ticket = (raw as { ticket?: SupportTicketRaw })?.ticket ?? (raw as SupportTicketRaw)
-
-  if (!ticket?.id) {
+  if (!raw?.success) {
     throw createError({ statusCode: 502, statusMessage: 'Failed to create ticket', data: raw })
   }
 
-  const dto: SupportTicketDto = mapSupportTicketToDto(ticket)
-  return dto
+  return { success: true }
 })

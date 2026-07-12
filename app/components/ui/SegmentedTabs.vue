@@ -28,7 +28,7 @@ const emit = defineEmits<{ 'update:modelValue': [T] }>()
       role="tab"
       type="button"
       :aria-selected="modelValue === item.value"
-      class="relative flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl whitespace-nowrap transition-all duration-200"
+      class="relative flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl whitespace-nowrap transition-all duration-200 cursor-pointer"
       :class="modelValue === item.value
         ? 'bg-primary text-primary-content shadow-sm'
         : item.disabled
