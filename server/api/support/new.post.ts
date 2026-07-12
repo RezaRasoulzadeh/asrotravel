@@ -24,7 +24,8 @@ export default defineEventHandler(async (event) => {
   body.append('priority', priority)
   body.append('message', message)
   if (filePart) {
-    body.append('file', new Blob([new Uint8Array(filePart.data)], { type: filePart.type }), filePart.filename)
+    const safeName = normalizeFileName(filePart.filename ?? 'file')
+    body.append('file', new Blob([new Uint8Array(filePart.data)], { type: filePart.type }), safeName)
   }
 
   const raw = await authApiFetch<SupportTicketRaw | { ticket?: SupportTicketRaw }>(

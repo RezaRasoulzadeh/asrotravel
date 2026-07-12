@@ -1,11 +1,20 @@
 <!-- app/components/dashboard/SupportTicketsList.vue -->
 <script setup lang="ts">
-import { Loader2, MessageCircleQuestion, WifiOff } from 'lucide-vue-next'
+import { Inbox, Loader2, MessageCircleQuestion, WifiOff, XCircle } from 'lucide-vue-next'
 import SupportTicketCard from '~/components/dashboard/SupportTicketCard.vue'
 import { SUPPORT_SORT_LABELS } from '~/types/support.types'
 import type { SupportSort } from '~/types/support.types'
+import type { SegmentedTabItem } from '~/components/ui/SegmentedTabs.vue'
 
 const { sort, items, loading, error, total, hasMore, isEmpty, fetchPage, loadMore, setSort } = useSupportTickets('all')
+
+const sortIcons: Record<SupportSort, typeof Inbox> = {
+  all: Inbox,
+  opening: MessageCircleQuestion,
+  closed: XCircle,
+}
+const sortTabs: SegmentedTabItem<SupportSort>[] = (Object.keys(SUPPORT_SORT_LABELS) as SupportSort[])
+  .map(key => ({ value: key, label: SUPPORT_SORT_LABELS[key], icon: sortIcons[key] }))
 
 const sentinel = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
@@ -28,19 +37,7 @@ function handleRetry() {
 <template>
   <div class="grid gap-4">
     <div class="flex items-center justify-between gap-2 flex-wrap">
-      <div role="tablist" class="tabs tabs-boxed w-fit">
-        <button
-          v-for="(label, key) in SUPPORT_SORT_LABELS"
-          :key="key"
-          role="tab"
-          type="button"
-          class="tab"
-          :class="{ 'tab-active': sort === key }"
-          @click="setSort(key as SupportSort)"
-        >
-          {{ label }}
-        </button>
-      </div>
+      <UiSegmentedTabs :model-value="sort" :items="sortTabs" @update:model-value="setSort" />
 
       <NuxtLink to="/dashboard/support/new" class="btn btn-primary btn-sm rounded-xl gap-1">
         <MessageCircleQuestion :size="16" />

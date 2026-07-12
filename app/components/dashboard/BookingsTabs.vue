@@ -1,30 +1,23 @@
 <!-- app/components/dashboard/BookingsTabs.vue -->
 <script setup lang="ts">
+import { Waves, Building2, Ticket } from 'lucide-vue-next'
 import type { BookingTab } from '~/types/dashboardBookings.types'
+import type { SegmentedTabItem } from '~/components/ui/SegmentedTabs.vue'
 
 defineProps<{ modelValue: BookingTab }>()
 const emit = defineEmits<{ 'update:modelValue': [BookingTab] }>()
 
-const tabs: { value: BookingTab, label: string, disabled?: boolean }[] = [
-  { value: 'pool', label: 'استخر' },
-  { value: 'hotel', label: 'هتل' },
-  { value: 'ticket', label: 'بلیط' },
+const tabs: SegmentedTabItem<BookingTab>[] = [
+  { value: 'pool', label: 'استخر', icon: Waves },
+  { value: 'hotel', label: 'هتل', icon: Building2 },
+  { value: 'ticket', label: 'بلیط', icon: Ticket },
 ]
 </script>
 
 <template>
-  <div role="tablist" class="tabs tabs-boxed w-full sm:w-fit">
-    <button
-      v-for="item in tabs"
-      :key="item.value"
-      role="tab"
-      type="button"
-      class="tab"
-      :class="{ 'tab-active': modelValue === item.value, 'opacity-40 cursor-not-allowed': item.disabled }"
-      :disabled="item.disabled"
-      @click="!item.disabled && emit('update:modelValue', item.value)"
-    >
-      {{ item.label }}
-    </button>
-  </div>
+  <UiSegmentedTabs
+    :model-value="modelValue"
+    :items="tabs"
+    @update:model-value="emit('update:modelValue', $event)"
+  />
 </template>

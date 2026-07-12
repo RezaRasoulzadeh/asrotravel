@@ -9,10 +9,10 @@ useSeoMeta({ title: 'پشتیبانی | آسروتراول' })
     <h1 class="text-xl font-semibold mb-6">پشتیبانی</h1>
 
     <div class="grid grid-cols-1 lg:grid-cols-7 gap-6 items-start">
-      <div class="lg:col-span-5">
+      <div class="lg:col-span-5 order-1">
         <DashboardSupportTicketsList />
       </div>
-      <div class="hidden lg:block lg:col-span-2">
+      <div class="lg:col-span-2 order-2">
         <DashboardSupportFaqSidebar />
       </div>
     </div>

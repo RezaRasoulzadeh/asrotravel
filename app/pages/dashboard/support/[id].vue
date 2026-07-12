@@ -109,8 +109,8 @@ const statusBadgeClass = computed(() => {
         <div
           v-for="msg in messages"
           :key="msg.id"
-          class="flex gap-3"
-          :class="msg.isSupport ? 'justify-start' : 'justify-end flex-row-reverse'"
+          class="flex gap-3 items-start"
+          :class="msg.isSupport ? 'justify-start' : 'justify-start flex-row-reverse'"
         >
           <UiAvatar
             :src="msg.isSupport ? null : (user?.ImageUrl ?? null)"
