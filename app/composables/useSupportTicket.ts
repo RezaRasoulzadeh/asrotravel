@@ -11,8 +11,8 @@ export function useSupportTicket(id: string | number) {
 
   const { handleSessionExpiry } = useAuth()
 
-  async function fetchTicket() {
-    loading.value = true
+  async function fetchTicket(options: { silent?: boolean } = {}) {
+    if (!options.silent) loading.value = true
     error.value = null
 
     const result = await safeApiFetch<SupportTicketShowDto>(`/api/support/${id}`)
@@ -41,16 +41,17 @@ export function useSupportTicket(id: string | number) {
     body.append('message', message.trim())
     if (file) body.append('file', file)
 
-    const result = await usePrivateApiFetch<SupportTicketShowDto['messages'][number]>(
+    const result = await usePrivateApiFetch<{ success: boolean }>(
       `/api/support/${id}/answer`,
       { method: 'POST', body },
       'خطا در ارسال پاسخ. لطفا دوباره تلاش کنید',
     )
     sending.value = false
 
-    if (result.error || !result.data) return { ok: false, error: result.error ?? undefined }
+    if (result.error || !result.data?.success) return { ok: false, error: result.error ?? undefined }
 
-    messages.value = [...messages.value, result.data]
+    await fetchTicket({ silent: true })
+
     return { ok: true }
   }
 

@@ -80,7 +80,8 @@ const statusBadgeClass = computed(() => {
 
 <template>
   <div class="px-4 lg:px-16 max-w-960 mx-auto py-8">
-    <NuxtLink to="/dashboard/support" class="inline-flex items-center gap-1 text-sm text-base-content/60 hover:text-primary mb-4">
+    <NuxtLink to="/dashboard/support"
+      class="inline-flex items-center gap-1 text-sm text-base-content/60 hover:text-primary mb-4">
       <ChevronRight :size="16" />
       بازگشت به پشتیبانی
     </NuxtLink>
@@ -97,7 +98,7 @@ const statusBadgeClass = computed(() => {
         <WifiOff :size="28" class="text-error" />
       </div>
       <p class="text-error text-sm mb-4">{{ error }}</p>
-      <button class="btn btn-primary btn-sm rounded-xl" @click="fetchTicket">تلاش مجدد</button>
+      <button class="btn btn-primary btn-sm rounded-xl" @click="fetchTicket()">تلاش مجدد</button>
     </div>
 
     <div v-else class="bg-base-100 rounded-2xl shadow-sm flex flex-col">
@@ -106,29 +107,21 @@ const statusBadgeClass = computed(() => {
           هنوز پیامی برای این تیکت ثبت نشده است
         </p>
 
-        <div
-          v-for="msg in messages"
-          :key="msg.id"
-          class="flex gap-3 items-start"
-          :class="msg.isSupport ? 'justify-start' : 'justify-start flex-row-reverse'"
-        >
-          <UiAvatar
-            :src="msg.isSupport ? null : (user?.ImageUrl ?? null)"
-            :name="msg.isSupport ? (msg.userName || 'پشتیبانی') : fullName"
-            size="sm"
-          />
+        <div v-for="msg in messages" :key="msg.id" class="flex gap-3 items-start"
+          :class="msg.isSupport ? 'justify-start' : 'justify-start flex-row-reverse'">
+          <UiAvatar :src="msg.isSupport ? null : (user?.ImageUrl ?? null)"
+            :name="msg.isSupport ? (msg.userName || 'پشتیبانی') : fullName" size="sm" />
           <div class="max-w-[80%] sm:max-w-[70%] flex flex-col" :class="msg.isSupport ? 'items-start' : 'items-end'">
             <span class="text-xs font-medium text-base-content/60 mb-1">
               {{ msg.isSupport ? (msg.userName || 'پشتیبانی') : fullName }}
             </span>
-            <div
-              class="rounded-2xl px-4 py-2.5 text-sm leading-relaxed prose prose-sm max-w-none"
+            <div class="rounded-2xl px-4 py-2.5 text-sm leading-relaxed prose prose-sm max-w-none"
               :class="msg.isSupport ? 'bg-base-200 rounded-tr-none' : 'bg-primary/10 rounded-tl-none'"
-              v-html="msg.message"
-            />
+              v-html="msg.message" />
             <div class="flex items-center gap-2 mt-1 text-[11px] text-base-content/40">
               <span>{{ formatDate(msg.updatedAt) }}</span>
-              <a v-if="msg.fileUrl" :href="msg.fileUrl" target="_blank" class="flex items-center gap-1 text-primary hover:underline">
+              <a v-if="msg.fileUrl" :href="msg.fileUrl" target="_blank"
+                class="flex items-center gap-1 text-primary hover:underline">
                 <Paperclip :size="12" />پیوست
               </a>
             </div>
@@ -144,21 +137,19 @@ const statusBadgeClass = computed(() => {
           <input ref="fileInput" type="file" hidden @change="handleFileChange" />
 
           <div class="flex-1">
-            <textarea
-              v-model="replyText"
-              rows="1"
-              class="textarea w-full resize-none"
-              placeholder="پیام خود را بنویسید..."
-            />
+            <textarea v-model="replyText" rows="1" class="textarea w-full resize-none"
+              placeholder="پیام خود را بنویسید..." />
             <span v-if="file" class="badge badge-ghost badge-sm gap-1 mt-1">
               {{ file.name }}
-              <button type="button" @click="clearFile"><X :size="10" /></button>
+              <button type="button" @click="clearFile">
+                <X :size="10" />
+              </button>
             </span>
           </div>
 
           <button type="submit" class="btn btn-primary btn-circle shrink-0" :disabled="sending">
             <Loader2 v-if="sending" class="size-4 animate-spin" />
-            <Send v-else :size="18" class="rotate-180" />
+            <Send v-else :size="18" class="rotate-y-180" />
           </button>
         </form>
       </div>
