@@ -11,6 +11,7 @@ import {
   Sun,
   Moon,
   Home,
+  ChevronDown,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
 import logoLight from '~/assets/images/logo-light.svg'
@@ -74,16 +75,11 @@ function isActive(to: string) {
       </div>
 
       <nav class="flex flex-col gap-1 px-3 flex-1 mt-2">
-        <NuxtLink
-          v-for="item in navItems"
-          :key="item.to"
-          :to="item.to"
+        <NuxtLink v-for="item in navItems" :key="item.to" :to="item.to"
           :aria-current="isActive(item.to) ? 'page' : undefined"
-          class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition-all duration-150 font-medium"
-          :class="isActive(item.to)
+          class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition-all duration-150 font-medium" :class="isActive(item.to)
             ? 'bg-primary text-primary-content shadow-sm'
-            : 'text-base-content/60 hover:bg-base-200 hover:text-base-content'"
-        >
+            : 'text-base-content/60 hover:bg-base-200 hover:text-base-content'">
           <component :is="item.icon" :size="18" class="shrink-0" />
           {{ item.label }}
         </NuxtLink>
@@ -99,8 +95,7 @@ function isActive(to: string) {
       <div class="px-3 pb-5 border-t border-base-200 pt-3">
         <button
           class="flex items-center gap-3 w-full rounded-2xl px-4 py-3 text-sm font-medium text-base-content/50 hover:bg-error/10 hover:text-error transition-colors duration-150"
-          @click="handleLogout"
-        >
+          @click="handleLogout">
           <LogOut :size="18" />
           خروج از حساب
         </button>
@@ -115,24 +110,45 @@ function isActive(to: string) {
         </NuxtLink>
 
         <div class="flex items-center gap-2">
-          <button class="btn btn-ghost btn-square btn-sm" aria-label="تغییر پوسته" @click="toggleTheme">
+          <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="flex items-center gap-2.5 cursor-pointer">
+              <UiAvatar :src="user?.ImageUrl" :name="fullName" size="sm" />
+              <div class="leading-tight text-right">
+                <p class="text-sm font-semibold">{{ fullName }}</p>
+                <p class="text-xs text-base-content/40">گردشگر</p>
+              </div>
+              <ChevronDown />
+            </div>
+            <ul tabindex="0" class="dropdown-content menu z-40 mt-3 w-48 rounded-2xl bg-base-100 p-2 shadow-lg">
+              <li>
+                <NuxtLink to="/dashboard/profile" class="rounded-xl text-sm">
+                  <User :size="16" />
+                  ویرایش پروفایل
+                </NuxtLink>
+              </li>
+              <li>
+                <button class="rounded-xl text-sm text-error" @click="handleLogout">
+                  <LogOut :size="16" />
+                  خروج از حساب
+                </button>
+              </li>
+            </ul>
+          </div>
+                    <button class="btn btn-ghost btn-square btn-sm" aria-label="تغییر پوسته" @click="toggleTheme">
             <Sun v-if="theme === 'dark'" :size="20" />
             <Moon v-else :size="20" />
           </button>
-          <NuxtLink to="/dashboard/profile">
-            <UiAvatar :src="user?.ImageUrl" :name="fullName" size="sm" />
-          </NuxtLink>
         </div>
       </header>
 
-      <main
-        class="flex-1 overflow-y-auto bg-base-200 rounded-[3rem] mx-4 my-4 lg:my-8 pb-20 lg:pb-0 min-w-0" >
+      <main class="flex-1 overflow-y-auto bg-base-200 rounded-[3rem] mx-4 my-4 lg:my-8 pb-20 lg:pb-0 min-w-0">
         <slot />
       </main>
 
     </div>
 
-    <aside class="hidden xl:flex flex-col w-64 2xl:w-72 bg-base-100 shrink-0 h-screen sticky top-0 px-4 py-12 gap-6 overflow-y-auto z-20">
+    <aside
+      class="hidden xl:flex flex-col w-64 2xl:w-72 bg-base-100 shrink-0 h-screen sticky top-0 px-4 py-12 gap-6 overflow-y-auto z-20">
 
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2.5">
@@ -154,15 +170,12 @@ function isActive(to: string) {
 
     </aside>
 
-    <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-base-100 border-t border-base-300 flex items-stretch safe-area-pb">
-      <NuxtLink
-        v-for="item in mobileNavItems"
-        :key="item.to"
-        :to="item.to"
+    <nav
+      class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-base-100 border-t border-base-300 flex items-stretch safe-area-pb">
+      <NuxtLink v-for="item in mobileNavItems" :key="item.to" :to="item.to"
         :aria-current="isActive(item.to) ? 'page' : undefined"
         class="flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] transition-colors duration-150"
-        :class="isActive(item.to) ? 'text-primary' : 'text-base-content/50'"
-      >
+        :class="isActive(item.to) ? 'text-primary' : 'text-base-content/50'">
         <component :is="item.icon" :size="22" :stroke-width="isActive(item.to) ? 2.2 : 1.8" />
         <span>{{ item.labelShort }}</span>
       </NuxtLink>
