@@ -10,6 +10,7 @@ import {
   LogOut,
   Sun,
   Moon,
+  Home,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
 import logoLight from '~/assets/images/logo-light.svg'
@@ -29,6 +30,11 @@ const navItems: NavItem[] = [
   { to: '/dashboard/my-wallet', icon: Wallet, label: 'کیف پول', labelShort: 'کیف پول' },
   { to: '/dashboard/my-favorites', icon: Heart, label: 'علاقه‌مندی‌ها', labelShort: 'علاقه‌ها' },
   { to: '/dashboard/support', icon: HeadphonesIcon, label: 'پشتیبانی', labelShort: 'پشتیبانی' },
+]
+
+const mobileNavItems: NavItem[] = [
+  { to: '/', icon: Home, label: 'خانه', labelShort: 'خانه' },
+  ...navItems.filter(item => item.to !== '/dashboard/my-favorites'),
 ]
 
 const route = useRoute()
@@ -51,6 +57,7 @@ async function handleLogout() {
 }
 
 function isActive(to: string) {
+  if (to === '/') return route.path === '/'
   return route.path === to || (to !== '/dashboard' && route.path.startsWith(to))
 }
 </script>
@@ -100,10 +107,30 @@ function isActive(to: string) {
       </div>
     </aside>
 
-    <main
-      class="flex-1 overflow-y-auto bg-base-200 rounded-[3rem] mx-4 my-8 pb-20 lg:pb-0 min-w-0" >
-      <slot />
-    </main>
+    <div class="flex-1 flex flex-col min-w-0">
+
+      <header class="lg:hidden flex items-center justify-between gap-3 px-4 pt-6 pb-2 bg-base-100">
+        <NuxtLink to="/" class="flex items-center gap-2 shrink-0">
+          <img :src="logoSrc" class="h-8" alt="آسروتراول" />
+        </NuxtLink>
+
+        <div class="flex items-center gap-2">
+          <button class="btn btn-ghost btn-square btn-sm" aria-label="تغییر پوسته" @click="toggleTheme">
+            <Sun v-if="theme === 'dark'" :size="20" />
+            <Moon v-else :size="20" />
+          </button>
+          <NuxtLink to="/dashboard/profile">
+            <UiAvatar :src="user?.ImageUrl" :name="fullName" size="sm" />
+          </NuxtLink>
+        </div>
+      </header>
+
+      <main
+        class="flex-1 overflow-y-auto bg-base-200 rounded-[3rem] mx-4 my-4 lg:my-8 pb-20 lg:pb-0 min-w-0" >
+        <slot />
+      </main>
+
+    </div>
 
     <aside class="hidden xl:flex flex-col w-64 2xl:w-72 bg-base-100 shrink-0 h-screen sticky top-0 px-4 py-12 gap-6 overflow-y-auto z-20">
 
@@ -129,7 +156,7 @@ function isActive(to: string) {
 
     <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-base-100 border-t border-base-300 flex items-stretch safe-area-pb">
       <NuxtLink
-        v-for="item in navItems"
+        v-for="item in mobileNavItems"
         :key="item.to"
         :to="item.to"
         :aria-current="isActive(item.to) ? 'page' : undefined"
