@@ -41,6 +41,10 @@ const mobileNavItems: NavItem[] = [
 const route = useRoute()
 const { user, fullName, logout } = useAuth()
 
+const isUserMenuOpen = ref(false)
+const userMenuRef = ref<HTMLElement | null>(null)
+onClickOutside(userMenuRef, () => { isUserMenuOpen.value = false })
+
 const theme = useCookie<'light' | 'dark'>('asro_theme', {
   default: () => 'light',
   maxAge: 60 * 60 * 24 * 365,
@@ -54,6 +58,7 @@ const logoSrc = computed(() => theme.value === 'dark' ? logoDark : logoLight)
 
 async function handleLogout() {
   logout()
+  isUserMenuOpen.value = false
   await navigateTo('/login')
 }
 
@@ -110,29 +115,39 @@ function isActive(to: string) {
         </NuxtLink>
 
         <div class="flex items-center gap-2">
-          <div class="dropdown dropdown-end">
-            <div tabindex="0" role="button" class="flex items-center gap-2.5 cursor-pointer">
+          <div ref="userMenuRef" class="relative">
+            <button
+              type="button"
+              class="flex items-center gap-2.5 cursor-pointer"
+              @click="isUserMenuOpen = !isUserMenuOpen"
+            >
               <UiAvatar :src="user?.ImageUrl" :name="fullName" size="sm" />
               <div class="leading-tight text-right">
                 <p class="text-sm font-semibold">{{ fullName }}</p>
                 <p class="text-xs text-base-content/40">گردشگر</p>
               </div>
-              <ChevronDown />
-            </div>
-            <ul tabindex="0" class="dropdown-content menu z-40 mt-3 w-48 rounded-2xl bg-base-100 p-2 shadow-lg">
-              <li>
-                <NuxtLink to="/dashboard/profile" class="rounded-xl text-sm">
-                  <User :size="16" />
-                  ویرایش پروفایل
-                </NuxtLink>
-              </li>
-              <li>
-                <button class="rounded-xl text-sm text-error" @click="handleLogout">
-                  <LogOut :size="16" />
-                  خروج از حساب
-                </button>
-              </li>
-            </ul>
+              <ChevronDown :size="16" />
+            </button>
+            <Transition name="menu-fade">
+              <ul
+                v-if="isUserMenuOpen"
+                class="absolute left-0 menu z-40 mt-3 w-48 rounded-2xl bg-base-100 p-2 shadow-lg origin-top-left"
+                @click="isUserMenuOpen = false"
+              >
+                <li>
+                  <NuxtLink to="/dashboard/profile" class="rounded-xl text-sm">
+                    <User :size="16" />
+                    ویرایش پروفایل
+                  </NuxtLink>
+                </li>
+                <li>
+                  <button class="rounded-xl text-sm text-error" @click="handleLogout">
+                    <LogOut :size="16" />
+                    خروج از حساب
+                  </button>
+                </li>
+              </ul>
+            </Transition>
           </div>
                     <button class="btn btn-ghost btn-square btn-sm" aria-label="تغییر پوسته" @click="toggleTheme">
             <Sun v-if="theme === 'dark'" :size="20" />
@@ -188,5 +203,15 @@ function isActive(to: string) {
 .safe-area-pb {
   padding-bottom: env(safe-area-inset-bottom, 0);
   height: calc(4rem + env(safe-area-inset-bottom, 0));
+}
+.menu-fade-enter-active {
+  animation: menu-reveal 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.menu-fade-leave-active {
+  animation: menu-reveal 0.2s cubic-bezier(0.22, 1, 0.36, 1) reverse both;
+}
+@keyframes menu-reveal {
+  from { opacity: 0; transform: scale(0.92) translateY(-6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 </style>

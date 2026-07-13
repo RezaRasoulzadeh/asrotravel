@@ -27,9 +27,14 @@ const isMobileUserOpen = ref(false)
 const mobileUserRef = ref<HTMLElement | null>(null)
 onClickOutside(mobileUserRef, () => { isMobileUserOpen.value = false })
 
+const isDesktopUserOpen = ref(false)
+const desktopUserRef = ref<HTMLElement | null>(null)
+onClickOutside(desktopUserRef, () => { isDesktopUserOpen.value = false })
+
 function handleLogout() {
   logout()
   isMobileUserOpen.value = false
+  isDesktopUserOpen.value = false
   router.push('/')
 }
 </script>
@@ -138,22 +143,31 @@ function handleLogout() {
         </div>
 
         <template v-if="isAuthenticated">
-          <div class="dropdown dropdown-end hidden lg:block">
-            <button tabindex="0" class="btn btn-ghost btn-sm gap-2 transition-colors text-base-content">
+          <div ref="desktopUserRef" class="relative hidden lg:block">
+            <button
+              type="button"
+              class="btn btn-ghost btn-sm gap-2 transition-colors text-base-content"
+              @click="isDesktopUserOpen = !isDesktopUserOpen"
+            >
               <UiAvatar :src="user?.ImageUrl" :name="fullName" size="sm" />
               <span class="max-w-24 truncate text-sm">{{ fullName }}</span>
             </button>
-            <ul tabindex="0"
-              class="dropdown-content menu bg-base-100 rounded-2xl shadow-lg border border-base-300 w-48 mt-2 z-50 p-2">
-              <li>
-                <NuxtLink to="/dashboard">داشبورد</NuxtLink>
-              </li>
-              <li>
-                <button class="text-error flex gap-2 items-center" @click="handleLogout">
-                  <LogOut class="size-4" /> خروج
-                </button>
-              </li>
-            </ul>
+            <Transition name="menu-fade">
+              <ul
+                v-if="isDesktopUserOpen"
+                class="absolute left-0 menu bg-base-100 rounded-2xl shadow-lg border border-base-300 w-48 mt-2 z-50 p-2 origin-top-left"
+                @click="isDesktopUserOpen = false"
+              >
+                <li>
+                  <NuxtLink to="/dashboard">داشبورد</NuxtLink>
+                </li>
+                <li>
+                  <button class="text-error flex gap-2 items-center" @click="handleLogout">
+                    <LogOut class="size-4" /> خروج
+                  </button>
+                </li>
+              </ul>
+            </Transition>
           </div>
         </template>
         <template v-else>
