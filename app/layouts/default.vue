@@ -1,6 +1,6 @@
 // app/layouts/default.vue
 <script setup lang="ts">
-import { Instagram, MoonIcon, Sun, User2, LogOut, Menu } from 'lucide-vue-next'
+import { Instagram, MoonIcon, Sun, User2, LogOut, Menu, X, LayoutDashboard } from 'lucide-vue-next'
 import logoLight from '~/assets/images/logo-light.svg'
 import logoDark from '~/assets/images/logo-dark.svg'
 
@@ -20,20 +20,19 @@ const logoSrc = computed(() => theme.value === 'dark' ? logoDark : logoLight)
 const { isAuthenticated, user, fullName, logout } = useAuth()
 
 const isMobileMenuOpen = ref(false)
-const mobileMenuRef = ref<HTMLElement | null>(null)
-onClickOutside(mobileMenuRef, () => { isMobileMenuOpen.value = false })
-
-const isMobileUserOpen = ref(false)
-const mobileUserRef = ref<HTMLElement | null>(null)
-onClickOutside(mobileUserRef, () => { isMobileUserOpen.value = false })
 
 const isDesktopUserOpen = ref(false)
 const desktopUserRef = ref<HTMLElement | null>(null)
 onClickOutside(desktopUserRef, () => { isDesktopUserOpen.value = false })
 
+watch(isMobileMenuOpen, (open) => {
+  document.body.style.overflow = open ? 'hidden' : ''
+})
+watch(() => route.path, () => { isMobileMenuOpen.value = false })
+
 function handleLogout() {
   logout()
-  isMobileUserOpen.value = false
+  isMobileMenuOpen.value = false
   isDesktopUserOpen.value = false
   router.push('/')
 }
@@ -104,42 +103,23 @@ function handleLogout() {
           <Sun v-else class="size-5" />
         </button>
 
-        <div ref="mobileUserRef" class="relative lg:hidden">
-          <template v-if="isAuthenticated">
-            <button 
-              class="btn btn-ghost btn-sm btn-circle transition-colors text-base-content"
-              @click="isMobileUserOpen = !isMobileUserOpen"
-            >
-              <UiAvatar :src="user?.ImageUrl" :name="fullName" size="sm" />
-            </button>
-            <Transition name="menu-fade">
-              <ul 
-                v-if="isMobileUserOpen"
-                class="absolute left-0 menu bg-base-100 rounded-2xl shadow-lg border border-base-300 w-48 mt-2 z-50 p-2 origin-top-left"
-                @click="isMobileUserOpen = false"
-              >
-                <li class="menu-title px-4 py-2 border-b border-base-200 text-xs truncate max-w-full">
-                  {{ fullName }}
-                </li>
-                <li>
-                  <NuxtLink to="/dashboard">داشبورد</NuxtLink>
-                </li>
-                <li>
-                  <button class="text-error flex gap-2 items-center" @click="handleLogout">
-                    <LogOut class="size-4" /> خروج
-                  </button>
-                </li>
-              </ul>
-            </Transition>
-          </template>
-          <template v-else>
-            <NuxtLink 
-              :to="{ path: '/login', query: { redirect: route.path } }" 
-              class="btn btn-ghost btn-sm btn-circle transition-colors text-base-content"
-            >
-              <User2 class="size-5" />
-            </NuxtLink>
-          </template>
+        <div class="relative lg:hidden">
+          <button
+            v-if="isAuthenticated"
+            class="btn btn-ghost btn-sm btn-circle transition-colors"
+            aria-label="باز کردن منو"
+            @click="isMobileMenuOpen = true"
+          >
+            <UiAvatar :src="user?.ImageUrl" :name="fullName" size="sm" />
+          </button>
+          <button
+            v-else
+            class="btn btn-ghost btn-sm btn-circle transition-colors text-base-content"
+            aria-label="باز کردن منو"
+            @click="isMobileMenuOpen = true"
+          >
+            <Menu class="size-5" />
+          </button>
         </div>
 
         <template v-if="isAuthenticated">
@@ -178,50 +158,109 @@ function handleLogout() {
           </NuxtLink>
         </template>
 
-        <div ref="mobileMenuRef" class="relative lg:hidden">
-          <button 
-            class="btn btn-ghost btn-sm btn-circle transition-colors text-base-content"
-            @click="isMobileMenuOpen = !isMobileMenuOpen"
-          >
-            <Menu class="size-5" />
-          </button>
-          
-          <Transition name="menu-fade">
-            <ul 
-              v-if="isMobileMenuOpen"
-              class="absolute left-0 menu bg-base-100 rounded-2xl shadow-lg border border-base-300 w-52 mt-2 z-50 p-2 origin-top-left"
-              @click="isMobileMenuOpen = false"
-            >
-              <li>
-                <NuxtLink to="/">صفحه اصلی</NuxtLink>
-              </li>
-              <li>
-                <NuxtLink to="/hotel">هتل و مراکز اقامتی</NuxtLink>
-              </li>
-              <li>
-                <NuxtLink to="/pool">استخر و آبدرمانی</NuxtLink>
-              </li>
-              <li>
-                <NuxtLink to="/ticket">مجموعه‌های تفریحی</NuxtLink>
-              </li>
-              <li>
-                <NuxtLink to="/place/travel-guide/ardebil">سفرنامه</NuxtLink>
-              </li>
-              <li>
-                <NuxtLink to="/blog">بلاگ</NuxtLink>
-              </li>
-              <li>
-                <NuxtLink to="/about">درباره ما</NuxtLink>
-              </li>
-              <li>
-                <NuxtLink to="/contact">تماس با ما</NuxtLink>
-              </li>
-            </ul>
-          </Transition>
-        </div>
-
       </div>
     </header>
+
+    <Teleport to="body">
+      <Transition name="overlay-fade">
+        <div
+          v-if="isMobileMenuOpen"
+          class="fixed inset-0 z-60 bg-black/50 lg:hidden"
+          @click="isMobileMenuOpen = false"
+        />
+      </Transition>
+
+      <Transition name="drawer-slide">
+        <aside
+          v-if="isMobileMenuOpen"
+          dir="rtl"
+          class="fixed inset-y-0 left-0 z-60 flex w-72 max-w-[85vw] flex-col bg-base-100 shadow-2xl lg:hidden"
+        >
+          <div class="flex items-center justify-between px-5 pt-6 pb-4 border-b border-base-200 shrink-0">
+            <NuxtLink to="/" class="flex items-center gap-2" @click="isMobileMenuOpen = false">
+              <img :src="logoSrc" alt="آسروتراول" class="h-8" />
+            </NuxtLink>
+            <button
+              class="btn btn-ghost btn-sm btn-circle"
+              aria-label="بستن منو"
+              @click="isMobileMenuOpen = false"
+            >
+              <X class="size-5" />
+            </button>
+          </div>
+
+          <div class="px-5 py-4 border-b border-base-200 shrink-0">
+            <template v-if="isAuthenticated">
+              <div class="flex items-center gap-3 mb-3">
+                <UiAvatar :src="user?.ImageUrl" :name="fullName" size="md" />
+                <div class="leading-tight">
+                  <p class="text-sm font-semibold">{{ fullName }}</p>
+                  <p class="text-xs text-base-content/40">گردشگر</p>
+                </div>
+              </div>
+              <div class="flex flex-col gap-1">
+                <NuxtLink
+                  to="/dashboard"
+                  class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-base-content/80 hover:bg-base-200 transition-colors"
+                >
+                  <LayoutDashboard class="size-4" />
+                  داشبورد
+                </NuxtLink>
+                <button
+                  class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-error hover:bg-error/10 transition-colors"
+                  @click="handleLogout"
+                >
+                  <LogOut class="size-4" />
+                  خروج از حساب
+                </button>
+              </div>
+            </template>
+            <template v-else>
+              <NuxtLink
+                :to="{ path: '/login', query: { redirect: route.path } }"
+                class="btn btn-primary btn-sm w-full rounded-xl gap-2"
+                @click="isMobileMenuOpen = false"
+              >
+                <User2 class="size-4" />
+                ورود / ثبت‌نام
+              </NuxtLink>
+            </template>
+          </div>
+
+          <nav class="flex-1 overflow-y-auto px-3 py-4">
+            <ul class="menu gap-1 text-sm font-medium">
+              <li>
+                <NuxtLink to="/" active-class="text-primary font-semibold">صفحه اصلی</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink to="/hotel" active-class="text-primary font-semibold">هتل و مراکز اقامتی</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink to="/pool" active-class="text-primary font-semibold">استخر و آبدرمانی</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink to="/ticket" active-class="text-primary font-semibold">مجموعه‌های تفریحی</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink to="/place/travel-guide/ardebil"
+                  :class="{ 'text-primary font-semibold': route.path.startsWith('/place/travel-guide/') }">
+                  سفرنامه
+                </NuxtLink>
+              </li>
+              <li>
+                <NuxtLink to="/blog" active-class="text-primary font-semibold">بلاگ</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink to="/about" active-class="text-primary font-semibold">درباره ما</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink to="/contact" active-class="text-primary font-semibold">تماس با ما</NuxtLink>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+      </Transition>
+    </Teleport>
 
     <main class="flex-1">
       <slot />
