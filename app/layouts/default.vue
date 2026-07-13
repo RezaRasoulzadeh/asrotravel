@@ -1,6 +1,19 @@
 // app/layouts/default.vue
 <script setup lang="ts">
-import { Instagram, MoonIcon, Sun, User2, LogOut, Menu, X, LayoutDashboard } from 'lucide-vue-next'
+import {
+  Instagram,
+  MoonIcon,
+  Sun,
+  User2,
+  LogOut,
+  Menu,
+  X,
+  LayoutDashboard,
+  User,
+  CalendarCheck,
+  Wallet,
+  HeadphonesIcon,
+} from 'lucide-vue-next'
 import logoLight from '~/assets/images/logo-light.svg'
 import logoDark from '~/assets/images/logo-dark.svg'
 
@@ -20,19 +33,32 @@ const logoSrc = computed(() => theme.value === 'dark' ? logoDark : logoLight)
 const { isAuthenticated, user, fullName, logout } = useAuth()
 
 const isMobileMenuOpen = ref(false)
+const isDashboardMenuOpen = ref(false)
 
 const isDesktopUserOpen = ref(false)
 const desktopUserRef = ref<HTMLElement | null>(null)
 onClickOutside(desktopUserRef, () => { isDesktopUserOpen.value = false })
 
-watch(isMobileMenuOpen, (open) => {
-  document.body.style.overflow = open ? 'hidden' : ''
+const dashboardMenuItems = [
+  { to: '/dashboard', icon: LayoutDashboard, label: 'داشبورد' },
+  { to: '/dashboard/profile', icon: User, label: 'پروفایل' },
+  { to: '/dashboard/bookings', icon: CalendarCheck, label: 'رزروهای من' },
+  { to: '/dashboard/my-wallet', icon: Wallet, label: 'کیف پول' },
+  { to: '/dashboard/support', icon: HeadphonesIcon, label: 'پشتیبانی' },
+]
+
+watch([isMobileMenuOpen, isDashboardMenuOpen], ([menuOpen, dashboardOpen]) => {
+  document.body.style.overflow = (menuOpen || dashboardOpen) ? 'hidden' : ''
 })
-watch(() => route.path, () => { isMobileMenuOpen.value = false })
+watch(() => route.path, () => {
+  isMobileMenuOpen.value = false
+  isDashboardMenuOpen.value = false
+})
 
 function handleLogout() {
   logout()
   isMobileMenuOpen.value = false
+  isDashboardMenuOpen.value = false
   isDesktopUserOpen.value = false
   router.push('/')
 }
@@ -43,7 +69,7 @@ function handleLogout() {
 
     <header class="navbar fixed top-0 z-50 px-6 lg:px-16 transition-all duration-300"
       :class="scrolled ? 'bg-base-100/80 backdrop-blur-md shadow-xs' : 'bg-transparent'">
-      <div class="navbar-start">
+      <div class="navbar-start hidden lg:flex">
         <NuxtLink to="/">
           <img :src="logoSrc" alt="آسروتراول" class="h-9 transition-opacity duration-300" />
         </NuxtLink>
@@ -95,7 +121,7 @@ function handleLogout() {
         </ul>
       </nav>
 
-      <div class="navbar-end gap-1">
+      <div class="navbar-end gap-1 hidden lg:flex">
 
         <button class="btn btn-ghost btn-sm btn-circle transition-colors"
           :aria-label="theme === 'light' ? 'تغییر به حالت تاریک' : 'تغییر به حالت روشن'" @click="toggleTheme">
@@ -103,27 +129,8 @@ function handleLogout() {
           <Sun v-else class="size-5" />
         </button>
 
-        <div class="relative lg:hidden">
-          <button
-            v-if="isAuthenticated"
-            class="btn btn-ghost btn-sm btn-circle transition-colors"
-            aria-label="باز کردن منو"
-            @click="isMobileMenuOpen = true"
-          >
-            <UiAvatar :src="user?.ImageUrl" :name="fullName" size="sm" />
-          </button>
-          <button
-            v-else
-            class="btn btn-ghost btn-sm btn-circle transition-colors text-base-content"
-            aria-label="باز کردن منو"
-            @click="isMobileMenuOpen = true"
-          >
-            <Menu class="size-5" />
-          </button>
-        </div>
-
         <template v-if="isAuthenticated">
-          <div ref="desktopUserRef" class="relative hidden lg:block">
+          <div ref="desktopUserRef" class="relative">
             <button
               type="button"
               class="btn btn-ghost btn-sm gap-2 transition-colors text-base-content"
@@ -135,11 +142,14 @@ function handleLogout() {
             <Transition name="menu-fade">
               <ul
                 v-if="isDesktopUserOpen"
-                class="absolute left-0 menu bg-base-100 rounded-2xl shadow-lg border border-base-300 w-48 mt-2 z-50 p-2 origin-top-left"
+                class="absolute left-0 menu bg-base-100 rounded-2xl shadow-lg border border-base-300 w-52 mt-2 z-50 p-2 origin-top-left"
                 @click="isDesktopUserOpen = false"
               >
-                <li>
-                  <NuxtLink to="/dashboard">داشبورد</NuxtLink>
+                <li v-for="item in dashboardMenuItems" :key="item.to">
+                  <NuxtLink :to="item.to" class="flex items-center gap-2">
+                    <component :is="item.icon" class="size-4" />
+                    {{ item.label }}
+                  </NuxtLink>
                 </li>
                 <li>
                   <button class="text-error flex gap-2 items-center" @click="handleLogout">
@@ -152,11 +162,52 @@ function handleLogout() {
         </template>
         <template v-else>
           <NuxtLink :to="{ path: '/login', query: { redirect: route.path } }"
-            class="btn btn-sm btn-primary text-primary-content rounded-xl gap-2 mr-1 hidden lg:flex">
+            class="btn btn-sm btn-primary text-primary-content rounded-xl gap-2 mr-1">
             <User2 class="size-4" />
             ورود / ثبت‌نام
           </NuxtLink>
         </template>
+
+      </div>
+
+      <div class="relative flex lg:hidden items-center justify-between w-full flex-1">
+
+        <button
+          class="btn btn-ghost btn-sm btn-circle transition-colors text-base-content"
+          aria-label="باز کردن منو"
+          @click="isMobileMenuOpen = true"
+        >
+          <Menu class="size-5" />
+        </button>
+
+        <NuxtLink to="/" class="absolute left-1/2 -translate-x-1/2">
+          <img :src="logoSrc" alt="آسروتراول" class="h-9 transition-opacity duration-300" />
+        </NuxtLink>
+
+        <div class="flex items-center gap-1">
+          <button class="btn btn-ghost btn-sm btn-circle transition-colors"
+            :aria-label="theme === 'light' ? 'تغییر به حالت تاریک' : 'تغییر به حالت روشن'" @click="toggleTheme">
+            <MoonIcon v-if="theme === 'light'" class="size-5" />
+            <Sun v-else class="size-5" />
+          </button>
+
+          <button
+            v-if="isAuthenticated"
+            class="btn btn-ghost btn-sm btn-circle transition-colors"
+            aria-label="باز کردن منوی حساب کاربری"
+            @click="isDashboardMenuOpen = true"
+          >
+            <UiAvatar :src="user?.ImageUrl" :name="fullName" size="sm" />
+          </button>
+          <NuxtLink
+            v-else
+            :to="{ path: '/login', query: { redirect: route.path } }"
+            class="btn btn-ghost btn-sm btn-circle transition-colors text-base-content"
+            aria-label="ورود / ثبت‌نام"
+          >
+            <User2 class="size-5" />
+          </NuxtLink>
+        </div>
 
       </div>
     </header>
@@ -164,17 +215,17 @@ function handleLogout() {
     <Teleport to="body">
       <Transition name="overlay-fade">
         <div
-          v-if="isMobileMenuOpen"
+          v-if="isMobileMenuOpen || isDashboardMenuOpen"
           class="fixed inset-0 z-60 bg-black/50 lg:hidden"
-          @click="isMobileMenuOpen = false"
+          @click="isMobileMenuOpen = false; isDashboardMenuOpen = false"
         />
       </Transition>
 
-      <Transition name="drawer-slide">
+      <Transition name="drawer-slide-right">
         <aside
           v-if="isMobileMenuOpen"
           dir="rtl"
-          class="fixed inset-y-0 left-0 z-60 flex w-72 max-w-[85vw] flex-col bg-base-100 shadow-2xl lg:hidden"
+          class="fixed inset-y-0 right-0 z-60 flex w-72 max-w-[85vw] flex-col bg-base-100 shadow-2xl lg:hidden"
         >
           <div class="flex items-center justify-between px-5 pt-6 pb-4 border-b border-base-200 shrink-0">
             <NuxtLink to="/" class="flex items-center gap-2" @click="isMobileMenuOpen = false">
@@ -189,46 +240,19 @@ function handleLogout() {
             </button>
           </div>
 
-          <div class="px-5 py-4 border-b border-base-200 shrink-0">
-            <template v-if="isAuthenticated">
-              <div class="flex items-center gap-3 mb-3">
-                <UiAvatar :src="user?.ImageUrl" :name="fullName" size="md" />
-                <div class="leading-tight">
-                  <p class="text-sm font-semibold">{{ fullName }}</p>
-                  <p class="text-xs text-base-content/40">گردشگر</p>
-                </div>
-              </div>
-              <div class="flex flex-col gap-1">
-                <NuxtLink
-                  to="/dashboard"
-                  class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-base-content/80 hover:bg-base-200 transition-colors"
-                >
-                  <LayoutDashboard class="size-4" />
-                  داشبورد
-                </NuxtLink>
-                <button
-                  class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-error hover:bg-error/10 transition-colors"
-                  @click="handleLogout"
-                >
-                  <LogOut class="size-4" />
-                  خروج از حساب
-                </button>
-              </div>
-            </template>
-            <template v-else>
-              <NuxtLink
-                :to="{ path: '/login', query: { redirect: route.path } }"
-                class="btn btn-primary btn-sm w-full rounded-xl gap-2"
-                @click="isMobileMenuOpen = false"
-              >
-                <User2 class="size-4" />
-                ورود / ثبت‌نام
-              </NuxtLink>
-            </template>
+          <div v-if="!isAuthenticated" class="px-5 py-4 border-b border-base-200 shrink-0">
+            <NuxtLink
+              :to="{ path: '/login', query: { redirect: route.path } }"
+              class="btn btn-primary btn-sm w-full rounded-xl gap-2"
+              @click="isMobileMenuOpen = false"
+            >
+              <User2 class="size-4" />
+              ورود / ثبت‌نام
+            </NuxtLink>
           </div>
 
           <nav class="flex-1 overflow-y-auto px-3 py-4">
-            <ul class="menu gap-1 text-sm font-medium">
+            <ul class="menu gap-3 text-sm font-medium">
               <li>
                 <NuxtLink to="/" active-class="text-primary font-semibold">صفحه اصلی</NuxtLink>
               </li>
@@ -258,6 +282,56 @@ function handleLogout() {
               </li>
             </ul>
           </nav>
+        </aside>
+      </Transition>
+
+      <Transition name="drawer-slide-left">
+        <aside
+          v-if="isDashboardMenuOpen && isAuthenticated"
+          dir="rtl"
+          class="fixed inset-y-0 left-0 z-60 flex w-72 max-w-[85vw] flex-col bg-base-100 shadow-2xl lg:hidden"
+        >
+          <div class="flex items-center justify-between px-5 pt-6 pb-4 border-b border-base-200 shrink-0">
+            <div class="flex items-center gap-3">
+              <UiAvatar :src="user?.ImageUrl" :name="fullName" size="md" />
+              <div class="leading-tight">
+                <p class="text-sm font-semibold">{{ fullName }}</p>
+                <p class="text-xs text-base-content/40">گردشگر</p>
+              </div>
+            </div>
+            <button
+              class="btn btn-ghost btn-sm btn-circle"
+              aria-label="بستن منو"
+              @click="isDashboardMenuOpen = false"
+            >
+              <X class="size-5" />
+            </button>
+          </div>
+
+          <nav class="flex-1 overflow-y-auto px-3 py-4">
+            <ul class="menu gap-1 text-sm font-medium">
+              <li v-for="item in dashboardMenuItems" :key="item.to">
+                <NuxtLink
+                  :to="item.to"
+                  class="flex items-center gap-3 rounded-xl px-3 py-2.5"
+                  active-class="text-primary font-semibold"
+                >
+                  <component :is="item.icon" class="size-4" />
+                  {{ item.label }}
+                </NuxtLink>
+              </li>
+            </ul>
+          </nav>
+
+          <div class="px-3 pb-6 pt-3 border-t border-base-200 shrink-0">
+            <button
+              class="flex items-center gap-3 w-full rounded-xl px-3 py-2.5 text-sm font-medium text-error hover:bg-error/10 transition-colors"
+              @click="handleLogout"
+            >
+              <LogOut class="size-4" />
+              خروج از حساب
+            </button>
+          </div>
         </aside>
       </Transition>
     </Teleport>
@@ -371,5 +445,32 @@ function handleLogout() {
 @keyframes menu-reveal {
   from { opacity: 0; transform: scale(0.92) translateY(-6px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.overlay-fade-enter-active,
+.overlay-fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+.overlay-fade-enter-from,
+.overlay-fade-leave-to {
+  opacity: 0;
+}
+
+.drawer-slide-right-enter-active,
+.drawer-slide-right-leave-active {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.drawer-slide-right-enter-from,
+.drawer-slide-right-leave-to {
+  transform: translateX(100%);
+}
+
+.drawer-slide-left-enter-active,
+.drawer-slide-left-leave-active {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.drawer-slide-left-enter-from,
+.drawer-slide-left-leave-to {
+  transform: translateX(-100%);
 }
 </style>

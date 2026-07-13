@@ -116,12 +116,12 @@ const hasBookings = computed(() => !summaryLoading.value && bookingRows.value.le
 
     <div class="grid grid-cols-3 gap-3">
       <div v-for="stat in stats" :key="stat.label" class="card bg-base-100 shadow-sm">
-        <div class="card-body p-4 gap-2">
+        <div class="card-body items-center py-4 px-2 gap-2">
           <div :class="[stat.bg, 'w-9 h-9 rounded-xl flex items-center justify-center']">
             <component :is="stat.icon" :size="18" :class="stat.color" />
           </div>
-          <p class="text-lg font-bold leading-none">{{ stat.value }}</p>
-          <p class="text-xs text-base-content/50">{{ stat.label }}</p>
+          <p class="text-2xl text-center font-bold leading-none">{{ stat.value }}</p>
+          <p class="text-xs text-center text-base-content/50">{{ stat.label }}</p>
         </div>
       </div>
     </div>
