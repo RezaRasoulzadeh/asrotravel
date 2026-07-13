@@ -45,6 +45,34 @@
   display: block;
 }
 
+/* VIDEOS */
+.b-video {
+  margin: 1.5rem auto;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: #000;
+  max-width: 720px;
+}
+
+.b-video video {
+  width: 100%;
+  display: block;
+}
+
+.b-video-embed {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.b-video-embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 /* LISTS */
 .b-list {
   padding-inline-start: 1.5rem;

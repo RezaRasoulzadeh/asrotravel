@@ -64,7 +64,6 @@ export const BOOKING_STATUS_ACTIONS: Record<BookingStatus, BookingAction[]> = {
   Cancelled_By_System: ['rebook']
 }
 
-// TODO: 'completed' inferred (implies previously paid), not directly confirmed.
 export const RESERVATION_CODE_VISIBLE_STATUSES: BookingStatus[] = ['paid', 'completed']
 
 export type BookingSortOption = 'newest' | 'oldest' | 'price_high' | 'price_low'
@@ -76,7 +75,6 @@ export const BOOKING_SORT_LABELS: Record<BookingSortOption, string> = {
   price_low: 'کمترین مبلغ',
 }
 
-// TODO: raw external API shape — server-only, never sent to the client as-is.
 
 export interface BookingLocation {
   name: string
@@ -217,8 +215,6 @@ export interface DashboardBookingsResponse {
   perPage: number
 }
 
-// TODO: client-facing DTO — the only shape ever sent over /api/dashboard/bookings.
-
 export interface DashboardBookingDto {
   id: number
   code: string
@@ -251,12 +247,12 @@ export interface DashboardBookingsDtoResponse {
   perPage: number
 }
 
-// TODO: "active" definition unconfirmed — excludes draft/cancelled/expired/completed.
 export const ACTIVE_BOOKING_STATUSES: BookingStatus[] = [
   'unpaid', 'error_payment', 'processing', 'accepted', 'confirmed', 'partial_payment', 'paid',
 ]
 
 export interface DashboardSummary {
   activeCount: number
+  favoritesCount: number
   recent: DashboardBookingDto[]
 }

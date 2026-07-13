@@ -1,3 +1,4 @@
+// utils/blog/parser.ts
 import { parseDocument } from "htmlparser2";
 import type { BlogBlock, InlineNode } from "./types";
 
@@ -36,13 +37,17 @@ export function parseBlogHtml(html: string): BlogBlock[] {
           break;
 
         case "p": {
-          const img = deepFindImage(node);
-          if (img) {
+          const media = deepFindMedia(node);
+          if (media?.name === "img") {
             blocks.push({
               type: "image",
-              src: normalizeSrc(img.attribs?.src),
-              alt: img.attribs?.alt || "",
+              src: normalizeSrc(media.attribs?.src),
+              alt: media.attribs?.alt || "",
             });
+          } else if (media?.name === "video") {
+            blocks.push(videoFileBlock(media));
+          } else if (media?.name === "iframe") {
+            blocks.push(videoEmbedBlock(media));
           } else {
             const content = parseInline(node.children || []);
             if (content.length > 0) {
@@ -71,6 +76,14 @@ export function parseBlogHtml(html: string): BlogBlock[] {
             src: normalizeSrc(node.attribs?.src),
             alt: node.attribs?.alt || "",
           });
+          break;
+
+        case "video":
+          blocks.push(videoFileBlock(node));
+          break;
+
+        case "iframe":
+          blocks.push(videoEmbedBlock(node));
           break;
 
         case "a":
@@ -162,16 +175,48 @@ function extractDeepText(node: any): string {
   return node.children.map((c: any) => extractDeepText(c)).join("");
 }
 
-function deepFindImage(node: any): any {
+function deepFindMedia(node: any): any {
   if (!node || node.type !== "tag") return null;
-  if (node.name === "img") return node;
+  if (node.name === "img" || node.name === "video" || node.name === "iframe") return node;
   if (!node.children) return null;
 
   for (const child of node.children) {
-    const found = deepFindImage(child);
+    const found = deepFindMedia(child);
     if (found) return found;
   }
   return null;
+}
+
+function extractVideoSrc(node: any): string {
+  if (node.attribs?.src) return node.attribs.src;
+  const source = (node.children || []).find(
+    (c: any) => c.type === "tag" && c.name === "source"
+  );
+  return source?.attribs?.src || "";
+}
+
+function videoFileBlock(node: any): BlogBlock {
+  return {
+    type: "video",
+    kind: "file",
+    src: normalizeSrc(extractVideoSrc(node)),
+    poster: node.attribs?.poster ? normalizeSrc(node.attribs.poster) : undefined,
+  };
+}
+
+function videoEmbedBlock(node: any): BlogBlock {
+  return {
+    type: "video",
+    kind: "embed",
+    src: normalizeEmbedSrc(node.attribs?.src || ""),
+  };
+}
+
+function normalizeEmbedSrc(src: string): string {
+  if (!src) return "";
+  if (src.startsWith("//")) return `https:${src}`;
+  if (src.startsWith("http://")) return src.replace("http://", "https://");
+  return src;
 }
 
 function normalizeSrc(src?: string) {

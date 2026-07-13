@@ -23,8 +23,6 @@ function toFaNumber(value: number | string): string {
   return Number(value).toLocaleString('fa-IR', { useGrouping: false })
 }
 
-// TODO: for mixed strings (e.g. "08:00 - 00:00") — Number.toLocaleString can't run on
-// the whole string, so digits are derived from toLocaleString and swapped per-character.
 function toFaDigitsInString(str: string): string {
   const digits = Array.from({ length: 10 }, (_, i) => i.toLocaleString('fa-IR'))
   return str.replace(/\d/g, d => digits[Number(d)] ?? d)
@@ -51,6 +49,10 @@ const showReservationCode = computed(() =>
 const hasWalletUsage = computed(() => props.booking.walletTotalUsed > 0)
 const hasDiscount = computed(() => !!props.booking.couponAmountDisplay && props.booking.couponAmountDisplay.trim() !== '۰ تومان')
 const hasOffer = computed(() => !!props.booking.offerDisplay && props.booking.offerDisplay.trim() !== '۰ تومان')
+const hasPaidAmount = computed(() => {
+  const num = Number(props.booking.paid)
+  return props.booking.paid !== null && props.booking.paid !== '' && !isNaN(num) && num > 0
+})
 const singleUrl = computed(() => `/${props.booking.objectModel.toLowerCase()}/${props.booking.slug ?? ''}`)
 const continueUrl = computed(() => `/cart/checkout/${props.booking.code}`)
 const continueLabel = computed(() => props.booking.status === 'partial_payment' ? 'پرداخت باقی‌مانده' : 'ادامه و پرداخت')
@@ -85,8 +87,9 @@ async function handleCancel() {
       <div class="divider my-1" />
 
       <div class="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-sm text-base-content/70 mb-3">
-        <p v-if="showReservationCode" class="flex items-center gap-1">
-          <Ticket :size="14" />کد رزرو: {{ toFaNumber(booking.reservationCode!) }}
+        <p v-if="showReservationCode" class="flex items-center gap-1.5">
+          <Ticket :size="14" />کد رزرو:
+          <span class="text-base font-bold text-base-content">{{ toFaNumber(booking.reservationCode!) }}</span>
         </p>
         <p>تاریخ ثبت: {{ formattedCreated }}</p>
         <p v-if="formattedTime">ساعت: {{ formattedTime }}</p>
@@ -105,8 +108,8 @@ async function handleCancel() {
           <span class="flex items-center gap-1"><Wallet :size="14" />استفاده از کیف پول</span>
           <span>{{ toFaNumber(booking.walletTotalUsed) }}</span>
         </div>
-        <div class="flex justify-between font-medium border-t border-base-300 pt-1 mt-1">
-          <span>پرداخت‌شده</span><span>{{ formatPrice(booking.paid) }}</span>
+        <div v-if="hasPaidAmount" class="flex justify-between font-medium border-t border-base-300 pt-1 mt-1">
+          <span>مبلغ پرداخت‌شده</span><span>{{ formatPrice(booking.paid) }}</span>
         </div>
         <div v-if="booking.payNow && booking.status === 'partial_payment'" class="flex justify-between text-warning">
           <span>باقی‌مانده برای پرداخت</span><span>{{ formatPrice(booking.payNow) }}</span>

@@ -9,10 +9,6 @@ export const TAB_TO_MODEL: Record<BookingTab, BookingObjectModel> = {
   ticket: 'Ticket',
 }
 
-// Confirmed from old site's $api.cart calls: the `service` filter/body param sent
-// TO the backend is lowercase for hotel but capitalized for pool/ticket. This is
-// intentionally separate from TAB_TO_MODEL above (which is the casing the backend
-// sends BACK in object_model) — do not merge these two maps.
 export const TAB_TO_SERVICE_PARAM: Record<BookingTab, string> = {
   pool: 'Pool',
   hotel: 'hotel',
@@ -25,8 +21,6 @@ export const SERVICE_PARAM_BY_MODEL: Record<BookingObjectModel, string> = {
   Ticket: 'Ticket',
 }
 
-// TODO: duplicates the jalali-digit formatting also present in BookingCard.vue for
-// createdAt — consolidate into one shared formatter once toJalali usage settles.
 function toFaNumber(value: number): string {
   return value.toLocaleString('fa-IR', { useGrouping: false })
 }
@@ -63,4 +57,22 @@ export function mapBookingToDto(booking: DashboardBooking): DashboardBookingDto 
     adultCount: meta?.quantity?.adult?.quantity ?? booking.total_guests,
     childCount: meta?.quantity?.child?.quantity ?? 0,
   }
+}
+
+export function extractWishCount(raw: unknown): number {
+  if (Array.isArray(raw)) return raw.length
+  if (!raw || typeof raw !== 'object') return 0
+
+  const obj = raw as Record<string, unknown>
+  const candidates = [
+    obj.total,
+    obj.count,
+    (obj.meta as Record<string, unknown> | undefined)?.total,
+    (obj.pagination as Record<string, unknown> | undefined)?.total,
+  ]
+  const found = candidates.find(v => typeof v === 'number')
+  if (typeof found === 'number') return found
+
+  if (Array.isArray(obj.data)) return obj.data.length
+  return 0
 }

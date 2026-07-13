@@ -1,6 +1,6 @@
 <!-- app/components/dashboard/BookingsList.vue -->
 <script setup lang="ts">
-import { Loader2, SearchX, WifiOff } from 'lucide-vue-next'
+import { ArrowUpDown, Check, ChevronDown, Loader2, SearchX, SlidersHorizontal, WifiOff } from 'lucide-vue-next'
 import BookingsTabs from '~/components/dashboard/BookingsTabs.vue'
 import BookingCard from '~/components/dashboard/BookingCard.vue'
 import { BOOKING_SORT_LABELS, BOOKING_STATUS_LABELS } from '~/types/dashboardBookings.types'
@@ -19,6 +19,25 @@ watch(searchInput, (val) => {
   if (debounceTimer) clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => setSearch(val), 400)
 })
+
+const isFilterOpen = ref(false)
+const isSortOpen = ref(false)
+const filterRef = ref<HTMLElement | null>(null)
+const sortRef = ref<HTMLElement | null>(null)
+onClickOutside(filterRef, () => { isFilterOpen.value = false })
+onClickOutside(sortRef, () => { isSortOpen.value = false })
+
+function selectStatus(key: BookingStatus | null) {
+  setStatus(key)
+  isFilterOpen.value = false
+}
+function selectSort(key: BookingSortOption) {
+  setSort(key)
+  isSortOpen.value = false
+}
+
+const statusLabel = computed(() => status.value ? BOOKING_STATUS_LABELS[status.value] : 'همه وضعیت‌ها')
+const sortLabel = computed(() => BOOKING_SORT_LABELS[sort.value])
 
 const sentinel = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
@@ -49,16 +68,64 @@ function clearFilters() {
     <BookingsTabs :model-value="tab" @update:model-value="switchTab" />
 
     <div class="flex flex-wrap gap-2 items-center">
-      <select class="select select-sm select-bordered w-40" :value="status ?? ''"
-        @change="setStatus((($event.target as HTMLSelectElement).value || null) as BookingStatus | null)">
-        <option value="">همه وضعیت‌ها</option>
-        <option v-for="(label, key) in BOOKING_STATUS_LABELS" :key="key" :value="key">{{ label }}</option>
-      </select>
+      <div ref="filterRef" class="relative">
+        <button
+          type="button"
+          class="btn btn-sm btn-ghost gap-1.5"
+          :class="{ 'text-primary': status }"
+          aria-label="فیلتر وضعیت"
+          @click="isFilterOpen = !isFilterOpen"
+        >
+          <SlidersHorizontal :size="15" />
+          <span class="hidden sm:inline">{{ statusLabel }}</span>
+          <ChevronDown :size="13" class="opacity-50" />
+        </button>
+        <Transition name="menu-fade">
+          <ul
+            v-if="isFilterOpen"
+            class="absolute right-0 menu bg-base-100 rounded-2xl shadow-lg border border-base-300 w-48 mt-2 z-30 p-2 origin-top-right"
+          >
+            <li>
+              <button type="button" class="flex items-center justify-between" @click="selectStatus(null)">
+                همه وضعیت‌ها
+                <Check v-if="!status" :size="14" class="text-primary" />
+              </button>
+            </li>
+            <li v-for="(label, key) in BOOKING_STATUS_LABELS" :key="key">
+              <button type="button" class="flex items-center justify-between" @click="selectStatus(key as BookingStatus)">
+                {{ label }}
+                <Check v-if="status === key" :size="14" class="text-primary" />
+              </button>
+            </li>
+          </ul>
+        </Transition>
+      </div>
 
-      <select class="select select-sm select-bordered w-36" :value="sort"
-        @change="setSort(($event.target as HTMLSelectElement).value as BookingSortOption)">
-        <option v-for="(label, key) in BOOKING_SORT_LABELS" :key="key" :value="key">{{ label }}</option>
-      </select>
+      <div ref="sortRef" class="relative">
+        <button
+          type="button"
+          class="btn btn-sm btn-ghost gap-1.5"
+          aria-label="مرتب‌سازی"
+          @click="isSortOpen = !isSortOpen"
+        >
+          <ArrowUpDown :size="15" />
+          <span class="hidden sm:inline">{{ sortLabel }}</span>
+          <ChevronDown :size="13" class="opacity-50" />
+        </button>
+        <Transition name="menu-fade">
+          <ul
+            v-if="isSortOpen"
+            class="absolute right-0 menu bg-base-100 rounded-2xl shadow-lg border border-base-300 w-44 mt-2 z-30 p-2 origin-top-right"
+          >
+            <li v-for="(label, key) in BOOKING_SORT_LABELS" :key="key">
+              <button type="button" class="flex items-center justify-between" @click="selectSort(key as BookingSortOption)">
+                {{ label }}
+                <Check v-if="sort === key" :size="14" class="text-primary" />
+              </button>
+            </li>
+          </ul>
+        </Transition>
+      </div>
 
       <input v-model="searchInput" type="text" placeholder="جستجو با کد رزرو، نام خدمت یا مکان..."
         class="input input-sm input-bordered flex-1 min-w-40">
@@ -108,3 +175,16 @@ function clearFilters() {
     </div>
   </div>
 </template>
+
+<style scoped>
+.menu-fade-enter-active {
+  animation: menu-reveal 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.menu-fade-leave-active {
+  animation: menu-reveal 0.2s cubic-bezier(0.22, 1, 0.36, 1) reverse both;
+}
+@keyframes menu-reveal {
+  from { opacity: 0; transform: scale(0.92) translateY(-6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+</style>

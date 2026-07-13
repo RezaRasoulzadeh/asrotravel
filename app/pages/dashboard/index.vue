@@ -29,7 +29,7 @@ const greeting = computed(() => {
 })
 
 const summaryLoading = ref(true)
-const summary = ref<DashboardSummary>({ activeCount: 0, recent: [] })
+const summary = ref<DashboardSummary>({ activeCount: 0, favoritesCount: 0, recent: [] })
 
 async function fetchSummary() {
   summaryLoading.value = true
@@ -46,6 +46,7 @@ interface DashboardStat {
   icon: Component
   color: string
   bg: string
+  to: string
 }
 
 const stats = computed<DashboardStat[]>(() => [
@@ -55,6 +56,7 @@ const stats = computed<DashboardStat[]>(() => [
     icon: CalendarCheck,
     color: 'text-primary',
     bg: 'bg-primary/10',
+    to: '/dashboard/bookings',
   },
   {
     label: 'موجودی کیف پول',
@@ -62,13 +64,15 @@ const stats = computed<DashboardStat[]>(() => [
     icon: Wallet,
     color: 'text-success',
     bg: 'bg-success/10',
+    to: '/dashboard/my-wallet',
   },
   {
     label: 'علاقه‌مندی‌ها',
-    value: (0).toLocaleString('fa-IR'),
+    value: summary.value.favoritesCount.toLocaleString('fa-IR'),
     icon: Heart,
     color: 'text-error',
     bg: 'bg-error/10',
+    to: '/dashboard/my-favorites',
   },
 ])
 
@@ -115,7 +119,12 @@ const hasBookings = computed(() => !summaryLoading.value && bookingRows.value.le
     </div>
 
     <div class="grid grid-cols-3 gap-3">
-      <div v-for="stat in stats" :key="stat.label" class="card bg-base-100 shadow-sm">
+      <NuxtLink
+        v-for="stat in stats"
+        :key="stat.label"
+        :to="stat.to"
+        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+      >
         <div class="card-body items-center py-4 px-2 gap-2">
           <div :class="[stat.bg, 'w-9 h-9 rounded-xl flex items-center justify-center']">
             <component :is="stat.icon" :size="18" :class="stat.color" />
@@ -123,7 +132,7 @@ const hasBookings = computed(() => !summaryLoading.value && bookingRows.value.le
           <p class="text-2xl text-center font-bold leading-none">{{ stat.value }}</p>
           <p class="text-xs text-center text-base-content/50">{{ stat.label }}</p>
         </div>
-      </div>
+      </NuxtLink>
     </div>
 
     <section class="space-y-3">

@@ -79,6 +79,31 @@ function renderBlock(b: BlogBlock) {
         })
       ])
 
+    case 'video':
+      if (!b.src) return null
+
+      if (b.kind === 'embed') {
+        return h('figure', { class: 'b-video b-video-embed' }, [
+          h('iframe', {
+            src: b.src,
+            loading: 'lazy',
+            allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share',
+            allowfullscreen: true,
+            frameborder: '0',
+          })
+        ])
+      }
+
+      return h('figure', { class: 'b-video' }, [
+        h('video', {
+          src: b.src,
+          poster: b.poster || undefined,
+          controls: true,
+          preload: 'metadata',
+          playsinline: true,
+        })
+      ])
+
     case 'list':
       return h(
         b.ordered ? 'ol' : 'ul',

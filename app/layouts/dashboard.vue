@@ -93,7 +93,7 @@ function isActive(to: string) {
       <div class="mx-3 mb-4 rounded-2xl bg-primary/10 p-4 text-center">
         <p class="text-xs text-base-content/50 mb-1">تخفیف ویژه</p>
         <p class="text-2xl font-bold text-primary">۲۰٪</p>
-        <p class="text-xs text-base-content/50 mt-1 leading-relaxed">در رزروهای این هفته از تخفیف بهره‌مند شوید</p>
+        <p class="text-xs text-base-content/50 mt-1 leading-relaxed">در رزروهای این هفته از تخفیف ویژه بهره‌مند شوید</p>
         <NuxtLink to="/pool" class="btn btn-primary btn-sm w-full mt-3 rounded-xl">مشاهده</NuxtLink>
       </div>
 
