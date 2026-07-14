@@ -11,10 +11,20 @@ import FeaturesList from '~/components/ui/spacer/FeaturesList.vue'
 import HowItWorks from '~/components/ui/spacer/HowItWorks.vue'
 import TestimonialQuote from '~/components/ui/spacer/TestimonialQuote.vue'
 import { useHomeData } from '~/composables/useHomeData'
+import { useHomeSectionsOrder, type HomeSectionKey } from '~/composables/useHomeSectionsOrder'
+import type { Component } from 'vue'
 
 const route = useRoute()
 
 const { data } = useHomeData()
+
+const { sectionsOrder } = useHomeSectionsOrder()
+
+const sectionComponents: Record<HomeSectionKey, Component> = {
+  pool: PoolList,
+  hotel: HotelList,
+  ticket: TicketList,
+}
 
 const seo = computed(() => data.value?.seo)
 
@@ -41,11 +51,11 @@ useHead(() => ({
 <template>
   <div class="text-base-content">
     <HeroSearch />
-    <PoolList />
+    <component :is="sectionComponents[sectionsOrder[0]]" />
     <HowItWorks />
-    <HotelList />
+    <component :is="sectionComponents[sectionsOrder[1]]" />
     <FeaturesList />
-    <TicketList />
+    <component :is="sectionComponents[sectionsOrder[2]]" />
     <DestinationList />  
     <TopPostsList/>
     <NewPostsList />

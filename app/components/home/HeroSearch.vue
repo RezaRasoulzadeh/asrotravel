@@ -7,18 +7,19 @@ import { useSearchOptions } from '~/composables/useSearchOptions'
 import { buildPoolSearchQuery } from '~/composables/usePoolSearch'
 import { buildHotelSearchQuery } from '~/composables/useHotelSearch'
 import { buildTicketSearchQuery } from '~/composables/useTicketSearch'
+import { useHomeSectionsOrder, type HomeTabKey } from '~/composables/useHomeSectionsOrder'
 
 defineProps<{ imageSrc?: string }>()
 
 const router = useRouter()
 const { options } = useSearchOptions()
 
-const tabs = [
-  { key: 'hotels',  label: 'هتل و مراکز اقامتی' },
+const tabs: { key: HomeTabKey; label: string }[] = [
   { key: 'pools',   label: 'استخر و آبدرمانی' },
+  { key: 'hotels',  label: 'هتل و مراکز اقامتی' },
   { key: 'fun',     label: 'مجموعه‌های تفریحی' },
 ]
-const activeTab = ref('hotels')
+const { activeTab, selectTab } = useHomeSectionsOrder()
 
 const hotelDestination = ref('')
 const enterDate = ref('')
@@ -118,7 +119,7 @@ function onSearch() {
                   ? 'text-primary'
                   : 'text-base-content/50 hover:text-base-content'"
                 :style="{ '--i': i }"
-                @click="activeTab = tab.key"
+                @click="selectTab(tab.key)"
               >
                 {{ tab.label }}
                 <span
