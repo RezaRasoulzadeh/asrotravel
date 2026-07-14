@@ -367,4 +367,4 @@ The checkout response (`GET /api/booking/{code}/checkout`) carries `booking.depo
 
 The ticket/pool (non-VIP) booking flow does not follow this same `service_id`/`parent` contract — it has its own, separately verified working payload shape in `CartDetail.vue`/`PoolSanseCalendar.vue`. Don't port the VIP field mapping over to it.
 
-TODO: referral logic for new add cart and checkouts. 
+TODO: scroll state problem in most pages. 
