@@ -6,6 +6,9 @@ import type { WishListRawResponse } from '~/types/wishlist.types'
 
 const TABS: BookingTab[] = ['pool', 'hotel', 'ticket']
 
+// TODO
+const WISHLIST_ENABLED = false
+
 export default defineEventHandler(async (event): Promise<DashboardSummary> => {
   const fallback: DashboardBookingsResponse = {
     total: 0,
@@ -25,16 +28,18 @@ export default defineEventHandler(async (event): Promise<DashboardSummary> => {
       ),
     ),
   )
-  const wishResultsPromise = Promise.all(
-    WISHLIST_TABS.map(tab =>
-      safeAuthApiFetch<WishListRawResponse>(
-        event,
-        '/users/get-wish-list',
-        { query: { service: WISHLIST_TAB_TO_SERVICE_PARAM[tab], page: 1 } },
-        null,
+  const wishResultsPromise = WISHLIST_ENABLED
+    ? Promise.all(
+      WISHLIST_TABS.map(tab =>
+        safeAuthApiFetch<WishListRawResponse>(
+          event,
+          '/users/get-wish-list',
+          { query: { service: WISHLIST_TAB_TO_SERVICE_PARAM[tab], page: 1 } },
+          null,
+        ),
       ),
-    ),
-  )
+    )
+    : Promise.resolve<WishListRawResponse[]>([])
 
   const bookingResults = await bookingResultsPromise
   const wishResults = await wishResultsPromise

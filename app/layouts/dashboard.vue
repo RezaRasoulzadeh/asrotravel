@@ -5,7 +5,6 @@ import {
   User,
   CalendarCheck,
   Wallet,
-  Heart,
   HeadphonesIcon,
   LogOut,
   Sun,
@@ -29,13 +28,12 @@ const navItems: NavItem[] = [
   { to: '/dashboard/profile', icon: User, label: 'پروفایل', labelShort: 'پروفایل' },
   { to: '/dashboard/bookings', icon: CalendarCheck, label: 'رزروهای من', labelShort: 'رزروها' },
   { to: '/dashboard/my-wallet', icon: Wallet, label: 'کیف پول', labelShort: 'کیف پول' },
-  { to: '/dashboard/my-favorites', icon: Heart, label: 'علاقه‌مندی‌ها', labelShort: 'علاقه‌ها' },
   { to: '/dashboard/support', icon: HeadphonesIcon, label: 'پشتیبانی', labelShort: 'پشتیبانی' },
 ]
 
 const mobileNavItems: NavItem[] = [
   { to: '/', icon: Home, label: 'خانه', labelShort: 'خانه' },
-  ...navItems.filter(item => item.to !== '/dashboard/my-favorites'),
+  ...navItems,
 ]
 
 const route = useRoute()

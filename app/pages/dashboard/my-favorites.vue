@@ -8,6 +8,9 @@ import type { WishlistTab, WishListRawResponse } from '~/types/wishlist.types'
 definePageMeta({ layout: 'dashboard' })
 useSeoMeta({ title: 'علاقه‌مندی‌ها | آسروتراول' })
 
+// TODO
+const WISHLIST_ENABLED = false
+
 const tab = ref<WishlistTab>('pool')
 const page = ref(1)
 const loading = ref(false)
@@ -23,7 +26,7 @@ async function fetchWishList() {
   loading.value = false
 }
 
-watch([tab, page], fetchWishList, { immediate: true })
+watch([tab, page], fetchWishList, { immediate: WISHLIST_ENABLED })
 
 function changeTab(next: WishlistTab) {
   tab.value = next
@@ -38,78 +41,85 @@ async function copyJson() {
     copied.value = true
     setTimeout(() => (copied.value = false), 2000)
   } catch {
-    // clipboard unavailable — nothing to do here, it's a dev-only probe page
+    // TODO
   }
 }
 </script>
 
 <template>
   <div class="px-4 lg:px-16 max-w-960 mx-auto py-8">
-    <h1 class="text-xl font-semibold mb-1">علاقه‌مندی‌ها</h1>
-    <p class="text-xs text-base-content/50 mb-6">
-      نسخه آزمایشی — پاسخ خام سرور برای بررسی ساختار داده نمایش داده می‌شود.
-    </p>
-
-    <div role="tablist" class="tabs tabs-boxed w-full sm:w-fit mb-6">
-      <button
-        v-for="item in WISHLIST_TABS"
-        :key="item"
-        role="tab"
-        type="button"
-        class="tab"
-        :class="{ 'tab-active': tab === item }"
-        @click="changeTab(item)"
-      >
-        {{ WISHLIST_TAB_LABELS[item] }}
-      </button>
+    <div v-if="!WISHLIST_ENABLED" class="flex flex-col items-center justify-center text-center py-24 gap-2">
+      <h1 class="text-xl font-semibold">علاقه‌مندی‌ها</h1>
+      <p class="text-sm text-base-content/50">این بخش موقتاً غیرفعال است.</p>
     </div>
 
-    <div class="card bg-base-100 shadow-sm">
-      <div class="card-body p-6 gap-4">
-        <div class="flex items-center justify-between">
-          <p class="text-sm font-semibold text-base-content/70">
-            پاسخ سرور — service={{ WISHLIST_TAB_TO_SERVICE_PARAM[tab] }}، page={{ page }}
-          </p>
-          <button
-            type="button"
-            class="btn btn-sm btn-outline rounded-xl gap-1.5"
-            :disabled="!rawResponse"
-            @click="copyJson"
-          >
-            <component :is="copied ? Check : Copy" class="size-3.5" />
-            {{ copied ? 'کپی شد' : 'کپی JSON' }}
-          </button>
-        </div>
+    <template v-else>
+      <h1 class="text-xl font-semibold mb-1">علاقه‌مندی‌ها</h1>
+      <p class="text-xs text-base-content/50 mb-6">
+        نسخه آزمایشی — پاسخ خام سرور برای بررسی ساختار داده نمایش داده می‌شود.
+      </p>
 
-        <div v-if="loading" class="flex justify-center py-12">
-          <LoadingState label="در حال دریافت اطلاعات..." />
-        </div>
+      <div role="tablist" class="tabs tabs-boxed w-full sm:w-fit mb-6">
+        <button
+          v-for="item in WISHLIST_TABS"
+          :key="item"
+          role="tab"
+          type="button"
+          class="tab"
+          :class="{ 'tab-active': tab === item }"
+          @click="changeTab(item)"
+        >
+          {{ WISHLIST_TAB_LABELS[item] }}
+        </button>
+      </div>
 
-        <pre
-          v-else
-          class="bg-base-200 rounded-xl p-4 text-xs overflow-x-auto max-h-[60vh] overflow-y-auto"
-          dir="ltr"
-        >{{ prettyJson }}</pre>
+      <div class="card bg-base-100 shadow-sm">
+        <div class="card-body p-6 gap-4">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-semibold text-base-content/70">
+              پاسخ سرور — service={{ WISHLIST_TAB_TO_SERVICE_PARAM[tab] }}، page={{ page }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline rounded-xl gap-1.5"
+              :disabled="!rawResponse"
+              @click="copyJson"
+            >
+              <component :is="copied ? Check : Copy" class="size-3.5" />
+              {{ copied ? 'کپی شد' : 'کپی JSON' }}
+            </button>
+          </div>
 
-        <div class="flex items-center justify-center gap-2">
-          <button
-            type="button"
-            class="btn btn-sm btn-outline rounded-xl"
-            :disabled="page <= 1"
-            @click="page = Math.max(1, page - 1)"
-          >
-            <ChevronRight class="size-4" />
-          </button>
-          <span class="text-xs text-base-content/50 px-2">صفحه {{ page.toLocaleString('fa-IR', { useGrouping: false }) }}</span>
-          <button
-            type="button"
-            class="btn btn-sm btn-outline rounded-xl"
-            @click="page += 1"
-          >
-            <ChevronLeft class="size-4" />
-          </button>
+          <div v-if="loading" class="flex justify-center py-12">
+            <LoadingState label="در حال دریافت اطلاعات..." />
+          </div>
+
+          <pre
+            v-else
+            class="bg-base-200 rounded-xl p-4 text-xs overflow-x-auto max-h-[60vh] overflow-y-auto"
+            dir="ltr"
+          >{{ prettyJson }}</pre>
+
+          <div class="flex items-center justify-center gap-2">
+            <button
+              type="button"
+              class="btn btn-sm btn-outline rounded-xl"
+              :disabled="page <= 1"
+              @click="page = Math.max(1, page - 1)"
+            >
+              <ChevronRight class="size-4" />
+            </button>
+            <span class="text-xs text-base-content/50 px-2">صفحه {{ page.toLocaleString('fa-IR', { useGrouping: false }) }}</span>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline rounded-xl"
+              @click="page += 1"
+            >
+              <ChevronLeft class="size-4" />
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
