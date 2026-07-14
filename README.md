@@ -1,8 +1,7 @@
 # Asro Travel — Project Context & Scheme
 
 > Source: reverse-engineered directly from `github.com/RezaRasoulzadeh/asrotravel` (public repo, current `main`).
-> Existing `README.md` / `DASHBOARD.md` / `checkout.md` in the repo are flagged as **stale** — this doc supersedes them.
-> Last synced: 2026-07-06 (booking-flow audit added, see §11).
+> Last synced: 2026-07-14.
 
 ---
 
@@ -230,10 +229,11 @@ app/components/
 /ticket, /ticket/search, /ticket/[slug]
 /place/travel-guide/[slug], /place/travel-guide/[slug]/search
 /place/travel-to/[slug]/[id]        slug = ename (place lookup), id = numeric review object_id
-/cart/detail
-/cart/checkout/[code]               booking code, drives useCheckout + useBookingStatus
+/cart/detail, /cart/hotel-detail, /cart/vip-detail
+/cart/[code]/payment                booking code, drives useCheckout + useBookingStatus
 /login
-/dashboard, /dashboard/bookings     dashboard layout
+/dashboard, /dashboard/bookings, /dashboard/profile, /dashboard/my-wallet,
+/dashboard/my-favorites, /dashboard/support, /dashboard/support/[id], /dashboard/support/new
 ```
 
 Layouts: `default` (public site), `dashboard` (customer panel — sidebar nav, mobile bottom nav, theme toggle), `blank`.
@@ -262,11 +262,11 @@ Layouts: `default` (public site), `dashboard` (customer panel — sidebar nav, m
 | `useBookingStatus` | live payment status via socket.io + countdown | raw socket.io-client |
 | `usePrivateApiFetch` | authenticated wrapper: auto-toast + auto-redirect on 401 | wraps client `safeApiFetch` |
 
-### `useDashboardBookings` behavior detail (most recently built feature)
+### `useDashboardBookings` behavior detail
 
 - Two loading modes: **paged** (default — `newest` sort, no search) uses `loadMore()` / incremental pagination; switches to **fully-loaded** mode (`ensureFullyLoaded()`, loops all pages) automatically the moment a search term or non-default sort is applied (`needsFullData` computed), because search/sort must operate over the complete set.
 - Uses a `generation` counter to invalidate in-flight requests when the tab/filter changes mid-fetch (prevents stale responses from overwriting newer state).
-- `cancelBooking(code)` — **⚠️ open item**: comment in source flags that the endpoint is keyed by `code` (UUID) rather than internal numeric `id`, and that the exact path/param contract with the real backend is *unconfirmed*. Treat as unverified until checked against the actual API.
+- `cancelBooking(code)` posts `{ id, service }` to `/api/dashboard/bookings/cancel`, keyed off the booking's internal `id` and `objectModel`.
 
 ---
 
@@ -291,13 +291,7 @@ These are the rules the codebase actually follows — deviate deliberately, not 
 11. **`is_vip` derivation for pool** (`pages/pool/[slug].vue`): `ticket === 0 && vip > 0`, computed from the counts of keys in `services.ticket` / `services.vip` objects returned by the sanse endpoint.
 12. **Two safe-fetch helpers, one name, different files/behavior** — see §4.1. Always check which file you're in before assuming the return shape.
 13. **Route params always cast explicitly** where dynamic — pattern seen in `place/travel-to/[slug]/[id].vue`: slug is the entity lookup key (`ename`), `id` is the numeric key used for review `object_id`.
-14. **No inline explanatory comments in generated code** (project-wide rule from your own conventions) — only a file-path header comment as the first line, and TODO comments. Explanations belong in chat, not the file.
-
-### Known unresolved / in-progress items
-
-- `useDashboardBookings.cancelBooking()` — endpoint contract unconfirmed (see §6 detail above).
-- `pages/pool/[slug].vue` → `handleAddToCart()` — **this note is stale, corrected in §11.** As of 2026-07-06 the flow *is* wired to `useCreateBooking()` → `POST /api/booking/cart/add`, but a full audit found several bugs in it (see §11.2). `main` still has the original, unfixed code as of this writing.
-- `README.md`, `DASHBOARD.md`, `checkout.md` in the repo are explicitly flagged by you as stale — don't trust their content; this doc was built by reading source directly instead.
+14. **No inline explanatory comments in generated code** (project-wide rule) — only a file-path header comment as the first line, and TODO comments. Explanations belong in chat, not the file.
 
 ---
 
@@ -324,7 +318,7 @@ Font: Vazirmatn, self-hosted `/fonts/*.woff2`, weights 400/500/600/700, `font-di
 
 ## 9. Types reference
 
-`app/types/`: `blog.types`, `blogSingle.types`, `cart.types`, `checkout.types`, `dashboardBookings.types`, `hotel.types`, `hotelSingle.types`, `place.types`, `placeSingle.types`, `pool.types`, `poolSingle.types`, `province.types`, `review.types`, `ticket.types`, `ticketSingle.types`.
+`app/types/`: `blog.types`, `blogSingle.types`, `cart.types`, `checkout.types`, `dashboardBookings.types`, `hotel.types`, `hotelSingle.types`, `place.types`, `placeSingle.types`, `pool.types`, `poolSingle.types`, `province.types`, `review.types`, `support.types`, `ticket.types`, `ticketSingle.types`, `wishlist.types`.
 
 `dashboardBookings.types.ts` exports `BookingSortOption`, `BookingStatus`, `BookingTab`, `DashboardBookingDto`, `DashboardBookingsDtoResponse`, and a `BOOKING_STATUS_LABELS` map (Persian status labels, used to optimistically patch UI after cancel).
 
@@ -332,16 +326,7 @@ Font: Vazirmatn, self-hosted `/fonts/*.woff2`, weights 400/500/600/700, `font-di
 
 ---
 
-## 10. Things a new task should check before assuming
-
-- **Which `safeApiFetch` am I in?** — client (`~/utils/api.ts`) vs server (`~~/server/utils/api.ts`). Import path context tells you; behavior differs completely.
-- **Is this composable `useFetch`-based (SSR, cached by key) or raw `$fetch`-based (client-triggered action)?** Determines whether 401 handling is automatic or must be added manually.
-- **Does the target page already have a real backend endpoint**, or is it one of the still-stubbed dashboard nav items (`/dashboard/profile`, `/dashboard/my-wallet`, `/dashboard/my-favorites`, `/dashboard/support` are linked in the sidebar but no corresponding `pages/dashboard/*` files exist yet beyond `index.vue` and `bookings.vue`).
-- **Persian RTL + Jalali dates + toman formatting** apply to *any* new page touching dates or prices — don't reach for a new date/currency library, use the existing `utils/date.ts`/`utils/jalali.ts`/`utils/price.ts`.
-
----
-
-## 11. VIP pool booking — payload contract
+## 10. VIP pool booking — payload contract
 
 `POST /api/booking/cart/add` with `service_type: 'vip'` has a field-to-meaning mapping that isn't obvious from names alone. There are three distinct numeric IDs in play, and mixing them up produces a 500 (`Cannot read properties of null (reading 'isBookable')`) because the backend does a lookup that fails silently into a null:
 
@@ -367,4 +352,16 @@ The checkout response (`GET /api/booking/{code}/checkout`) carries `booking.depo
 
 The ticket/pool (non-VIP) booking flow does not follow this same `service_id`/`parent` contract — it has its own, separately verified working payload shape in `CartDetail.vue`/`PoolSanseCalendar.vue`. Don't port the VIP field mapping over to it.
 
-TODO: scroll state problem in most pages. 
+---
+
+## 11. TODO
+
+- [ ] Complete checkout: integrate payment gateways and their callbacks
+- [ ] Unify and fix scroll position state across page navigations (mobile UX issues)
+- [ ] Wishlist / favorites fetch (backend)
+- [ ] Profile image upload (backend)
+- [ ] Confirm support ticket priority enum values with backend
+- [ ] Confirm support ticket raw response shapes (list + show endpoint)
+- [ ] Confirm profile gender value mapping (1/2)
+- [ ] Confirm FAQ category parameter values beyond `category=1`
+- [ ] Confirm dashboard bookings `status` query param is honored by backend
