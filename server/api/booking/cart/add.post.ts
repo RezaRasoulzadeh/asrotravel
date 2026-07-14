@@ -3,11 +3,12 @@ import type { CartAddPayload, VipCartAddPayload, HotelCartAddPayload, CartRefres
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<CartAddPayload | VipCartAddPayload | HotelCartAddPayload | CartRefreshPayload>(event)
+  const headers = resolveReferralHeader(event)
 
   const result = await authApiFetch<CartAddResponse>(
     event,
     '/booking/cart/add',
-    { method: 'POST', body },
+    { method: 'POST', body, headers },
   )
 
   if (!result?.booking_code) {

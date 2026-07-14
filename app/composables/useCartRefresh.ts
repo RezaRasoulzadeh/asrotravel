@@ -23,9 +23,10 @@ export function useCartRefresh() {
 
     try {
       const payload: CartRefreshPayload = { booking_code: code }
+      const { referralHeaders } = useReferral()
       const result = await usePrivateApiFetch<CartAddResponse>(
         '/api/booking/cart/add',
-        { method: 'POST', body: payload },
+        { method: 'POST', body: payload, headers: referralHeaders() },
         'خطا در به‌روزرسانی قیمت رزرو',
       )
 
