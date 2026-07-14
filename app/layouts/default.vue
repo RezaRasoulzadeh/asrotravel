@@ -252,33 +252,34 @@ function handleLogout() {
           </div>
 
           <nav class="flex-1 overflow-y-auto px-3 py-4">
-            <ul class="menu gap-3 text-sm font-medium">
+            <ul class="menu gap-1 text-sm font-medium w-full">
               <li>
-                <NuxtLink to="/" active-class="text-primary font-semibold">صفحه اصلی</NuxtLink>
+                <NuxtLink to="/" class="py-3" active-class="text-primary font-semibold">صفحه اصلی</NuxtLink>
               </li>
               <li>
-                <NuxtLink to="/hotel" active-class="text-primary font-semibold">هتل و مراکز اقامتی</NuxtLink>
+                <NuxtLink to="/hotel" class="py-3" active-class="text-primary font-semibold">هتل و مراکز اقامتی</NuxtLink>
               </li>
               <li>
-                <NuxtLink to="/pool" active-class="text-primary font-semibold">استخر و آبدرمانی</NuxtLink>
+                <NuxtLink to="/pool" class="py-3" active-class="text-primary font-semibold">استخر و آبدرمانی</NuxtLink>
               </li>
               <li>
-                <NuxtLink to="/ticket" active-class="text-primary font-semibold">مجموعه‌های تفریحی</NuxtLink>
+                <NuxtLink to="/ticket" class="py-3" active-class="text-primary font-semibold">مجموعه‌های تفریحی</NuxtLink>
               </li>
               <li>
                 <NuxtLink to="/place/travel-guide/ardebil"
+                class="py-3"
                   :class="{ 'text-primary font-semibold': route.path.startsWith('/place/travel-guide/') }">
                   سفرنامه
                 </NuxtLink>
               </li>
               <li>
-                <NuxtLink to="/blog" active-class="text-primary font-semibold">بلاگ</NuxtLink>
+                <NuxtLink to="/blog" class="py-3" active-class="text-primary font-semibold">بلاگ</NuxtLink>
               </li>
               <li>
-                <NuxtLink to="/about" active-class="text-primary font-semibold">درباره ما</NuxtLink>
+                <NuxtLink to="/about" class="py-3" active-class="text-primary font-semibold">درباره ما</NuxtLink>
               </li>
               <li>
-                <NuxtLink to="/contact" active-class="text-primary font-semibold">تماس با ما</NuxtLink>
+                <NuxtLink to="/contact" class="py-3" active-class="text-primary font-semibold">تماس با ما</NuxtLink>
               </li>
             </ul>
           </nav>
@@ -309,7 +310,7 @@ function handleLogout() {
           </div>
 
           <nav class="flex-1 overflow-y-auto px-3 py-4">
-            <ul class="menu gap-1 text-sm font-medium">
+            <ul class="menu gap-1 text-sm font-medium w-full">
               <li v-for="item in dashboardMenuItems" :key="item.to">
                 <NuxtLink
                   :to="item.to"
