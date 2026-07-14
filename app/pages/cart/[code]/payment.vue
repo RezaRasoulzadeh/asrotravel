@@ -1,4 +1,4 @@
-<!-- app/pages/cart/checkout/[code].vue -->
+<!-- app/pages/cart/[code]/payment.vue -->
 <script setup lang="ts">
 import { WifiOff } from 'lucide-vue-next'
 import CartSteps from '~/components/cart/CartSteps.vue'
@@ -16,10 +16,24 @@ if (!isAuthenticated.value) {
 }
 
 const code = computed(() => route.params.code as string)
+const arrivedFresh = computed(() => route.query.fresh === '1')
 
-const { checkout, loading, error } = isAuthenticated.value
+const { checkout, loading, error, refresh } = isAuthenticated.value
   ? useCheckout(code)
-  : { checkout: ref(null), loading: ref(false), error: ref(null) }
+  : { checkout: ref(null), loading: ref(false), error: ref(null), refresh: async () => {} }
+
+const { refreshCartPrice, refreshing } = useCartRefresh()
+
+async function syncLatestPrice() {
+  if (!isAuthenticated.value || arrivedFresh.value) return
+
+  const { error: refreshErr } = await refreshCartPrice(code.value)
+  if (!refreshErr) {
+    await refresh()
+  }
+}
+
+onMounted(syncLatestPrice)
 
 const isPaying = ref(false)
 
@@ -49,8 +63,8 @@ function onCouponApplied(booking: CouponApplyBooking) {
   <div class="container mx-auto p-4 md:p-8 mt-24" dir="rtl">
     <CartSteps :current-step="3" />
 
-    <div v-if="loading" class="flex justify-center p-12">
-      <LoadingState v-if="loading" label="در حال دریافت اطلاعات پرداخت..." />
+    <div v-if="loading || refreshing" class="flex justify-center p-12">
+      <LoadingState label="در حال دریافت اطلاعات پرداخت..." />
     </div>
 
     <div

@@ -54,6 +54,10 @@ export interface CartAddResponse {
   return: CartAddPayload
 }
 
+export interface CartRefreshPayload {
+  booking_code: string
+}
+
 
 export interface VipCartAddServicePayload extends VipChangeDateSlot {
   service_type: string

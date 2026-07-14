@@ -54,7 +54,7 @@ const hasPaidAmount = computed(() => {
   return props.booking.paid !== null && props.booking.paid !== '' && !isNaN(num) && num > 0
 })
 const singleUrl = computed(() => `/${props.booking.objectModel.toLowerCase()}/${props.booking.slug ?? ''}`)
-const continueUrl = computed(() => `/cart/checkout/${props.booking.code}`)
+const continueUrl = computed(() => `/cart/${props.booking.code}/payment`)
 const continueLabel = computed(() => props.booking.status === 'partial_payment' ? 'پرداخت باقی‌مانده' : 'ادامه و پرداخت')
 
 async function handleCancel() {

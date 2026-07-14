@@ -427,7 +427,7 @@ const checkout = async () => {
       return
     }
     syncCheckoutSummaryState()
-    await navigateTo(`/cart/checkout/${data.booking_code}`)
+    await navigateTo(`/cart/${data.booking_code}/payment?fresh=1`)
   } finally {
     submitting.value = false
   }
