@@ -1,7 +1,7 @@
 # Asro Travel — Project Context & Scheme
 
 > Source: reverse-engineered directly from `github.com/RezaRasoulzadeh/asrotravel` (public repo, current `main`).
-> Last synced: 2026-07-14.
+> Last synced: 2026-07-15.
 
 ---
 
@@ -356,9 +356,11 @@ The ticket/pool (non-VIP) booking flow does not follow this same `service_id`/`p
 
 ## 11. TODO
 
-- [ ] Complete checkout: integrate payment gateways and their callbacks
+- [x] Complete checkout: integrate payment gateways and their callbacks — `usePayCheckout`/`useConfirmPayment` + `/cart/[code]/verify/[gateway]` page now handle the full pay → gateway redirect → callback confirm flow (saman/parsian)
+- [ ] Confirm exact backend path for organization-payment check (`server/api/booking/[code]/organization-check.get.ts` — inferred from convention, unverified)
+- [ ] Expand the Saman gateway `State` → message map beyond `CanceledByUser` (`server/utils/paymentErrors.ts`) once more raw values are confirmed from backend logs or bank docs
 - [ ] Unify and fix scroll position state across page navigations (mobile UX issues)
-- [ ] Wishlist / favorites fetch (backend)
+- [ ] Wishlist / favorites fetch (backend) — also gates `WISHLIST_ENABLED` flag in `server/api/dashboard/summary.get.ts`, currently hardcoded `false`
 - [ ] Profile image upload (backend)
 - [ ] Confirm support ticket priority enum values with backend
 - [ ] Confirm support ticket raw response shapes (list + show endpoint)
