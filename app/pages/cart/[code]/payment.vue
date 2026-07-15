@@ -35,19 +35,15 @@ async function syncLatestPrice() {
 
 onMounted(syncLatestPrice)
 
-const isPaying = ref(false)
+const { paying: isPaying, pay } = usePayCheckout()
 
-async function onPay(payload: { gateway: string; credit: number; howToPay: 'full' | 'deposit' }) {
-  if (isPaying.value) return
-  isPaying.value = true
-
-  try {
-    await new Promise(resolve => setTimeout(resolve, 2000))
-  } catch (err) {
-    useToast().error('خطا در ارتباط با سرور')
-  } finally {
-    isPaying.value = false
-  }
+async function onPay(payload: { gateway: string; credit: number; howToPay: 'full' | 'deposit'; organizationPayment?: boolean }) {
+  await pay(code.value, {
+    payment_gateway: payload.gateway || undefined,
+    credit: payload.credit,
+    how_to_pay: payload.howToPay,
+    organization_payment: payload.organizationPayment,
+  })
 }
 
 function onCouponApplied(booking: CouponApplyBooking) {

@@ -3,7 +3,9 @@
 import { Landmark, Loader2 } from 'lucide-vue-next'
 import type { CheckoutResponse, CouponApplyBooking } from '~/types/checkout.types'
 import { formatPrice } from '~/utils/price'
+import { DEFAULT_PAYMENT_GATEWAY } from '~/utils/payment'
 import CouponInput from '~/components/cart/CouponInput.vue'
+import OrganizationPaymentCheck from '~/components/cart/OrganizationPaymentCheck.vue'
 
 interface Props {
   checkout: CheckoutResponse
@@ -15,7 +17,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  pay: [payload: { gateway: string; credit: number; howToPay: 'full' | 'deposit' }]
+  pay: [payload: { gateway: string; credit: number; howToPay: 'full' | 'deposit'; organizationPayment?: boolean }]
   couponApplied: [booking: CouponApplyBooking]
 }>()
 
@@ -32,7 +34,9 @@ const { primaryStatusMessage, accessToPaid, countdownDisplay, countdownExpired, 
   useBookingStatus(props.checkout.booking.booking_code)
 
 const selectedGateway = ref<string | null>(
-  Object.keys(props.checkout.gateways)[0] ?? null
+  props.checkout.gateways[DEFAULT_PAYMENT_GATEWAY]
+    ? DEFAULT_PAYMENT_GATEWAY
+    : (Object.keys(props.checkout.gateways)[0] ?? null)
 )
 
 const payWithWallet = ref(false)
@@ -77,6 +81,8 @@ const payDisabled = computed(() =>
   statusLoading.value || !accessToPaid.value || (needsGateway.value && !selectedGateway.value) || props.loading
 )
 
+const isOrganizationUser = computed(() => !!user.value?.is_organization)
+
 function onPayClick() {
   if (payWithWallet.value && userWalletBalance.value <= 0) {
     useToast().error('مجاز به پرداخت از طریق کیف پول نیستید.')
@@ -88,6 +94,10 @@ function onPayClick() {
     credit: walletCredit.value,
     howToPay: payWithWallet.value ? 'deposit' : 'full',
   })
+}
+
+function onOrganizationConfirmed() {
+  emit('pay', { gateway: '', credit: 0, howToPay: 'deposit', organizationPayment: true })
 }
 </script>
 
@@ -148,6 +158,12 @@ function onPayClick() {
       </ul>
 
       <div v-if="needsGateway" class="mt-4">
+        <OrganizationPaymentCheck
+          v-if="isOrganizationUser"
+          :booking-code="checkout.booking.booking_code"
+          :payable-total="remainingAfterWallet"
+          @confirmed="onOrganizationConfirmed"
+        />
         <div class="bg-success/10 text-success text-xs rounded-xl px-3 py-2 mb-3">
           پرداخت با تمام کارت‌های بانکی عضو شبکه شتاب.
         </div>

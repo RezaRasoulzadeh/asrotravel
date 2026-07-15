@@ -130,3 +130,31 @@ export interface CheckoutResponse {
   parent: CheckoutParent
   gateways: CheckoutGateways
 }
+
+export interface CheckoutOrganizationCheck {
+  access_to_organization: boolean
+  message?: string
+  title?: string
+  avatar_url?: { image_url: string } | null
+  user_organization_balance?: number
+}
+
+export interface CheckoutPaymentPayload {
+  payment_gateway?: string
+  credit: number
+  how_to_pay: 'full' | 'deposit'
+  organization_payment?: boolean
+  mobile?: string
+}
+
+export interface CheckoutPaymentResponse {
+  message?: string
+  url?: string
+  script?: string
+}
+
+export interface CheckoutGatewayConfirmResponse {
+  status?: number
+  message?: string
+  [key: string]: unknown
+}
