@@ -1,7 +1,9 @@
 <!-- app/pages/dashboard/my-wallet.vue -->
 <script setup lang="ts">
 import { ArrowDownToLine, ArrowUpFromLine, ShieldCheck, Sparkles, Loader2 } from 'lucide-vue-next'
-import { formatPrice } from '~/utils/price'
+import { formatPrice, rialToToman, tomanToRial } from '~/utils/price'
+import { DEFAULT_PAYMENT_GATEWAY } from '~/utils/payment'
+import { parsePersianInt } from '~/utils/number'
 import type { ActivateWalletFormPayload } from '~/composables/useWallet'
 
 definePageMeta({ layout: 'dashboard' })
@@ -50,33 +52,30 @@ const depositForm = reactive<{ amount: string; gateway: string; option: number |
 const depositTouched = ref(false)
 const depositMax = 200000000
 
-function parsePersianInt(str: string) {
-  if (!str) return ''
-  return str
-    .replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
-    .replace(/[٠-٩]/g, d => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
-    .replace(/\D/g, '')
-}
+watch(() => depositData.value?.gateways, (gateways) => {
+  if (!gateways || depositForm.gateway) return
+  depositForm.gateway = gateways[DEFAULT_PAYMENT_GATEWAY] ? DEFAULT_PAYMENT_GATEWAY : (Object.keys(gateways)[0] ?? '')
+}, { immediate: true })
 
 const displayDepositAmount = computed({
   get() {
     if (!depositForm.amount) return ''
-    return Number(Number(depositForm.amount) / 10).toLocaleString('fa-IR')
+    return rialToToman(depositForm.amount).toLocaleString('fa-IR')
   },
   set(val) {
     const englishNumber = parsePersianInt(val)
-    depositForm.amount = englishNumber ? String(Number(englishNumber) * 10) : ''
+    depositForm.amount = englishNumber ? String(tomanToRial(englishNumber)) : ''
   }
 })
 
 const displayWithdrawAmount = computed({
   get() {
     if (!withdrawForm.amount) return ''
-    return Number(Number(withdrawForm.amount) / 10).toLocaleString('fa-IR')
+    return rialToToman(withdrawForm.amount).toLocaleString('fa-IR')
   },
   set(val) {
     const englishNumber = parsePersianInt(val)
-    withdrawForm.amount = englishNumber ? String(Number(englishNumber) * 10) : ''
+    withdrawForm.amount = englishNumber ? String(tomanToRial(englishNumber)) : ''
   }
 })
 
@@ -304,8 +303,16 @@ async function submitWithdraw() {
             <fieldset class="fieldset gap-1.5 mb-4">
               <legend class="fieldset-legend">مبلغ برداشت</legend>
               <label class="input w-full flex items-center gap-2" dir="ltr">
-                <input v-model="displayWithdrawAmount" type="text" class="grow text-left font-medium" placeholder="۰" />
                 <span class="text-base-content/60 text-sm shrink-0" dir="rtl">تومان</span>
+                <input v-model="displayWithdrawAmount" type="text" class="grow text-left text-lg font-medium" placeholder="۰" />
+                <button
+                  v-if="balance > 0"
+                  type="button"
+                  class="text-xs text-primary font-medium shrink-0"
+                  @click="withdrawForm.amount = String(balance)"
+                >
+                  حداکثر
+                </button>
               </label>
               <p v-if="withdrawTouched && withdrawErrors.amount" class="text-xs text-error">{{ withdrawErrors.amount }}</p>
               <p v-else class="text-xs text-base-content/40">

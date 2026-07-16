@@ -106,7 +106,7 @@ async function handleCancel() {
         </div>
         <div v-if="hasWalletUsage" class="flex items-center justify-between text-info">
           <span class="flex items-center gap-1"><Wallet :size="14" />استفاده از کیف پول</span>
-          <span>{{ toFaNumber(booking.walletTotalUsed) }}</span>
+          <span>{{ formatPrice(booking.walletTotalUsed) }}</span>
         </div>
         <div v-if="hasPaidAmount" class="flex justify-between font-medium border-t border-base-300 pt-1 mt-1">
           <span>مبلغ پرداخت‌شده</span><span>{{ formatPrice(booking.paid) }}</span>

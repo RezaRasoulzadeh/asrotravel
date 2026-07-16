@@ -14,11 +14,13 @@ import type { Component } from 'vue'
 import { BOOKING_STATUS_BADGE, BOOKING_STATUS_LABELS } from '~/types/dashboardBookings.types'
 import type { BookingObjectModel, DashboardSummary } from '~/types/dashboardBookings.types'
 import LoadingState from '~/components/ui/LoadingState.vue'
+import { formatPrice } from '~/utils/price'
 
 definePageMeta({ layout: 'dashboard' })
 useSeoMeta({ title: 'داشبورد | آسروتراول' })
 
-const { user, fullName } = useAuth()
+const { fullName } = useAuth()
+const { balance: walletBalance, fetchWallet } = useWallet()
 
 const greeting = computed(() => {
   const h = new Date().getHours()
@@ -38,7 +40,10 @@ async function fetchSummary() {
   summaryLoading.value = false
 }
 
-onMounted(fetchSummary)
+onMounted(() => {
+  fetchSummary()
+  fetchWallet()
+})
 
 interface DashboardStat {
   label: string
@@ -60,7 +65,7 @@ const stats = computed<DashboardStat[]>(() => [
   },
   {
     label: 'موجودی کیف پول',
-    value: Number(user.value?.wallet?.balance ?? 0).toLocaleString('fa-IR'),
+    value: formatPrice(walletBalance.value),
     icon: Wallet,
     color: 'text-success',
     bg: 'bg-success/10',

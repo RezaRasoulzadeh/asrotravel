@@ -9,6 +9,7 @@ import type {
   WalletUserDto,
   WalletWithdrawPayload,
 } from '~/types/wallet.types'
+import { DEFAULT_PAYMENT_GATEWAY } from '~/utils/payment'
 
 export interface ActivateWalletFormPayload {
   account_name: string
@@ -120,9 +121,14 @@ export function useWallet() {
     if (actionLoading.value) return { ok: false }
     actionLoading.value = true
 
+    const body: WalletDepositPayload = {
+      ...payload,
+      payment_gateway: payload.payment_gateway || DEFAULT_PAYMENT_GATEWAY,
+    }
+
     const result = await usePrivateApiFetch<WalletDepositResponse>(
       '/api/wallet/deposit',
-      { method: 'POST', body: payload },
+      { method: 'POST', body },
       'خطا در اتصال به درگاه پرداخت. لطفا دوباره تلاش کنید',
     )
     actionLoading.value = false

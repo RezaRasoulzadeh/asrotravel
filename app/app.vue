@@ -17,5 +17,8 @@ useHead(() => ({
 }))
 
 const { captureReferral } = useReferral()
-onMounted(() => captureReferral())
+onMounted(() => {
+  window.scrollTo(0, 0)
+  captureReferral()
+})
 </script>

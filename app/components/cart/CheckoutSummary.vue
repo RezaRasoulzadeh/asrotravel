@@ -2,8 +2,9 @@
 <script setup lang="ts">
 import { Landmark, Loader2 } from 'lucide-vue-next'
 import type { CheckoutResponse, CouponApplyBooking } from '~/types/checkout.types'
-import { formatPrice } from '~/utils/price'
+import { formatPrice, rialToToman, tomanToRial } from '~/utils/price'
 import { DEFAULT_PAYMENT_GATEWAY } from '~/utils/payment'
+import { parsePersianInt } from '~/utils/number'
 import CouponInput from '~/components/cart/CouponInput.vue'
 import OrganizationPaymentCheck from '~/components/cart/OrganizationPaymentCheck.vue'
 
@@ -66,10 +67,10 @@ watch(maxWalletCredit, (max) => {
 })
 
 const walletCreditDisplay = computed({
-  get: () => walletCredit.value > 0 ? walletCredit.value.toLocaleString('fa-IR') : '',
+  get: () => walletCredit.value > 0 ? rialToToman(walletCredit.value).toLocaleString('fa-IR') : '',
   set: (val: string) => {
-    const digits = val.replace(/[^\d]/g, '')
-    const num = digits ? Number(digits) : 0
+    const digits = parsePersianInt(val)
+    const num = digits ? tomanToRial(digits) : 0
     walletCredit.value = Math.min(num, maxWalletCredit.value)
   },
 })
@@ -134,12 +135,12 @@ function onOrganizationConfirmed() {
       <ul v-if="payWithWallet" class="mt-4 space-y-2 text-sm">
         <li class="flex justify-between">
           <span class="text-base-content/70">اعتبار کیف پول شما:</span>
-          <span class="text-primary font-medium">{{ userWalletBalance.toLocaleString('fa-IR') }} تومان</span>
+          <span class="text-primary font-medium">{{ formatPrice(userWalletBalance) }}</span>
         </li>
         <li class="flex justify-between items-center">
           <span class="text-base-content/70">اعتبار مورد نیاز:</span>
           <span class="cursor-pointer text-base-content/80" @click="walletCredit = maxWalletCredit">
-            {{ maxWalletCredit.toLocaleString('fa-IR') }} تومان
+            {{ formatPrice(maxWalletCredit) }}
           </span>
         </li>
         <li class="flex justify-between items-center gap-3">
