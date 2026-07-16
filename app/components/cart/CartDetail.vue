@@ -118,7 +118,7 @@ const checkout = async () => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
                 <div class="flex justify-between items-center bg-base-200/50 p-4 rounded-xl">
                     <span class="text-base-content/70">قیمت بلیت:</span>
-                    <span class="font-bold">{{ selectedSlot.display_price_object?.price_with_offer_display ||
+                    <span class="font-bold">{{ selectedSlot.display_price_object?.origin_price_display ||
                         selectedSlot.price_with_offer_display }}</span>
                 </div>
 
