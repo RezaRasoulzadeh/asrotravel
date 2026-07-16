@@ -95,7 +95,7 @@ watch(priceRange, (range) => {
 const priceMax = computed(() => priceRange.value?.max ?? PRICE_FALLBACK_MAX)
 
 const sidebarOpen = ref(false)
-const resultHeaderVisible = ref(true)
+const { resultHeaderVisible } = useResultHeaderScroll()
 
 const activeFilterCount = computed(() => {
   let n = 0
@@ -154,19 +154,6 @@ function clearAndClose() {
 
 watch(localMinPrice, (v) => { if (v > localMaxPrice.value) localMaxPrice.value = v })
 watch(localMaxPrice, (v) => { if (v < localMinPrice.value) localMinPrice.value = v })
-
-function handleWindowScroll() {
-  resultHeaderVisible.value = window.scrollY < 80
-}
-
-onMounted(() => {
-  handleWindowScroll()
-  window.addEventListener('scroll', handleWindowScroll, { passive: true })
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', handleWindowScroll)
-})
 
 const pages = computed(() => {
   const arr: (number | '...')[] = []

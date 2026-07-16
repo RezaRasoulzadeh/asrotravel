@@ -52,7 +52,7 @@ export type BookingAction = 'continue' | 'cancel' | 'rebook' | 'review'
 export const BOOKING_STATUS_ACTIONS: Record<BookingStatus, BookingAction[]> = {
   draft: ['continue'],
   unpaid: ['continue'],
-  error_payment: ['continue'],
+  error_payment: ['rebook'],
   processing: [],
   accepted: [],
   confirmed: ['continue'],

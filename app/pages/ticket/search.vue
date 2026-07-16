@@ -43,7 +43,7 @@ const localMaxPrice = ref(filters.value.max_price ?? PRICE_FALLBACK_MAX)
 const localTerms = ref<number[]>([...(filters.value.terms ?? [])])
 
 const sidebarOpen = ref(false)
-const resultHeaderVisible = ref(true)
+const { resultHeaderVisible } = useResultHeaderScroll()
 
 const priceMax = computed(() => priceRange.value?.max ?? PRICE_FALLBACK_MAX)
 
@@ -98,19 +98,6 @@ watch(localDestination, (location) => {
 })
 
 fetchAttributes(localDestination.value)
-
-function handleWindowScroll() {
-  resultHeaderVisible.value = window.scrollY < 80
-}
-
-onMounted(() => {
-  handleWindowScroll()
-  window.addEventListener('scroll', handleWindowScroll, { passive: true })
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', handleWindowScroll)
-})
 
 const pages = computed(() => {
   const arr: (number | '...')[] = []

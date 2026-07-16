@@ -76,7 +76,7 @@ const priceMax = computed(() => {
 
 // ── Mobile sidebar ─────────────────────────────────────────
 const sidebarOpen = ref(false)
-const resultHeaderVisible = ref(true)
+const { resultHeaderVisible } = useResultHeaderScroll()
 
 // ── Active filter count for badge ─────────────────────────
 const activeFilterCount = computed(() => {
@@ -147,19 +147,6 @@ watch([minMaxRange, apiCategories], () => {
     ) {
         localCategory.value = ''
     }
-})
-
-function handleWindowScroll() {
-    resultHeaderVisible.value = window.scrollY < 80
-}
-
-onMounted(() => {
-    handleWindowScroll()
-    window.addEventListener('scroll', handleWindowScroll, { passive: true })
-})
-
-onUnmounted(() => {
-    window.removeEventListener('scroll', handleWindowScroll)
 })
 
 const pages = computed(() => {

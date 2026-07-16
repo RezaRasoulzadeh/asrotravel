@@ -11,7 +11,7 @@ const { categories, loading: attrLoading, fetchAttributes } = usePlaceSearchAttr
 useHead({ title: 'جستجوی جاذبه‌های گردشگری', meta: [{ name: 'description', content: 'جستجو و کشف جاذبه‌های گردشگری ایران' }] })
 
 const sidebarOpen = ref(false)
-const resultHeaderVisible = ref(true)
+const { resultHeaderVisible } = useResultHeaderScroll()
 const expandedCategories = ref<Record<number, boolean>>({})
 const locationSlug = computed(() => (Array.isArray(route.params.slug) ? route.params.slug[0] : route.params.slug) ?? '')
 const localCat = ref((route.query.cat as string) ?? '')
@@ -63,7 +63,6 @@ const pages = computed(() => {
 })
 
 onMounted(() => {
-    window.addEventListener('scroll', () => { resultHeaderVisible.value = window.scrollY < 80 }, { passive: true })
     fetchAttributes(localCat.value)
     fetchPlaces({ location: locationSlug.value || undefined, cat: localCat.value || undefined, page: 1 })
 })

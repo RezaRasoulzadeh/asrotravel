@@ -21,10 +21,10 @@ import logoLight from '~/assets/images/logo-light.svg'
 import logoDark from '~/assets/images/logo-dark.svg'
 import enamadImg from '~/assets/images/enamad.webp'
 import culturalHeritageImg from '~/assets/images/culturalHeritageImg.png'
-import ecunionImg from '~/assets/images/samandehi.png'
+import ecunionImg from '~/assets/images/ecunionImg.png'
 import samandehiImg from '~/assets/images/samandehi.png'
-import airaImg from '~/assets/images/samandehi.png'
-import daneshBonyanImg from '~/assets/images/samandehi.png'
+import airaImg from '~/assets/images/aira.png'
+import daneshBonyanImg from '~/assets/images/daneshBonyanImg.png'
 
 const route = useRoute()
 const router = useRouter()
