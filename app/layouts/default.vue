@@ -2,6 +2,9 @@
 <script setup lang="ts">
 import {
   Instagram,
+  Twitter,
+  Linkedin,
+  Facebook,
   MoonIcon,
   Sun,
   User2,
@@ -16,6 +19,12 @@ import {
 } from 'lucide-vue-next'
 import logoLight from '~/assets/images/logo-light.svg'
 import logoDark from '~/assets/images/logo-dark.svg'
+import enamadImg from '~/assets/images/enamad.webp'
+import culturalHeritageImg from '~/assets/images/culturalHeritageImg.png'
+import ecunionImg from '~/assets/images/samandehi.png'
+import samandehiImg from '~/assets/images/samandehi.png'
+import airaImg from '~/assets/images/samandehi.png'
+import daneshBonyanImg from '~/assets/images/samandehi.png'
 
 const route = useRoute()
 const router = useRouter()
@@ -38,6 +47,15 @@ const isDashboardMenuOpen = ref(false)
 const isDesktopUserOpen = ref(false)
 const desktopUserRef = ref<HTMLElement | null>(null)
 onClickOutside(desktopUserRef, () => { isDesktopUserOpen.value = false })
+
+const licences = [
+  { title: 'نماد اعتماد', link: 'https://trustseal.enamad.ir/?id=329138&Code=NjghlHMaoxQ5jbCZvDGg', image: enamadImg },
+  { title: 'میراث فرهنگی', link: 'http://ardabilchto.ir/0/FA', image: culturalHeritageImg },
+  { title: 'اتحادیه کسب و کارهای مجازی', link: '', image: ecunionImg },
+  { title: 'ساماندهی', link: '', image: samandehiImg },
+  { title: 'نرخ بلیط', link: '', image: airaImg },
+  { title: 'دانش‌بنیان', link: 'https://daneshbonyan.isti.ir', image: daneshBonyanImg },
+]
 
 const dashboardMenuItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'داشبورد' },
@@ -394,12 +412,16 @@ function handleLogout() {
         <div class="flex flex-col gap-3">
           <h4 class="font-bold text-sm text-base-content/90 border-r-2 border-primary pr-2 leading-none">مجوزهای قانونی</h4>
           <div class="flex gap-2 flex-wrap">
-            <div class="size-16 rounded-xl bg-base-100 border border-base-300/60 flex items-center justify-center p-2 text-[10px] text-base-content/40 text-center font-medium shadow-xs">
-              نماد الکترونیک
-            </div>
-            <div class="size-16 rounded-xl bg-base-100 border border-base-300/60 flex items-center justify-center p-2 text-[10px] text-base-content/40 text-center font-medium shadow-xs">
-              نشان ملی ثبت
-            </div>
+            <a
+              v-for="(item, key) in licences"
+              :key="key"
+              :href="item.link"
+              target="_blank"
+              rel="nofollow"
+              class="size-20 rounded-xl bg-white border border-base-300/60 flex items-center justify-center p-1.5 shadow-xs overflow-hidden"
+            >
+              <img :src="item.image" :alt="item.title" class="max-h-full max-w-full object-cover" loading="lazy" />
+            </a>
           </div>
         </div>
 
@@ -409,12 +431,12 @@ function handleLogout() {
         <div class="max-w-480 mx-auto px-6 lg:px-16 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p class="text-xs text-base-content/50 font-medium">© ۱۴۰۵ آسرو — تمامی حقوق مادی و معنوی محفوظ است.</p>
           <div class="flex gap-2">
-            <a href="https://instagram.com/asroofficial" target="_blank"
+            <a href="#" target="_blank" rel="nofollow"
               class="btn btn-sm btn-circle btn-ghost text-base-content/60 hover:text-primary transition-colors"
-              aria-label="اینستاگرام">
-              <Instagram class="size-5" />
+              aria-label="تویتر">
+              <Twitter class="size-5" />
             </a>
-            <a href="https://t.me/asroofficial" target="_blank"
+            <a href="https://t.me/asroofficial" target="_blank" rel="nofollow"
               class="btn btn-sm btn-circle btn-ghost text-base-content/60 hover:text-primary transition-colors"
               aria-label="تلگرام">
               <svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="none"
@@ -422,6 +444,21 @@ function handleLogout() {
                 <line x1="22" y1="2" x2="11" y2="13" />
                 <polygon points="22 2 15 22 11 13 2 9 22 2" />
               </svg>
+            </a>
+            <a href="#" target="_blank" rel="nofollow"
+              class="btn btn-sm btn-circle btn-ghost text-base-content/60 hover:text-primary transition-colors"
+              aria-label="لینکدین">
+              <Linkedin class="size-5" />
+            </a>
+            <a href="https://facebook.com/asroofficial" target="_blank" rel="nofollow"
+              class="btn btn-sm btn-circle btn-ghost text-base-content/60 hover:text-primary transition-colors"
+              aria-label="فیسبوک">
+              <Facebook class="size-5" />
+            </a>
+            <a href="https://instagram.com/asroofficial" target="_blank" rel="nofollow"
+              class="btn btn-sm btn-circle btn-ghost text-base-content/60 hover:text-primary transition-colors"
+              aria-label="اینستاگرام">
+              <Instagram class="size-5" />
             </a>
           </div>
           <div class="flex items-center gap-1" dir="ltr">
