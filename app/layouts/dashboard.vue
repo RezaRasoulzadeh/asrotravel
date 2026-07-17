@@ -24,7 +24,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'داشبورد', labelShort: 'خانه' },
+  { to: '/dashboard', icon: LayoutDashboard, label: 'داشبورد', labelShort: 'داشبورد' },
   { to: '/dashboard/profile', icon: User, label: 'پروفایل', labelShort: 'پروفایل' },
   { to: '/dashboard/bookings', icon: CalendarCheck, label: 'رزروهای من', labelShort: 'رزروها' },
   { to: '/dashboard/my-wallet', icon: Wallet, label: 'کیف پول', labelShort: 'کیف پول' },
@@ -32,7 +32,7 @@ const navItems: NavItem[] = [
 ]
 
 const mobileNavItems: NavItem[] = [
-  { to: '/', icon: Home, label: 'خانه', labelShort: 'خانه' },
+  { to: '/', icon: Home, label: 'صفحه اصلی', labelShort: 'صفحه اصلی' },
   ...navItems,
 ]
 

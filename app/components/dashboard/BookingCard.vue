@@ -4,10 +4,14 @@ import { Calendar, MapPin, PlayCircle, RotateCcw, Star, Ticket, Users, Wallet, X
 import type { DashboardBookingDto } from '~/types/dashboardBookings.types'
 import { BOOKING_STATUS_ACTIONS, BOOKING_STATUS_BADGE, BOOKING_STATUS_LABELS, RESERVATION_CODE_VISIBLE_STATUSES } from '~/types/dashboardBookings.types'
 
-const props = defineProps<{ booking: DashboardBookingDto }>()
+const props = defineProps<{ booking: DashboardBookingDto, autoExpand?: boolean }>()
 const emit = defineEmits<{ cancel: [string] }>()
 
 const cancelling = ref(false)
+const isOpen = ref(!!props.autoExpand)
+watch(() => props.autoExpand, (val) => {
+  if (val) isOpen.value = true
+})
 
 const statusLabel = computed(() =>
   BOOKING_STATUS_LABELS[props.booking.status as keyof typeof BOOKING_STATUS_LABELS] ?? props.booking.statusText,
@@ -18,6 +22,12 @@ const statusBadgeClass = computed(() =>
 const actions = computed(() =>
   BOOKING_STATUS_ACTIONS[props.booking.status as keyof typeof BOOKING_STATUS_ACTIONS] ?? [],
 )
+
+const showReservationCode = computed(() =>
+  RESERVATION_CODE_VISIBLE_STATUSES.includes(props.booking.status as typeof RESERVATION_CODE_VISIBLE_STATUSES[number])
+  && !!props.booking.reservationCode,
+)
+const { qrDataUrl: reservationQrDataUrl } = useQrCode(computed(() => showReservationCode.value ? props.booking.reservationCode : null))
 
 function toFaNumber(value: number | string): string {
   return Number(value).toLocaleString('fa-IR', { useGrouping: false })
@@ -41,10 +51,6 @@ function formatCreatedAt(iso: string) {
 
 const formattedCreated = computed(() => formatCreatedAt(props.booking.createdAt))
 const formattedTime = computed(() => props.booking.timeDisplay ? toFaDigitsInString(props.booking.timeDisplay) : null)
-const showReservationCode = computed(() =>
-  RESERVATION_CODE_VISIBLE_STATUSES.includes(props.booking.status as typeof RESERVATION_CODE_VISIBLE_STATUSES[number])
-  && !!props.booking.reservationCode,
-)
 
 const hasWalletUsage = computed(() => props.booking.walletTotalUsed > 0)
 const hasDiscount = computed(() => !!props.booking.couponAmountDisplay && props.booking.couponAmountDisplay.trim() !== '۰ تومان')
@@ -66,8 +72,12 @@ async function handleCancel() {
 </script>
 
 <template>
-  <div class="collapse collapse-arrow bg-base-100 border border-base-300 rounded-2xl">
-    <input type="checkbox" class="peer">
+  <div
+    :id="`booking-${booking.code}`"
+    class="collapse collapse-arrow bg-base-100 border rounded-2xl transition-shadow"
+    :class="autoExpand ? 'border-primary ring-2 ring-primary/30' : 'border-base-300'"
+  >
+    <input v-model="isOpen" type="checkbox" class="peer">
     <div class="collapse-title flex items-center gap-3">
       <div class="flex-1 grid gap-1">
         <div class="flex items-center justify-between gap-2">
@@ -86,11 +96,20 @@ async function handleCancel() {
     <div class="collapse-content">
       <div class="divider my-1" />
 
+      <div v-if="showReservationCode" class="flex items-center gap-4 bg-primary/10 border border-primary/20 rounded-2xl p-4 mb-3">
+        <img
+          v-if="reservationQrDataUrl"
+          :src="reservationQrDataUrl"
+          alt="کد QR رزرو"
+          class="size-20 rounded-lg bg-base-100 p-1.5 border border-primary/20 shrink-0"
+        >
+        <div class="min-w-0">
+          <p class="text-xs text-base-content/60 mb-1 flex items-center gap-1"><Ticket :size="13" />کد رزرو</p>
+          <p class="text-3xl font-extrabold tracking-wide text-primary font-mono">{{ booking?.reservationCode ?? '—' }}</p>
+        </div>
+      </div>
+
       <div class="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-sm text-base-content/70 mb-3">
-        <p v-if="showReservationCode" class="flex items-center gap-1.5">
-          <Ticket :size="14" />کد رزرو:
-          <span class="text-base font-bold text-base-content">{{ toFaNumber(booking.reservationCode!) }}</span>
-        </p>
         <p>تاریخ ثبت: {{ formattedCreated }}</p>
         <p v-if="formattedTime">ساعت: {{ formattedTime }}</p>
         <p v-if="booking.childCount > 0">تعداد کودک: {{ toFaNumber(booking.childCount) }} نفر</p>

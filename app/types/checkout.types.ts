@@ -153,8 +153,18 @@ export interface CheckoutPaymentResponse {
   script?: string
 }
 
+export interface CheckoutGatewayConfirmBookingData {
+  ticket_quantity: number
+  ticket_code: number | string
+  booking_date: string
+  created_date: string
+  status_text: string
+  amount: string
+}
+
 export interface CheckoutGatewayConfirmResponse {
   status?: number
   message?: string
+  booking_data?: CheckoutGatewayConfirmBookingData
   [key: string]: unknown
 }

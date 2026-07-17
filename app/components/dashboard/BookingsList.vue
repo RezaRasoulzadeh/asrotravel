@@ -4,14 +4,30 @@ import { ArrowUpDown, Check, ChevronDown, Loader2, SearchX, SlidersHorizontal, W
 import BookingsTabs from '~/components/dashboard/BookingsTabs.vue'
 import BookingCard from '~/components/dashboard/BookingCard.vue'
 import { BOOKING_SORT_LABELS, BOOKING_STATUS_LABELS } from '~/types/dashboardBookings.types'
-import type { BookingSortOption, BookingStatus } from '~/types/dashboardBookings.types'
+import type { BookingSortOption, BookingStatus, BookingTab } from '~/types/dashboardBookings.types'
 import LoadingState from '../ui/LoadingState.vue'
+
+const route = useRoute()
+const VALID_TABS: BookingTab[] = ['pool', 'hotel', 'ticket']
+const queryTab = route.query.tab as BookingTab | undefined
+const initialTab: BookingTab = queryTab && VALID_TABS.includes(queryTab) ? queryTab : 'pool'
+const targetReservation = computed(() => (route.query.reservation as string | undefined)?.trim() || null)
+const scrolledToTarget = ref(false)
 
 const {
   tab, status, sort, search, items, loading, loadingAll, error, total,
   hasMore, isEmpty, isFiltered,
   fetchPage, loadMore, switchTab, setStatus, setSort, setSearch, cancelBooking,
-} = useDashboardBookings('pool')
+} = useDashboardBookings(initialTab)
+
+watch(items, async () => {
+  if (!targetReservation.value || scrolledToTarget.value) return
+  const match = items.value.find(item => item.reservationCode === targetReservation.value)
+  if (!match) return
+  scrolledToTarget.value = true
+  await nextTick()
+  document.getElementById(`booking-${match.code}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+})
 
 const searchInput = ref(search.value)
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -166,7 +182,11 @@ function clearFilters() {
     </div>
 
     <template v-else>
-      <BookingCard v-for="item in items" :key="item.code" :booking="item" @cancel="cancelBooking" />
+      <BookingCard
+        v-for="item in items" :key="item.code" :booking="item"
+        :auto-expand="!!targetReservation && item.reservationCode === targetReservation"
+        @cancel="cancelBooking"
+      />
     </template>
 
     <div v-if="hasMore" ref="sentinel" class="h-4" />

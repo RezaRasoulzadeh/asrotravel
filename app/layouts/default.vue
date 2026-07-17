@@ -16,6 +16,7 @@ import {
   CalendarCheck,
   Wallet,
   HeadphonesIcon,
+  ChevronDown,
 } from 'lucide-vue-next'
 import logoLight from '~/assets/images/logo-light.svg'
 import logoDark from '~/assets/images/logo-dark.svg'
@@ -25,6 +26,7 @@ import ecunionImg from '~/assets/images/ecunionImg.png'
 import samandehiImg from '~/assets/images/samandehi.png'
 import airaImg from '~/assets/images/aira.png'
 import daneshBonyanImg from '~/assets/images/daneshBonyanImg.png'
+import { C } from 'vue-router/dist/index-BQLwgiyK.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -156,6 +158,7 @@ function handleLogout() {
             >
               <UiAvatar :src="user?.ImageUrl" :name="fullName" size="sm" />
               <span class="max-w-24 truncate text-sm">{{ fullName }}</span>
+              <ChevronDown class="size-4 text-base-content" />
             </button>
             <Transition name="menu-fade">
               <ul
@@ -211,10 +214,11 @@ function handleLogout() {
 
           <button
             v-if="isAuthenticated"
-            class="btn btn-ghost btn-sm btn-circle transition-colors"
+            class="flex flex-row btn btn-ghost btn-sm transition-colors"
             aria-label="باز کردن منوی حساب کاربری"
             @click="isDashboardMenuOpen = true"
           >
+          <ChevronDown class="size-4 text-base-content" />
             <UiAvatar :src="user?.ImageUrl" :name="fullName" size="sm" />
           </button>
           <NuxtLink

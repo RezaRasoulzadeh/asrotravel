@@ -39,7 +39,7 @@ function handleRetry() {
     <div class="flex items-center justify-between gap-2 flex-wrap">
       <UiSegmentedTabs :model-value="sort" :items="sortTabs" @update:model-value="setSort" />
 
-      <NuxtLink to="/dashboard/support/new" class="btn btn-primary btn-sm rounded-xl gap-1">
+      <NuxtLink to="/dashboard/support/new" class="btn btn-primary btn-soft w-full lg:w-auto rounded-xl gap-1">
         <MessageCircleQuestion :size="16" />
         تیکت جدید
       </NuxtLink>

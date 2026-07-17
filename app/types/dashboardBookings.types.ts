@@ -3,6 +3,12 @@
 export type BookingTab = 'pool' | 'hotel' | 'ticket'
 export type BookingObjectModel = 'Pool' | 'Hotel' | 'Ticket'
 
+export const MODEL_TO_TAB: Record<BookingObjectModel, BookingTab> = {
+  Pool: 'pool',
+  Hotel: 'hotel',
+  Ticket: 'ticket',
+}
+
 export type BookingStatus =
   | 'draft'
   | 'unpaid'

@@ -11,8 +11,8 @@ import {
   MapPin,
 } from 'lucide-vue-next'
 import type { Component } from 'vue'
-import { BOOKING_STATUS_BADGE, BOOKING_STATUS_LABELS } from '~/types/dashboardBookings.types'
-import type { BookingObjectModel, DashboardSummary } from '~/types/dashboardBookings.types'
+import { BOOKING_STATUS_BADGE, BOOKING_STATUS_LABELS, MODEL_TO_TAB, RESERVATION_CODE_VISIBLE_STATUSES } from '~/types/dashboardBookings.types'
+import type { BookingObjectModel, BookingStatus, DashboardSummary } from '~/types/dashboardBookings.types'
 import LoadingState from '~/components/ui/LoadingState.vue'
 import { formatPrice } from '~/utils/price'
 
@@ -100,12 +100,22 @@ const bookingIconMap: Record<BookingObjectModel, Component> = {
   Ticket,
 }
 
-const bookingRows = computed(() => summary.value.recent.map(booking => ({
-  ...booking,
-  icon: bookingIconMap[booking.objectModel] ?? Ticket,
-  statusLabel: BOOKING_STATUS_LABELS[booking.status as keyof typeof BOOKING_STATUS_LABELS] ?? booking.statusText,
-  statusClass: BOOKING_STATUS_BADGE[booking.status as keyof typeof BOOKING_STATUS_BADGE] ?? 'badge-neutral',
-})))
+const bookingRows = computed(() => summary.value.recent.map((booking) => {
+  const tab = MODEL_TO_TAB[booking.objectModel]
+  const showReservation = RESERVATION_CODE_VISIBLE_STATUSES.includes(booking.status as typeof RESERVATION_CODE_VISIBLE_STATUSES[number])
+    && !!booking.reservationCode
+
+  return {
+    ...booking,
+    icon: bookingIconMap[booking.objectModel] ?? Ticket,
+    statusLabel: BOOKING_STATUS_LABELS[booking.status as keyof typeof BOOKING_STATUS_LABELS] ?? booking.statusText,
+    statusClass: BOOKING_STATUS_BADGE[booking.status as keyof typeof BOOKING_STATUS_BADGE] ?? 'badge-neutral',
+    to: {
+      path: '/dashboard/bookings',
+      query: { tab, ...(showReservation ? { reservation: booking.reservationCode! } : {}) },
+    },
+  }
+}))
 
 const hasBookings = computed(() => !summaryLoading.value && bookingRows.value.length > 0)
 </script>
@@ -169,7 +179,10 @@ const hasBookings = computed(() => !summaryLoading.value && bookingRows.value.le
       </div>
 
       <div class="card bg-base-100 shadow-sm divide-y divide-base-200">
-        <div v-for="booking in bookingRows" :key="booking.code" class="flex items-center gap-3 px-4 py-3">
+        <NuxtLink
+          v-for="booking in bookingRows" :key="booking.code" :to="booking.to"
+          class="flex items-center gap-3 px-4 py-3 hover:bg-base-200/50 transition-colors"
+        >
           <div class="w-9 h-9 rounded-xl bg-base-200 flex items-center justify-center shrink-0">
             <component :is="booking.icon" :size="16" class="text-base-content/50" />
           </div>
@@ -182,7 +195,7 @@ const hasBookings = computed(() => !summaryLoading.value && bookingRows.value.le
           <span class="badge badge-sm badge-soft" :class="booking.statusClass">
             {{ booking.statusLabel }}
           </span>
-        </div>
+        </NuxtLink>
 
         <div v-if="summaryLoading" class="flex justify-center py-12">
           <LoadingState label="در حال دریافت رزروها..." />
