@@ -143,7 +143,7 @@ Use this (not raw `safeApiFetch`) for any action that should **auto-toast on err
 
 ### 4.4 Server route conventions
 
-- One file per endpoint, named by HTTP verb suffix: `[slug].get.ts`, `add.post.ts`, `[id]/cancel.post.ts`.
+- One file per endpoint, named by HTTP verb suffix: `[slug].get.ts`, `add.post.ts`, `cancel.post.ts`. Dynamic `[param]` segments are only used when the value truly comes from the URL — `bookings/cancel.post.ts` takes `id` from the body instead, since the client never had the id at request time as a route param.
 - Nearly all are thin proxies: extract params → `safeApiFetch(path, options, fallback)` → return.
 - `apiUrl(path)` (server/utils/api.ts) prefixes `runtimeConfig.apiBase` (`https://api.asrotravel.com/api` by default, overridable via `API_BASE_URL` env var).
 - Server utils are **Nitro auto-imported** — never `import` them explicitly from `~/server/...` inside a handler.
@@ -355,15 +355,12 @@ The ticket/pool (non-VIP) booking flow does not follow this same `service_id`/`p
 ---
 
 ## 11. TODO
-
-- [x] Complete checkout: integrate payment gateways and their callbacks — `usePayCheckout`/`useConfirmPayment` + `/cart/[code]/verify/[gateway]` page now handle the full pay → gateway redirect → callback confirm flow (saman/parsian)
 - [ ] Confirm exact backend path for organization-payment check (`server/api/booking/[code]/organization-check.get.ts` — inferred from convention, unverified)
 - [ ] Expand the Saman gateway `State` → message map beyond `CanceledByUser` (`server/utils/paymentErrors.ts`) once more raw values are confirmed from backend logs or bank docs
-- [ ] Unify and fix scroll position state across page navigations (mobile UX issues)
 - [ ] Wishlist / favorites fetch (backend) — also gates `WISHLIST_ENABLED` flag in `server/api/dashboard/summary.get.ts`, currently hardcoded `false`
 - [ ] Profile image upload (backend)
 - [ ] Confirm support ticket priority enum values with backend
-- [ ] Confirm support ticket raw response shapes (list + show endpoint)
 - [ ] Confirm profile gender value mapping (1/2)
 - [ ] Confirm FAQ category parameter values beyond `category=1`
 - [ ] Confirm dashboard bookings `status` query param is honored by backend
+- [ ] add `live chat` from old code

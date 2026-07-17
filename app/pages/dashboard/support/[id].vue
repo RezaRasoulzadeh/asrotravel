@@ -108,15 +108,15 @@ const statusBadgeClass = computed(() => {
         </p>
 
         <div v-for="msg in messages" :key="msg.id" class="flex gap-3 items-start"
-          :class="msg.isSupport ? 'justify-start' : 'justify-start flex-row-reverse'">
+          :class="msg.isSupport ? 'justify-start flex-row-reverse' : 'justify-start'">
           <UiAvatar :src="msg.isSupport ? null : (user?.ImageUrl ?? null)"
             :name="msg.isSupport ? (msg.userName || 'پشتیبانی') : fullName" size="sm" />
-          <div class="max-w-[80%] sm:max-w-[70%] flex flex-col" :class="msg.isSupport ? 'items-start' : 'items-end'">
+          <div class="max-w-[80%] sm:max-w-[70%] flex flex-col" :class="msg.isSupport ? 'items-end' : 'items-start'">
             <span class="text-xs font-medium text-base-content/60 mb-1">
               {{ msg.isSupport ? (msg.userName || 'پشتیبانی') : fullName }}
             </span>
             <div class="rounded-2xl px-4 py-2.5 text-sm leading-relaxed prose prose-sm max-w-none"
-              :class="msg.isSupport ? 'bg-base-200 rounded-tr-none' : 'bg-primary/10 rounded-tl-none'"
+              :class="msg.isSupport ? 'bg-primary/10 rounded-tl-none' : 'bg-base-200 rounded-tr-none'"
               v-html="msg.message" />
             <div class="flex items-center gap-2 mt-1 text-[11px] text-base-content/40">
               <span>{{ formatDate(msg.updatedAt) }}</span>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RefreshCw, ScrollText, SearchX, ShieldX, WifiOff } from 'lucide-vue-next'
+import { ChevronRight, RefreshCw, ScrollText, SearchX, ShieldX, WifiOff } from 'lucide-vue-next'
 import PoolPolicySection from '~/components/pool/PoolPolicySection.vue'
 import TicketList from '~/components/ticket/TicketList.vue'
 import TicketSingleHeader from '~/components/ticket/TicketSingleHeader.vue'
@@ -113,55 +113,36 @@ useHead({
     </button>
   </div>
 
-  <div v-else-if="!headerData" class="flex flex-col items-center justify-center py-16 gap-3 text-center px-4 min-h-[60vh]">
+  <div v-else-if="!headerData"
+    class="flex flex-col items-center justify-center py-16 gap-3 text-center px-4 min-h-[60vh]">
     <div class="size-14 rounded-full bg-base-200 flex items-center justify-center">
       <SearchX class="size-6 text-base-content/40" />
     </div>
     <p class="font-medium text-base-content">نتیجه‌ای یافت نشد</p>
+    <NuxtLink to="/ticket/search" class="inline-flex items-center gap-1 btn btn-primary btn-soft text-sm mb-4">
+      <ChevronRight :size="16" />
+      لیست مراکز تفریحی
+    </NuxtLink>
   </div>
 
   <div v-else class="mt-20 px-4 lg:px-16 max-w-960 mx-auto">
-<TicketSingleHeader
-  class="lg:pe-14"
-  :ticket="headerData"
-  :gallery="gallery"
-  :sanse-loading="sanseLoading"
-  @add-to-cart="handleAddToCart"
-/>
-<TicketSanseCalendar
-  v-if="sanse"
-  :services="sanse.services"
-  :ticket-slug="slug"
-  :service-active="!!ticket?.service_active"
-  v-model="selectedTicketId"
-  @add-to-cart="handleAddToCart"
-/>
+    <TicketSingleHeader class="lg:pe-14" :ticket="headerData" :gallery="gallery" :sanse-loading="sanseLoading"
+      @add-to-cart="handleAddToCart" />
+    <TicketSanseCalendar v-if="sanse" :services="sanse.services" :ticket-slug="slug"
+      :service-active="!!ticket?.service_active" v-model="selectedTicketId" @add-to-cart="handleAddToCart" />
 
     <div v-if="blocks.length" class="w-full max-w-960 mx-auto px-4 lg:px-10 bg-base-100 rounded-3xl py-4 lg:py-10 mt-6">
       <BlogRenderer :blocks="blocks" />
     </div>
 
-    <PoolPolicySection
-      v-if="terms_information.length"
-      title="قوانین و مقررات"
-      subtitle="استفاده از خدمات به منزله پذیرش این قوانین است."
-      :icon="ScrollText"
-      :blocks="terms_information"
-    />
+    <PoolPolicySection v-if="terms_information.length" title="قوانین و مقررات"
+      subtitle="استفاده از خدمات به منزله پذیرش این قوانین است." :icon="ScrollText" :blocks="terms_information" />
 
-    <PoolPolicySection
-      v-if="cancel_policy.length"
-      title="قوانین لغو رزرو"
-      subtitle="لطفاً پیش از رزرو، شرایط لغو را مطالعه کنید."
-      :icon="ShieldX"
-      :blocks="cancel_policy"
-    />
+    <PoolPolicySection v-if="cancel_policy.length" title="قوانین لغو رزرو"
+      subtitle="لطفاً پیش از رزرو، شرایط لغو را مطالعه کنید." :icon="ShieldX" :blocks="cancel_policy" />
 
-    <ReviewSecion
-      :params="{ object_id: ticket?.id ?? 0, object_model: 'Ticket', object_name: ticket?.slug ?? '' }"
-      :is-logged-in="false"
-      @login-click="router.push('/auth/login')"
-    />
+    <ReviewSecion :params="{ object_id: ticket?.id ?? 0, object_model: 'Ticket', object_name: ticket?.slug ?? '' }"
+      :is-logged-in="false" @login-click="router.push('/auth/login')" />
   </div>
 
   <FAQ v-if="ticket?.faqs?.length" :items="ticket.faqs" title="سوالات متداول" />

@@ -1,6 +1,6 @@
 // app/pages/pool/[slug].vue
 <script setup lang="ts">
-import { WifiOff, RefreshCw, SearchX, ScrollText, ShieldX } from 'lucide-vue-next'
+import { WifiOff, RefreshCw, SearchX, ScrollText, ShieldX, ChevronRight } from 'lucide-vue-next'
 import type { OpenHour, PoolSingleWithSanse } from '~/types/poolSingle.types'
 import { parseBlogHtml } from '~/utils/blog/parser'
 import PoolSingleHeader from '~/components/pool/PoolSingleHeader.vue'
@@ -48,7 +48,7 @@ const aggregatedData = computed<PoolSingleWithSanse | null>(() => {
 
 const is_vip = computed(() => {
   const ticket = Object.keys(aggregatedData.value?.services?.ticket ?? {}).length
-  const vip    = Object.keys(aggregatedData.value?.services?.vip    ?? {}).length
+  const vip = Object.keys(aggregatedData.value?.services?.vip ?? {}).length
   return ticket === 0 && vip > 0
 })
 
@@ -180,31 +180,22 @@ useHead({
       <SearchX class="size-6 text-base-content/40" />
     </div>
     <p class="font-medium text-base-content">نتیجه‌ای یافت نشد</p>
-    <p class="text-sm text-base-content/50 max-w-xs leading-relaxed">
-      هیچ موردی با فیلترهای انتخابی شما مطابقت ندارد.
-    </p>
+    <NuxtLink to="/pool/search" class="inline-flex items-center gap-1 btn btn-primary btn-soft text-sm mb-4">
+      <ChevronRight :size="16" />
+      لیست استخرها
+    </NuxtLink>
   </div>
 
   <div v-else class="pool-single-container mt-20 px-4 lg:px-16 max-w-960 mx-auto">
     <PoolSingleHeader class="lg:pe-14" :pool="aggregatedData" :gallery="gallery" :is_vip="is_vip" />
-<!-- Calendar / Sanse Section -->
-<div id="sans-section" class="scroll-mt-20">
-<PoolSanseCalendar
-    v-if="!is_vip && aggregatedData.services"
-    :services="aggregatedData.services"
-    :service-active="pool?.service_active == 1"
-    :pool-slug="aggregatedData.slug ?? slug"
-    v-model="selectedSlotUuid"
-    @add-to-cart="handleAddToCart"
-/>
-  <VipSanseSecion
-    v-else-if="is_vip && aggregatedData.services?.vip"
-    :vip-services="aggregatedData.services.vip"
-    :pool-id="aggregatedData.id"
-    :pool-title="aggregatedData.title"
-    :pool-slug="aggregatedData.slug ?? slug"
-  />
-</div>
+    <!-- Calendar / Sanse Section -->
+    <div id="sans-section" class="scroll-mt-20">
+      <PoolSanseCalendar v-if="!is_vip && aggregatedData.services" :services="aggregatedData.services"
+        :service-active="pool?.service_active == 1" :pool-slug="aggregatedData.slug ?? slug" v-model="selectedSlotUuid"
+        @add-to-cart="handleAddToCart" />
+      <VipSanseSecion v-else-if="is_vip && aggregatedData.services?.vip" :vip-services="aggregatedData.services.vip"
+        :pool-id="aggregatedData.id" :pool-title="aggregatedData.title" :pool-slug="aggregatedData.slug ?? slug" />
+    </div>
     <div v-if="blocks.length > 0"
       class="w-full max-w-960 mx-auto px-4 lg:px-10 bg-base-100 rounded-3xl py-4 lg:py-10 mt-6">
       <BlogRenderer :blocks="blocks" />
@@ -216,7 +207,7 @@ useHead({
     <ReviewSecion :params="{ object_id: pool?.id ?? 0, object_model: 'Pool', object_name: pool?.slug ?? '' }"
       :is-logged-in="false" @login-click="router.push('/auth/login')" />
   </div>
-      <FAQ v-if="pool?.faqs && pool.faqs.length > 0" :items="pool?.faqs || []" :title="'سوالات متداول'" />
-    <!-- Related Pools -->
-    <PoolList :pools="related" title="مجموعه‌های نزدیک" :tab_active="false" />
+  <FAQ v-if="pool?.faqs && pool.faqs.length > 0" :items="pool?.faqs || []" :title="'سوالات متداول'" />
+  <!-- Related Pools -->
+  <PoolList :pools="related" title="مجموعه‌های نزدیک" :tab_active="false" />
 </template>

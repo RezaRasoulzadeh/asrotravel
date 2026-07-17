@@ -1,6 +1,6 @@
 // app/pages/hotel/[slug].vue
 <script setup lang="ts">
-import { WifiOff, RefreshCw, SearchX, ScrollText } from 'lucide-vue-next'
+import { WifiOff, RefreshCw, SearchX, ScrollText, ChevronRight } from 'lucide-vue-next'
 import { parseBlogHtml } from '~/utils/blog/parser'
 import type { HotelCardItem, HotelMedia } from '~/types/hotel.types'
 import type { HotelCheckoutSlotState, HotelCheckoutSummaryState, HotelRoomSelection } from '~/types/cart.types'
@@ -128,7 +128,14 @@ useHead({
         <template v-else-if="!hotel">
             <div class="flex flex-col items-center py-16 gap-3 min-h-[60vh]">
                 <SearchX class="size-10 text-base-content/40" />
+                <p class="font-medium text-base-content">نتیجه‌ای یافت نشد</p>
+                <NuxtLink to="/hotel/search"
+                    class="inline-flex items-center gap-1 btn btn-primary btn-soft text-sm mb-4">
+                    <ChevronRight :size="16" />
+                    لیست هتل‌ها
+                </NuxtLink>
             </div>
+
         </template>
 
         <template v-else>
@@ -139,13 +146,9 @@ useHead({
 
             <BlogRenderer v-if="blocks.length" :blocks="blocks" />
 
-            <HotelPolicySection
-                v-if="hotel.policy?.length"
-                title="قوانین هتل"
-                subtitle="استفاده از خدمات به منزله پذیرش این قوانین است."
-                :icon="ScrollText"
-                :policies="hotel.policy"
-            />
+            <HotelPolicySection v-if="hotel.policy?.length" title="قوانین هتل"
+                subtitle="استفاده از خدمات به منزله پذیرش این قوانین است." :icon="ScrollText"
+                :policies="hotel.policy" />
 
             <ReviewSecion :params="{ object_id: hotel.id, object_model: 'hotel', object_name: hotel.slug }"
                 @login-click="router.push('/auth/login')" />
