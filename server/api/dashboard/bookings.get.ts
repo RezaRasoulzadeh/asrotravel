@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
       query: {
         service: TAB_TO_SERVICE_PARAM[tab],
         page,
-        ...(status ? { status } : {}), // TODO: unconfirmed the API even honors this
+        ...(status ? { status } : {}), 
       },
     },
     fallback,
@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
     totalPages: raw.totalPages,
     currentPage: raw.currentPage,
     perPage: raw.perPage,
-    data: raw.data.map(mapBookingToDto),
+    data: (raw.data ?? []).map(mapBookingToDto),
   }
 
   return dto

@@ -3,7 +3,7 @@ import type { CheckoutPaymentPayload, CheckoutPaymentResponse } from '~/types/ch
 
 export default defineEventHandler(async (event) => {
   const code = getRouterParam(event, 'code')
-  const body = await readBody<CheckoutPaymentPayload>(event)
+  const body = await readBody<CheckoutPaymentPayload>(event) ?? {} as CheckoutPaymentPayload
 
   if (!code) {
     throw createError({ statusCode: 400, statusMessage: 'Booking code is required' })

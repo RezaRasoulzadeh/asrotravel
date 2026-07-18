@@ -32,11 +32,11 @@ export default defineEventHandler(async (event) => {
   )
 
   const dto: SupportTicketListDtoResponse = {
-    total: raw.total ?? raw.data.length,
+    total: raw.total ?? (raw.data ?? []).length,
     totalPages: raw.totalPages ?? 1,
     currentPage: raw.currentPage ?? page,
     perPage: raw.perPage ?? 10,
-    data: raw.data.map(mapSupportTicketToDto),
+    data: (raw.data ?? []).map(mapSupportTicketToDto),
   }
 
   return dto

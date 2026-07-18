@@ -129,17 +129,17 @@ useHead({
 
                         <div class="flex items-center gap-2">
                             <Eye class="size-4" />
-                            <span>{{ post.view_count.toLocaleString('fa-IR') }}</span>
+                            <span>{{ (post.view_count ?? 0).toLocaleString('fa-IR') }}</span>
                         </div>
 
                         <div class="flex items-center gap-2">
                             <MessageCircle class="size-4" />
-                            <span>{{ post.comment_count.toLocaleString('fa-IR') }}</span>
+                            <span>{{ (post.comment_count ?? 0).toLocaleString('fa-IR') }}</span>
                         </div>
 
                         <div class="flex items-center gap-2">
                             <Heart class="size-4" />
-                            <span>{{ post.like_count.toLocaleString('fa-IR') }}</span>
+                            <span>{{ (post.like_count ?? 0).toLocaleString('fa-IR') }}</span>
                         </div>
                     </div>
 

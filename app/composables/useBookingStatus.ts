@@ -51,11 +51,14 @@ export function useBookingStatus(code: MaybeRefOrGetter<string>) {
     }, 1000)
   }
 
-  function handleBookingStatus(data: BookingStatusData) {
+  function handleBookingStatus(data: BookingStatusData | null | undefined) {
+    if (!data) return
+
     statusLoading.value = false
-    statusHtml.value = data.html
-    primaryStatusMessage.value = extractPrimaryMessage(data.html)
+    statusHtml.value = data.html ?? ''
+    primaryStatusMessage.value = extractPrimaryMessage(data.html ?? '')
     accessToPaid.value = !!data.access_to_paid
+    needOfflineAccept.value = !!data.need_offline_accept
 
     function extractPrimaryMessage(html: string): string {
       if (!import.meta.client) return ''
@@ -65,12 +68,14 @@ export function useBookingStatus(code: MaybeRefOrGetter<string>) {
 
     stopCountdown()
 
+    const countDownTime = data.count_down_time ?? 0
+
     if (!data.need_offline_accept) {
-      if (data.count_down_time > 0) {
-        remainingSeconds = Math.floor(data.count_down_time)
+      if (countDownTime > 0) {
+        remainingSeconds = Math.floor(countDownTime)
         countdownExpired.value = false
         startCountdown()
-      } else if (data.count_down_time < 0 && !data.access_to_paid) {
+      } else if (countDownTime < 0 && !data.access_to_paid) {
         countdownExpired.value = true
       }
     }

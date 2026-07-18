@@ -25,6 +25,10 @@ export function useUpdateProfile() {
 
     const updated = result.data.userData
 
+    if (!updated) {
+      return { ok: false, error: 'اطلاعات کاربر در پاسخ سرور یافت نشد' }
+    }
+
     if (user.value) {
       user.value = {
         ...user.value,

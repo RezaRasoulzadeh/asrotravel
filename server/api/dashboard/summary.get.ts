@@ -45,13 +45,13 @@ export default defineEventHandler(async (event): Promise<DashboardSummary> => {
   const wishResults = await wishResultsPromise
 
   const activeCount = bookingResults.reduce((sum, r) => {
-    return sum + r.data.filter(b => ACTIVE_BOOKING_STATUSES.includes(b.status as typeof ACTIVE_BOOKING_STATUSES[number])).length
+    return sum + (r.data ?? []).filter(b => ACTIVE_BOOKING_STATUSES.includes(b.status as typeof ACTIVE_BOOKING_STATUSES[number])).length
   }, 0)
 
   const favoritesCount = wishResults.reduce<number>((sum, r) => sum + extractWishCount(r), 0)
 
   const recent = bookingResults
-    .flatMap(r => r.data)
+    .flatMap(r => r.data ?? [])
     .map(mapBookingToDto)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5)
