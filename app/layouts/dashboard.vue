@@ -43,6 +43,10 @@ const isUserMenuOpen = ref(false)
 const userMenuRef = ref<HTMLElement | null>(null)
 onClickOutside(userMenuRef, () => { isUserMenuOpen.value = false })
 
+const mainEl = ref<HTMLElement | null>(null)
+const { y } = useScroll(mainEl)
+const scrolled = computed(() => y.value > 40)
+
 const theme = useCookie<'light' | 'dark'>('asro_theme', {
   default: () => 'light',
   maxAge: 60 * 60 * 24 * 365,
@@ -67,7 +71,7 @@ function isActive(to: string) {
 </script>
 
 <template>
-  <div class="dashboard-root min-h-screen lg:h-screen bg-base-100 lg:pe-6 flex" dir="rtl">
+  <div class="dashboard-root h-dvh bg-base-100 lg:pe-6 flex" dir="rtl">
 
     <aside class="hidden lg:flex flex-col w-56 xl:w-60 bg-base-100 shrink-0 h-screen sticky top-0 z-20">
 
@@ -107,7 +111,8 @@ function isActive(to: string) {
 
     <div class="flex-1 flex flex-col min-w-0">
 
-      <header class="lg:hidden flex items-center justify-between gap-3 px-4 pt-6 pb-2 bg-base-100">
+      <header class="lg:hidden sticky top-0 z-40 flex items-center justify-between gap-3 px-4 pt-6 pb-2 transition-all duration-300"
+        :class="scrolled ? 'bg-base-100/80 backdrop-blur-md shadow-xs' : 'bg-transparent'">
         <NuxtLink to="/" class="flex items-center gap-2 shrink-0">
           <img :src="logoSrc" class="h-8" alt="آسروتراول" />
         </NuxtLink>
@@ -154,7 +159,7 @@ function isActive(to: string) {
         </div>
       </header>
 
-      <main class="flex-1 overflow-y-auto bg-base-200 rounded-[3rem] mx-4 my-4 lg:my-8 pb-20 lg:pb-0 min-w-0">
+      <main ref="mainEl" class="flex-1 overflow-y-auto bg-base-200 rounded-[3rem] mx-4 my-4 lg:my-8 pb-20 lg:pb-0 min-w-0">
         <slot />
       </main>
 

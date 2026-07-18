@@ -79,16 +79,18 @@ const statusBadgeClass = computed(() => {
 </script>
 
 <template>
-  <div class="px-4 lg:px-16 max-w-960 mx-auto py-8">
-    <NuxtLink to="/dashboard/support"
-      class="inline-flex items-center gap-1 text-sm text-base-content/60 hover:text-primary mb-4">
-      <ChevronRight :size="16" />
-      بازگشت به پشتیبانی
-    </NuxtLink>
+  <div class="h-full flex flex-col px-4 lg:px-16 max-w-960 mx-auto">
+    <div class="shrink-0 pt-6 pb-4">
+      <NuxtLink to="/dashboard/support"
+        class="inline-flex items-center gap-1 text-sm text-base-content/60 hover:text-primary mb-4">
+        <ChevronRight :size="16" />
+        بازگشت به پشتیبانی
+      </NuxtLink>
 
-    <div class="flex items-center justify-between gap-2 mb-6 flex-wrap">
-      <h1 class="text-xl font-semibold">{{ ticket?.subject || `تیکت #${id}` }}</h1>
-      <span v-if="statusLabel" class="badge" :class="statusBadgeClass">{{ statusLabel }}</span>
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <h1 class="text-xl font-semibold">{{ ticket?.subject || `تیکت #${id}` }}</h1>
+        <span v-if="statusLabel" class="badge" :class="statusBadgeClass">{{ statusLabel }}</span>
+      </div>
     </div>
 
     <UiLoadingState v-if="loading" label="در حال دریافت تیکت..." />
@@ -101,8 +103,8 @@ const statusBadgeClass = computed(() => {
       <button class="btn btn-primary btn-sm rounded-xl" @click="fetchTicket()">تلاش مجدد</button>
     </div>
 
-    <div v-else class="bg-base-100 rounded-2xl shadow-sm flex flex-col">
-      <div ref="listEl" class="overflow-y-auto max-h-[55vh] sm:max-h-[60vh] p-4 sm:p-6 space-y-4">
+    <div v-else class="flex-1 min-h-0 bg-base-100 rounded-2xl shadow-sm flex flex-col mb-4">
+      <div ref="listEl" class="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4">
         <p v-if="!messages.length" class="text-center text-sm text-base-content/40 py-10">
           هنوز پیامی برای این تیکت ثبت نشده است
         </p>
@@ -129,7 +131,7 @@ const statusBadgeClass = computed(() => {
         </div>
       </div>
 
-      <div v-if="ticket?.status !== 'deactive'" class="border-t border-base-200 p-3 sm:p-4">
+      <div v-if="ticket?.status !== 'deactive'" class="shrink-0 border-t border-base-200 p-3 sm:p-4">
         <form class="flex items-end gap-2" @submit.prevent="handleSubmit">
           <button type="button" class="btn btn-ghost btn-circle btn-sm shrink-0" @click="fileInput?.click()">
             <Paperclip :size="18" class="text-base-content/50" />
@@ -153,7 +155,7 @@ const statusBadgeClass = computed(() => {
           </button>
         </form>
       </div>
-      <div v-else class="border-t border-base-200 p-4 text-center text-sm text-base-content/50">
+      <div v-else class="shrink-0 border-t border-base-200 p-4 text-center text-sm text-base-content/50">
         این تیکت بسته شده است و امکان ارسال پیام جدید وجود ندارد
       </div>
     </div>
