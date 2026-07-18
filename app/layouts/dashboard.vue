@@ -159,7 +159,7 @@ function isActive(to: string) {
         </div>
       </header>
 
-      <main ref="mainEl" class="flex-1 overflow-y-auto bg-base-200 rounded-[3rem] mx-4 my-4 lg:my-8 pb-20 lg:pb-0 min-w-0">
+      <main ref="mainEl" class="flex-1 overflow-y-auto bg-base-200 rounded-[3rem] mx-4 my-4 lg:my-8 pb-12 lg:pb-0 min-w-0">
         <slot />
       </main>
 

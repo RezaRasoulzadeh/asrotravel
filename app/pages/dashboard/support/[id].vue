@@ -17,6 +17,16 @@ const replyText = ref('')
 const file = ref<File | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const listEl = ref<HTMLElement | null>(null)
+const textareaEl = ref<HTMLTextAreaElement | null>(null)
+
+const TEXTAREA_MAX_HEIGHT = 96
+
+function autoGrowTextarea() {
+  const el = textareaEl.value
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = `${Math.min(el.scrollHeight, TEXTAREA_MAX_HEIGHT)}px`
+}
 
 onMounted(async () => {
   await fetchTicket()
@@ -51,6 +61,7 @@ async function handleSubmit() {
     replyText.value = ''
     clearFile()
     scrollToBottom()
+    nextTick(autoGrowTextarea)
   }
   else if (result.error) {
     useToast().error(result.error)
@@ -103,8 +114,8 @@ const statusBadgeClass = computed(() => {
       <button class="btn btn-primary btn-sm rounded-xl" @click="fetchTicket()">تلاش مجدد</button>
     </div>
 
-    <div v-else class="flex-1 min-h-0 bg-base-100 rounded-2xl shadow-sm flex flex-col mb-4">
-      <div ref="listEl" class="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4">
+    <div v-else class="flex-1 min-h-0 flex flex-col mb-2">
+      <div ref="listEl" class="no-scrollbar flex-1 min-h-0 overflow-y-auto p-1 sm:p-3 space-y-4 bg-transparent">
         <p v-if="!messages.length" class="text-center text-sm text-base-content/40 py-10">
           هنوز پیامی برای این تیکت ثبت نشده است
         </p>
@@ -131,33 +142,45 @@ const statusBadgeClass = computed(() => {
         </div>
       </div>
 
-      <div v-if="ticket?.status !== 'deactive'" class="shrink-0 border-t border-base-200 p-3 sm:p-4">
-        <form class="flex items-end gap-2" @submit.prevent="handleSubmit">
-          <button type="button" class="btn btn-ghost btn-circle btn-sm shrink-0" @click="fileInput?.click()">
-            <Paperclip :size="18" class="text-base-content/50" />
-          </button>
-          <input ref="fileInput" type="file" hidden @change="handleFileChange" />
+      <div v-if="ticket?.status !== 'deactive'" class="shrink-0 p-1 sm:p-2">
+        <form @submit.prevent="handleSubmit">
+          <div class="flex items-end gap-1 bg-base-100 rounded-2xl shadow-sm p-1.5">
+            <button type="button" class="btn btn-ghost btn-circle btn-sm shrink-0 mb-1" @click="fileInput?.click()">
+              <Paperclip :size="18" class="text-base-content/50" />
+            </button>
+            <input ref="fileInput" type="file" hidden @change="handleFileChange" />
 
-          <div class="flex-1">
-            <textarea v-model="replyText" rows="1" class="textarea w-full resize-none"
-              placeholder="پیام خود را بنویسید..." />
-            <span v-if="file" class="badge badge-ghost badge-sm gap-1 mt-1">
-              {{ file.name }}
-              <button type="button" @click="clearFile">
-                <X :size="10" />
-              </button>
-            </span>
+            <textarea ref="textareaEl" v-model="replyText" rows="1"
+              class="textarea textarea-ghost flex-1 resize-none border-none bg-transparent focus:outline-none py-2 min-h-9 leading-6 overflow-y-auto"
+              style="max-height: 96px"
+              placeholder="پیام خود را بنویسید..." @input="autoGrowTextarea" />
+
+            <button type="submit" class="btn btn-primary btn-circle shrink-0" :disabled="sending">
+              <Loader2 v-if="sending" class="size-4 animate-spin" />
+              <Send v-else :size="18" class="rotate-y-180" />
+            </button>
           </div>
-
-          <button type="submit" class="btn btn-primary btn-circle shrink-0" :disabled="sending">
-            <Loader2 v-if="sending" class="size-4 animate-spin" />
-            <Send v-else :size="18" class="rotate-y-180" />
-          </button>
+          <span v-if="file" class="badge badge-ghost badge-sm gap-1 mt-1.5 mr-2">
+            {{ file.name }}
+            <button type="button" @click="clearFile">
+              <X :size="10" />
+            </button>
+          </span>
         </form>
       </div>
-      <div v-else class="shrink-0 border-t border-base-200 p-4 text-center text-sm text-base-content/50">
+      <div v-else class="shrink-0 bg-base-100 rounded-2xl shadow-sm p-4 text-center text-sm text-base-content/50">
         این تیکت بسته شده است و امکان ارسال پیام جدید وجود ندارد
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+</style>
