@@ -158,9 +158,7 @@ async function submitWithdraw() {
 </script>
 
 <template>
-  <div class="px-4 lg:px-16 max-w-960 mx-auto py-8" dir="rtl">
-    <h1 class="text-xl font-semibold mb-6">کیف پول من</h1>
-
+  <div class="px-4 lg:px-6 max-w-960 mx-auto py-4 lg:py-6" dir="rtl">
     <UiLoadingState v-if="loading" label="در حال دریافت اطلاعات کیف پول..." />
 
     <div v-else-if="error" class="bg-base-100 rounded-3xl p-8 text-center">
@@ -254,7 +252,7 @@ async function submitWithdraw() {
                 v-for="(item, key) in depositData.wallet_deposit_lists"
                 :key="key"
                 type="button"
-                class="rounded-xl px-4 py-2 text-sm border transition-colors font-medium"
+                class="flex-1 rounded-xl px-4 py-2 text-sm border transition-colors font-medium"
                 :class="depositForm.amount == item.amount
                   ? 'border-primary text-primary bg-primary/5'
                   : 'border-base-300 text-base-content/60 hover:border-base-content/30'"

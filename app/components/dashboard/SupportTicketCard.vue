@@ -32,23 +32,23 @@ function formatDate(iso: string) {
 <template>
   <NuxtLink
     :to="`/dashboard/support/${ticket.id}`"
-    class="block border border-base-300 rounded-2xl p-4 hover:shadow-md hover:border-primary/30 transition-all duration-150"
+    class="block bg-base-100 rounded-2xl p-4 hover:shadow-lg/5 hover:-translate-y-0.5 transition-all duration-200"
   >
     <div class="flex items-center justify-between gap-2 mb-2">
-      <span class="flex items-center gap-2 font-medium truncate">
+      <span class="flex items-center gap-2 font-medium min-w-0">
         <component :is="statusIcon" :size="18" class="text-primary shrink-0" />
-        {{ ticket.subject }}
+        <span class="truncate">{{ ticket.subject }}</span>
       </span>
-      <span class="badge badge-sm" :class="statusBadgeClass">{{ statusLabel }}</span>
+      <span class="badge badge-sm shrink-0" :class="statusBadgeClass">{{ statusLabel }}</span>
     </div>
 
     <p v-if="ticket.excerpt" class="text-sm text-base-content/60 mb-3 line-clamp-1">{{ ticket.excerpt }}</p>
 
-    <div class="flex items-center justify-between text-xs text-base-content/50">
-      <span class="flex items-center gap-1">
+    <div class="flex items-center justify-between gap-2 text-xs text-base-content/50">
+      <span class="flex items-center gap-1 shrink-0">
         <Calendar :size="14" />{{ formatDate(ticket.updatedAt) }}
       </span>
-      <span class="badge badge-sm badge-outline">{{ ticket.departmentTitle }}</span>
+      <span class="badge badge-sm badge-outline min-w-0 truncate">{{ ticket.departmentTitle }}</span>
     </div>
   </NuxtLink>
 </template>

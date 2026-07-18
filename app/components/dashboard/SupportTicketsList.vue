@@ -35,11 +35,13 @@ function handleRetry() {
 </script>
 
 <template>
-  <div class="grid gap-4">
-    <div class="flex items-center justify-between gap-2 flex-wrap">
-      <UiSegmentedTabs :model-value="sort" :items="sortTabs" @update:model-value="setSort" />
+  <div class="grid gap-4 w-full min-w-0">
+    <div class="flex flex-col items-center justify-between gap-2 lg:flex-row w-full min-w-0">
+      <div class="w-full min-w-0 lg:flex-1">
+        <UiSegmentedTabs :model-value="sort" :items="sortTabs" @update:model-value="setSort" />
+      </div>
 
-      <NuxtLink to="/dashboard/support/new" class="btn btn-primary btn-soft w-full lg:w-auto rounded-xl gap-1">
+      <NuxtLink to="/dashboard/support/new" class="btn btn-primary btn-soft w-full lg:w-auto rounded-xl gap-1 shrink-0">
         <MessageCircleQuestion :size="16" />
         تیکت جدید
       </NuxtLink>

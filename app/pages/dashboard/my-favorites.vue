@@ -47,7 +47,7 @@ async function copyJson() {
 </script>
 
 <template>
-  <div class="px-4 lg:px-16 max-w-960 mx-auto py-8">
+  <div class="px-4 lg:px-16 max-w-960 mx-auto py-4">
     <div v-if="!WISHLIST_ENABLED" class="flex flex-col items-center justify-center text-center py-24 gap-2">
       <h1 class="text-xl font-semibold">علاقه‌مندی‌ها</h1>
       <p class="text-sm text-base-content/50">این بخش موقتاً غیرفعال است.</p>

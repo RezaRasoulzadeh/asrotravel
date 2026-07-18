@@ -6,8 +6,7 @@ useSeoMeta({ title: 'رزروهای من' })
 </script>
 
 <template>
-  <div class="px-4 lg:px-16 max-w-960 mx-auto py-8">
-    <h1 class="text-xl font-semibold mb-6">رزروهای من</h1>
+  <div class="px-4 lg:px-6 max-w-960 mx-auto py-4 lg:py-6">
     <DashboardBookingsList /> 
   </div>
 </template>

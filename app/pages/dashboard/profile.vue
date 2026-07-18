@@ -141,12 +141,11 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="px-4 lg:px-16 max-w-960 mx-auto py-8">
-    <h1 class="text-xl font-semibold mb-6">پروفایل من</h1>
+  <div class="px-4 lg:px-6 max-w-960 mx-auto py-4 lg:py-6">
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
 
-      <div class="card bg-base-100 shadow-sm lg:col-span-1">
+      <div class="card bg-base-100 lg:col-span-1">
         <div class="card-body p-6 gap-4 items-center text-center">
           <div class="relative">
             <UiAvatar :src="localPreview || form.imageUrl || null" :name="fullName" size="xl" />
@@ -175,7 +174,7 @@ async function handleSubmit() {
         </div>
       </div>
 
-      <div class="card bg-base-100 shadow-sm lg:col-span-2">
+      <div class="card bg-base-100 lg:col-span-2">
         <div class="card-body p-6 gap-5">
           <h2 class="text-sm font-semibold text-base-content/70">اطلاعات حساب کاربری</h2>
 

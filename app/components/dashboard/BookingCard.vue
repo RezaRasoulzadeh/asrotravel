@@ -74,9 +74,7 @@ async function handleCancel() {
 <template>
   <div
     :id="`booking-${booking.code}`"
-    class="collapse collapse-arrow bg-base-100 border rounded-2xl transition-shadow"
-    :class="autoExpand ? 'border-primary ring-2 ring-primary/30' : 'border-base-300'"
-  >
+    class="collapse collapse-arrow rounded-2xl bg-base-100 hover:shadow-lg/5 hover:-translate-y-0.5 transition-all duration-200" >
     <input v-model="isOpen" type="checkbox" class="peer">
     <div class="collapse-title flex items-center gap-3">
       <div class="flex-1 grid gap-1">

@@ -121,7 +121,7 @@ const hasBookings = computed(() => !summaryLoading.value && bookingRows.value.le
 </script>
 
 <template>
-  <div class="px-4 lg:px-6 py-6 mx-auto space-y-8">
+  <div class="px-4 lg:px-6 py-4 lg:py-6 mx-auto space-y-8">
 
     <div class="card bg-base-100 text-base-content overflow-hidden">
       <div class="card-body py-6 px-6 relative">
@@ -138,7 +138,7 @@ const hasBookings = computed(() => !summaryLoading.value && bookingRows.value.le
         v-for="stat in stats"
         :key="stat.label"
         :to="stat.to"
-        class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+        class="card bg-base-100 hover:shadow-lg/5 hover:-translate-y-0.5 transition-all duration-200"
       >
         <div class="card-body items-center py-4 px-2 gap-2">
           <div :class="[stat.bg, 'w-9 h-9 rounded-xl flex items-center justify-center']">
@@ -157,7 +157,7 @@ const hasBookings = computed(() => !summaryLoading.value && bookingRows.value.le
           v-for="action in quickActions"
           :key="action.label"
           :to="action.to"
-          class="card bg-base-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+          class="card bg-base-100 hover:shadow-lg/5 hover:-translate-y-0.5 transition-all duration-200"
         >
           <div class="card-body p-3 items-center text-center gap-2">
             <div class="w-10 h-10 rounded-xl bg-base-200 flex items-center justify-center">
@@ -178,7 +178,7 @@ const hasBookings = computed(() => !summaryLoading.value && bookingRows.value.le
         </NuxtLink>
       </div>
 
-      <div class="card bg-base-100 shadow-sm divide-y divide-base-200">
+      <div class="card bg-base-100 divide-y divide-base-200">
         <NuxtLink
           v-for="booking in bookingRows" :key="booking.code" :to="booking.to"
           class="flex items-center gap-3 px-4 py-3 hover:bg-base-200/50 transition-colors"
