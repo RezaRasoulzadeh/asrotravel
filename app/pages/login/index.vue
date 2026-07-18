@@ -113,6 +113,13 @@ function checkAutoSubmit() {
   if (otpDigits.value.every(d => d !== '')) handleVerifyOtp()
 }
 
+const { start: startWebOtp, stop: stopWebOtp } = useWebOtp((code) => {
+  const digits = toEnglishDigits(code).replace(/\D/g, '').slice(0, OTP_LENGTH).split('')
+  if (digits.length !== OTP_LENGTH) return
+  digits.forEach((d, i) => { otpDigits.value[i] = d })
+  checkAutoSubmit()
+})
+
 const RESEND_SECONDS = 180
 const resendTimer    = ref(0)
 let   timerInterval  : ReturnType<typeof setInterval> | null = null
@@ -138,13 +145,17 @@ function startResendTimer() {
 }
 
 onMounted(() => phoneInputRef.value?.focus())
-onUnmounted(() => { if (timerInterval) clearInterval(timerInterval) })
+onUnmounted(() => {
+  if (timerInterval) clearInterval(timerInterval)
+  stopWebOtp()
+})
 
 function backToPhone() {
   step.value      = 'phone'
   error.value     = ''
   otpDigits.value = Array(OTP_LENGTH).fill('')
   if (timerInterval) clearInterval(timerInterval)
+  stopWebOtp()
   nextTick(() => phoneInputRef.value?.focus())
 }
 
@@ -160,6 +171,7 @@ async function handleSendOtp() {
   if (result.ok) {
     step.value = 'otp'
     startResendTimer()
+    startWebOtp()
     nextTick(() => focusCell(0))
   } else {
     error.value = result.error ?? 'خطا'
@@ -175,6 +187,7 @@ async function handleResend() {
   if (result.ok) {
     otpDigits.value = Array(OTP_LENGTH).fill('')
     startResendTimer()
+    startWebOtp()
     nextTick(() => focusCell(0))
   } else {
     error.value = result.error ?? 'خطا'
@@ -188,6 +201,7 @@ async function handleVerifyOtp() {
   const result  = await verifyOtp(fullMobile.value, otpValue.value)
   loading.value = false
   if (result.ok) {
+    stopWebOtp()
     const redirect = (route.query.redirect as string) || '/'
     router.replace(redirect)
   } else {
@@ -266,6 +280,7 @@ async function handleVerifyOtp() {
               :value="otpDigits[i]"
               type="text"
               inputmode="numeric"
+              autocomplete="one-time-code"
               maxlength="2"
               class="input input-bordered w-11 h-12 text-center text-lg font-bold font-mono p-0 rounded-xl transition-colors"
               :class="otpDigits[i] ? 'input-primary' : ''"
