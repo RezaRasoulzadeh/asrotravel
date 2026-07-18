@@ -1,6 +1,5 @@
 # Asro Travel — Project Context & Scheme
 
-> Source: reverse-engineered directly from `github.com/RezaRasoulzadeh/asrotravel` (public repo, current `main`).
 > Last synced: 2026-07-15.
 
 ---
