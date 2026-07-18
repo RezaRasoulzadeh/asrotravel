@@ -6,9 +6,7 @@
 
 ## 1. What this project is
 
-Asro (asrotravel.com) is a Persian-language (RTL) travel booking platform covering four product types — **hotel**, **pool** (سالن استخر / sports hall bookings), **ticket** (سانس/دربیس-style timed sessions), and **place** (destination/travel-guide content) — plus a blog and a customer dashboard for managing bookings.
-
-**This was migrated from a Vue 3 + Vite SPA to Nuxt 4 SSR.** That migration is the single most important architectural fact for this project: every page now goes through a server-rendered, two-hop fetch pattern (browser → Nuxt server route → real backend), not a direct SPA → API call.
+Asro (asrotravel.com) is a Persian-language (RTL) travel booking platform covering four product types — **hotel**, **pool** (سالن استخر / sports hall bookings), **ticket** (سانس/دربیس-style timed sessions), and **place** (destination/travel-guide content) — plus a blog and a customer dashboard for managing bookings. every page now goes through a server-rendered, two-hop fetch pattern (browser → Nuxt server route → real backend), not a direct SPA → API call.
 
 ---
 
