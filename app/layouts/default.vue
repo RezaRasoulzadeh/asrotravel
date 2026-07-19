@@ -26,7 +26,6 @@ import ecunionImg from '~/assets/images/ecunionImg.png'
 import samandehiImg from '~/assets/images/samandehi.png'
 import airaImg from '~/assets/images/aira.png'
 import daneshBonyanImg from '~/assets/images/daneshBonyanImg.png'
-import { C } from 'vue-router/dist/index-BQLwgiyK.js'
 
 const route = useRoute()
 const router = useRouter()
